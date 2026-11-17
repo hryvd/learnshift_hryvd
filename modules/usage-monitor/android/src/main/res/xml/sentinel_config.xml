@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  LearnShift Sentinel Accessibility configuration (Blueprint v2 Section 2.2).
+  android:canRetrieveWindowContent="false" ensures the OS blocks reading any
+  text, messages, view hierarchies, or video frames from watched apps.
+  Do NOT set android:isAccessibilityTool so LearnShift follows the standard
+  prominent-disclosure Play Store compliance path (Section 5).
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeViewScrolled|typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="100"
+    android:description="@string/a11y_description" />
+
