@@ -7,10 +7,12 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 import { UsageMonitor, type LiveSession, type NativeDay } from '../../../modules/usage-monitor';
+import type { SubjectId } from '@/data/localQuestions';
 import { SKILL_BY_ID, type SkillId } from '@/data/skills';
+import { credentialStorage } from '@/lib/credentialStorage';
 import { SUPABASE_KEY, SUPABASE_URL } from '@/lib/config';
 import { createDeviceToken } from '@/services/backend/api';
 
@@ -29,6 +31,7 @@ export type MonitorStatus = {
   platform: MonitorPlatform;
   /** Android usage access / iOS Screen Time authorization. */
   access: boolean;
+  scrollAccess: boolean;
   /** Android only: can bring the lock screen over other apps. */
   overlay: boolean;
   /** Android only: exempt from battery optimization (keeps detection alive). */
@@ -46,6 +49,7 @@ export function status(): MonitorStatus {
     return {
       platform,
       access: UsageMonitor.hasUsageAccess(),
+      scrollAccess: UsageMonitor.hasScrollAccess?.() ?? false,
       overlay: UsageMonitor.canDrawOverlays(),
       battery: UsageMonitor.isIgnoringBatteryOptimizations(),
       running: UsageMonitor.isRunning(),
@@ -59,6 +63,7 @@ export function status(): MonitorStatus {
     return {
       platform,
       access: s.authorized,
+      scrollAccess: false,
       overlay: true,
       battery: true,
       running: s.monitoring,
@@ -67,7 +72,7 @@ export function status(): MonitorStatus {
       notifications: true,
     };
   }
-  return { platform, access: false, overlay: false, battery: false, running: false, apps: 0, brand: '', notifications: false };
+  return { platform, scrollAccess: false, access: false, overlay: false, battery: false, running: false, apps: 0, brand: '', notifications: false };
 }
 
 /** Opens the system screen where the student grants access. */
@@ -78,6 +83,13 @@ export async function requestAccess(): Promise<boolean> {
   }
   if (platform === 'ios') return ios.authorize();
   return false;
+}
+
+export function openScrollSettings() {
+  Alert.alert('Allow scroll detection?', 'LearnShift uses Android Accessibility only to notice upward scroll events in supported apps after your timer ends. It does not read screen text, messages, typed keys, screenshots or touch coordinates. The app name and scroll direction are checked on this phone and are not uploaded by this detector. You can turn this off at any time in Android Accessibility settings.', [
+    { text: 'Not now', style: 'cancel' },
+    { text: 'Open settings', onPress: () => UsageMonitor?.openScrollSettings?.() },
+  ]);
 }
 
 export function openOverlaySettings() {
@@ -146,22 +158,29 @@ const TOKEN_KEY = 'learnshift-device-token';
 /** The monitor reports with its own device token; created once per install. */
 async function deviceToken(userId: string): Promise<string | null> {
   const key = `${TOKEN_KEY}-${userId}`;
-  const saved = await AsyncStorage.getItem(key);
+  const saved = await credentialStorage.getItem(key);
   if (saved) return saved;
   try {
     const t = await createDeviceToken(platform === 'ios' ? 'ios' : 'android');
-    await AsyncStorage.setItem(key, t);
+    await credentialStorage.setItem(key, t);
     return t;
   } catch {
     return null;
   }
 }
 
-export async function forgetDevice() {
-  const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(TOKEN_KEY));
-  await AsyncStorage.multiRemove(keys);
+export function stopMonitoring() {
   if (platform === 'android') UsageMonitor!.configure(JSON.stringify({ enabled: false }));
   if (platform === 'ios') ios.stopAll();
+}
+
+export async function forgetDevice() {
+  stopMonitoring();
+  const { useAppStore } = await import('@/store/useAppStore');
+  const userId = useAppStore.getState().userId;
+  if (userId) await credentialStorage.removeItem(`${TOKEN_KEY}-${userId}`);
+  const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(TOKEN_KEY));
+  await AsyncStorage.multiRemove(keys);
 }
 
 export type MonitorConfig = {
@@ -183,12 +202,14 @@ export type MonitorConfig = {
   gamesLimit: number | null;
   overlayIntervalSec?: number;
   monitorAllApps?: boolean;
+  grade?: number;
+  subject?: SubjectId | 'mixed';
 };
 
 /** Pushes the current settings down to the native monitor (always refreshes service state). */
 export async function configure(cfg: MonitorConfig) {
   if (platform === 'none') return;
-  const token = cfg.enabled ? await deviceToken(cfg.userId) : null;
+  const token = cfg.enabled && cfg.userId !== 'local-student' ? await deviceToken(cfg.userId) : null;
   const payload = {
     ...cfg,
     enabled: cfg.enabled,

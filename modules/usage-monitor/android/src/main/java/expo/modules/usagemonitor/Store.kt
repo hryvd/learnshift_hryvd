@@ -2,6 +2,14 @@ package expo.modules.usagemonitor
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -31,6 +39,8 @@ data class Config(
   val overlayIntervalSec: Int,
   /** Watch all non-study installed apps instead of only preset categories. */
   val monitorAllApps: Boolean,
+  val grade: Int,
+  val subject: String,
 ) {
   val fil get() = lang == "fil"
 
@@ -55,8 +65,10 @@ data class Config(
       guardianName = o.optString("guardianName", ""),
       scrollLimit = o.optInt("scrollLimit", 0),
       gamesLimit = o.optInt("gamesLimit", 0),
-      overlayIntervalSec = o.optInt("overlayIntervalSec", 30).coerceIn(10, 3600),
-      monitorAllApps = o.optBoolean("monitorAllApps", true),
+      overlayIntervalSec = o.optInt("overlayIntervalSec", 15).coerceIn(10, 3600),
+      monitorAllApps = o.optBoolean("monitorAllApps", false),
+      grade = o.optInt("grade", 1).coerceIn(1, 10),
+      subject = o.optString("subject", "mixed"),
     )
   }
 }
@@ -68,13 +80,46 @@ object Store {
   private fun prefs(ctx: Context): SharedPreferences =
     ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
+  private const val CONFIG_KEY = "config_encrypted"
+  private const val KEY_ALIAS = "learnshift_monitor_config"
+
+  private fun encryptionKey(): SecretKey {
+    val keys = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    (keys.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }
+    return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {
+      init(KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build())
+    }.generateKey()
+  }
+
   @Synchronized
-  fun config(ctx: Context): Config =
-    Config.from(runCatching { JSONObject(prefs(ctx).getString("config", "{}") ?: "{}") }.getOrDefault(JSONObject()))
+  fun config(ctx: Context): Config = runCatching {
+    val prefs = prefs(ctx)
+    val encoded = prefs.getString(CONFIG_KEY, null)
+    val json = if (encoded != null) {
+      val parts = encoded.split(':', limit = 2)
+      require(parts.size == 2)
+      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+      cipher.init(Cipher.DECRYPT_MODE, encryptionKey(), GCMParameterSpec(128, Base64.decode(parts[0], Base64.NO_WRAP)))
+      String(cipher.doFinal(Base64.decode(parts[1], Base64.NO_WRAP)), Charsets.UTF_8)
+    } else {
+      // Upgrade old installations before returning their credentials to the monitor.
+      val legacy = prefs.getString("config", "{}") ?: "{}"
+      if (prefs.contains("config")) saveConfig(ctx, legacy)
+      legacy
+    }
+    Config.from(JSONObject(json))
+  }.getOrElse { Config.from(JSONObject()) } // Unavailable keys disable monitoring/reporting.
 
   @Synchronized
   fun saveConfig(ctx: Context, json: String) {
-    prefs(ctx).edit().putString("config", json).apply()
+    JSONObject(json) // reject malformed configuration before replacing anything
+    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, encryptionKey())
+    val encrypted = Base64.encodeToString(cipher.iv, Base64.NO_WRAP) + ":" +
+      Base64.encodeToString(cipher.doFinal(json.toByteArray(Charsets.UTF_8)), Base64.NO_WRAP)
+    check(prefs(ctx).edit().putString(CONFIG_KEY, encrypted).remove("config").commit())
   }
 
   fun getLong(ctx: Context, key: String, def: Long = 0L) = prefs(ctx).getLong(key, def)

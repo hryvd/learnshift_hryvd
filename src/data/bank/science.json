@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "science-g1-01",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Senses",
+    "prompt": "Which body part helps you see colors?",
+    "options": [
+      "Ears",
+      "Nose",
+      "Eyes",
+      "Tongue"
+    ],
+    "answer": 2,
+    "explanation": "Eyes detect light and let us see colors and shapes."
+  },
+  {
+    "id": "science-g1-02",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Senses",
+    "prompt": "Which body part helps you hear a bell?",
+    "options": [
+      "Eyes",
+      "Fingers",
+      "Teeth",
+      "Ears"
+    ],
+    "answer": 3,
+    "explanation": "Ears help us hear sounds such as a ringing bell."
+  },
+  {
+    "id": "science-g1-03",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Living things",
+    "prompt": "Which one is a living thing?",
+    "options": [
+      "Butterfly",
+      "Spoon",
+      "Stone",
+      "Chair"
+    ],
+    "answer": 0,
+    "explanation": "A butterfly needs food and grows, so it is a living thing."
+  },
+  {
+    "id": "science-g1-04",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Plant needs",
+    "prompt": "What do most plants take in through their roots?",
+    "options": [
+      "Plastic",
+      "Water",
+      "Sandwiches",
+      "Smoke"
+    ],
+    "answer": 1,
+    "explanation": "Roots take in water from the soil."
+  },
+  {
+    "id": "science-g1-05",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Animal needs",
+    "prompt": "What does a pet dog need every day?",
+    "options": [
+      "Paint",
+      "Candy only",
+      "Clean water",
+      "A television"
+    ],
+    "answer": 2,
+    "explanation": "Dogs need clean water to stay healthy."
+  },
+  {
+    "id": "science-g1-06",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Materials",
+    "prompt": "Which object is usually soft?",
+    "options": [
+      "Metal spoon",
+      "Glass cup",
+      "Stone",
+      "Cotton ball"
+    ],
+    "answer": 3,
+    "explanation": "Cotton bends and feels soft when touched gently."
+  },
+  {
+    "id": "science-g1-07",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Weather",
+    "prompt": "What should you use to help stay dry in rain?",
+    "options": [
+      "Raincoat",
+      "Sunglasses only",
+      "Paper fan",
+      "Swimming goggles only"
+    ],
+    "answer": 0,
+    "explanation": "A raincoat helps keep rain off your clothes."
+  },
+  {
+    "id": "science-g1-08",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Healthy habits",
+    "prompt": "What should you do before eating with your hands?",
+    "options": [
+      "Wipe them on the floor",
+      "Wash them with soap and water",
+      "Touch your shoes",
+      "Cover them with sand"
+    ],
+    "answer": 1,
+    "explanation": "Soap and water help remove dirt and germs from hands."
+  },
+  {
+    "id": "science-g1-09",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Body parts",
+    "prompt": "Which body parts help you walk?",
+    "options": [
+      "Ears",
+      "Eyebrows",
+      "Legs",
+      "Teeth"
+    ],
+    "answer": 2,
+    "explanation": "Legs support the body and help it move from place to place."
+  },
+  {
+    "id": "science-g1-10",
+    "subject": "science",
+    "grade": 1,
+    "topic": "Day and night",
+    "prompt": "What is Earth's main natural source of daylight?",
+    "options": [
+      "Moon",
+      "Streetlamp",
+      "Candle",
+      "Sun"
+    ],
+    "answer": 3,
+    "explanation": "The Sun gives Earth the light we see during the day."
+  },
+  {
+    "id": "science-g2-01",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Plant parts",
+    "prompt": "Which plant part usually makes seeds after flowering?",
+    "options": [
+      "Root hair",
+      "Stem bark",
+      "Leaf vein",
+      "Flower"
+    ],
+    "answer": 3,
+    "explanation": "Flowers are reproductive parts that can develop into fruits with seeds."
+  },
+  {
+    "id": "science-g2-02",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Animal growth",
+    "prompt": "What does a caterpillar become after its pupa stage?",
+    "options": [
+      "Butterfly or moth",
+      "Fish",
+      "Frog",
+      "Spider"
+    ],
+    "answer": 0,
+    "explanation": "Caterpillars become butterflies or moths after the pupa stage."
+  },
+  {
+    "id": "science-g2-03",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Habitats",
+    "prompt": "Which habitat best suits a fish with gills?",
+    "options": [
+      "Dry sand",
+      "Water",
+      "A bookshelf",
+      "A hot oven"
+    ],
+    "answer": 1,
+    "explanation": "Fish use gills to get oxygen from water."
+  },
+  {
+    "id": "science-g2-04",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Materials",
+    "prompt": "Which material is usually transparent?",
+    "options": [
+      "Wood",
+      "Cardboard",
+      "Clear glass",
+      "Brick"
+    ],
+    "answer": 2,
+    "explanation": "Transparent materials let enough light through to see objects behind them."
+  },
+  {
+    "id": "science-g2-05",
+    "subject": "science",
+    "grade": 2,
+    "topic": "States of matter",
+    "prompt": "Which item is a liquid at normal room temperature?",
+    "options": [
+      "Ice cube",
+      "Rock",
+      "Wooden block",
+      "Water"
+    ],
+    "answer": 3,
+    "explanation": "Liquid water flows and takes the shape of its container."
+  },
+  {
+    "id": "science-g2-06",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Forces",
+    "prompt": "What action opens a drawer toward you?",
+    "options": [
+      "Pulling",
+      "Melting",
+      "Freezing",
+      "Listening"
+    ],
+    "answer": 0,
+    "explanation": "A pull moves the drawer toward the person pulling it."
+  },
+  {
+    "id": "science-g2-07",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Shadows",
+    "prompt": "What can make a shadow when it blocks light?",
+    "options": [
+      "A sound",
+      "An opaque object",
+      "An empty space",
+      "A smell"
+    ],
+    "answer": 1,
+    "explanation": "Opaque objects block light and create shadows."
+  },
+  {
+    "id": "science-g2-08",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Weather safety",
+    "prompt": "What is the safest place during a thunderstorm?",
+    "options": [
+      "Under a lone tall tree",
+      "In an open field",
+      "Inside a sturdy building",
+      "In a swimming pool"
+    ],
+    "answer": 2,
+    "explanation": "A sturdy enclosed building gives better protection from lightning."
+  },
+  {
+    "id": "science-g2-09",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Waste",
+    "prompt": "Which action reduces waste at lunch?",
+    "options": [
+      "Throwing away a lunchbox daily",
+      "Littering wrappers",
+      "Burning plastic",
+      "Using a washable lunchbox"
+    ],
+    "answer": 3,
+    "explanation": "A washable lunchbox can be used many times."
+  },
+  {
+    "id": "science-g2-10",
+    "subject": "science",
+    "grade": 2,
+    "topic": "Healthy food",
+    "prompt": "Which snack provides fruit as part of a varied diet?",
+    "options": [
+      "A fresh banana",
+      "A spoon of salt",
+      "A plastic toy",
+      "Only candy"
+    ],
+    "answer": 0,
+    "explanation": "Bananas are fruit and provide nutrients as part of a varied diet."
+  },
+  {
+    "id": "science-g3-01",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Matter",
+    "prompt": "Which change makes ice become liquid water?",
+    "options": [
+      "Melting",
+      "Freezing",
+      "Rusting",
+      "Tearing"
+    ],
+    "answer": 0,
+    "explanation": "Ice melts when it gains enough heat."
+  },
+  {
+    "id": "science-g3-02",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Matter",
+    "prompt": "What happens when liquid water freezes?",
+    "options": [
+      "It becomes wood",
+      "It becomes solid ice",
+      "It disappears forever",
+      "It becomes soil"
+    ],
+    "answer": 1,
+    "explanation": "Freezing changes liquid water into solid ice."
+  },
+  {
+    "id": "science-g3-03",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Measurement",
+    "prompt": "Which tool measures temperature?",
+    "options": [
+      "Ruler",
+      "Balance",
+      "Thermometer",
+      "Measuring tape"
+    ],
+    "answer": 2,
+    "explanation": "A thermometer measures how hot or cold something is."
+  },
+  {
+    "id": "science-g3-04",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Animal groups",
+    "prompt": "Which animal has feathers?",
+    "options": [
+      "Cat",
+      "Frog",
+      "Tilapia",
+      "Chicken"
+    ],
+    "answer": 3,
+    "explanation": "Birds, including chickens, have feathers."
+  },
+  {
+    "id": "science-g3-05",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Plant growth",
+    "prompt": "Why should a growing plant have enough space?",
+    "options": [
+      "Its roots and leaves need room",
+      "Plants must never touch air",
+      "Space replaces water",
+      "Space makes soil unnecessary"
+    ],
+    "answer": 0,
+    "explanation": "Plants need room for roots and leaves as they grow."
+  },
+  {
+    "id": "science-g3-06",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Sound",
+    "prompt": "What produces sound when a guitar string is plucked?",
+    "options": [
+      "The string freezes",
+      "The string vibrates",
+      "The string dissolves",
+      "The string becomes light"
+    ],
+    "answer": 1,
+    "explanation": "A vibrating string makes the air vibrate, producing sound."
+  },
+  {
+    "id": "science-g3-07",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Magnets",
+    "prompt": "Which object is most likely attracted to a magnet?",
+    "options": [
+      "Wooden pencil",
+      "Plastic ruler",
+      "Iron nail",
+      "Rubber eraser"
+    ],
+    "answer": 2,
+    "explanation": "Iron is a magnetic material."
+  },
+  {
+    "id": "science-g3-08",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Soil",
+    "prompt": "Which soil component comes from decayed plants and animals?",
+    "options": [
+      "Plastic",
+      "Glass",
+      "Metal wire",
+      "Humus"
+    ],
+    "answer": 3,
+    "explanation": "Humus is organic matter formed as living remains decay."
+  },
+  {
+    "id": "science-g3-09",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Water cycle",
+    "prompt": "Wet clothes dry mainly because water does what?",
+    "options": [
+      "Evaporates",
+      "Turns into stone",
+      "Creates soil",
+      "Freezes in warm air"
+    ],
+    "answer": 0,
+    "explanation": "Evaporation changes liquid water into water vapor."
+  },
+  {
+    "id": "science-g3-10",
+    "subject": "science",
+    "grade": 3,
+    "topic": "Sun safety",
+    "prompt": "Which action helps protect skin from strong sunlight?",
+    "options": [
+      "Staring at the Sun",
+      "Seeking shade",
+      "Skipping all drinking water",
+      "Touching hot metal"
+    ],
+    "answer": 1,
+    "explanation": "Shade reduces direct exposure to sunlight."
+  },
+  {
+    "id": "science-g4-01",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Mixtures",
+    "prompt": "How can you separate pebbles from dry sand?",
+    "options": [
+      "Freeze the mixture",
+      "Use a sieve",
+      "Add more pebbles",
+      "Paint the sand"
+    ],
+    "answer": 1,
+    "explanation": "A sieve lets smaller sand grains through while keeping larger pebbles."
+  },
+  {
+    "id": "science-g4-02",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Changes in matter",
+    "prompt": "Which change is reversible by cooling?",
+    "options": [
+      "Burning paper",
+      "Cooking an egg",
+      "Melting candle wax",
+      "Rusting iron"
+    ],
+    "answer": 2,
+    "explanation": "Melted wax becomes solid again when it cools."
+  },
+  {
+    "id": "science-g4-03",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Human body",
+    "prompt": "Which organ pumps blood around the body?",
+    "options": [
+      "Stomach",
+      "Lungs",
+      "Skin",
+      "Heart"
+    ],
+    "answer": 3,
+    "explanation": "The heart's contractions push blood through blood vessels."
+  },
+  {
+    "id": "science-g4-04",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Human body",
+    "prompt": "Which organs take oxygen from the air into the blood?",
+    "options": [
+      "Lungs",
+      "Kidneys",
+      "Stomach",
+      "Bones"
+    ],
+    "answer": 0,
+    "explanation": "Oxygen passes from air in the lungs into the blood."
+  },
+  {
+    "id": "science-g4-05",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Food chains",
+    "prompt": "In grass → grasshopper → frog, which is the producer?",
+    "options": [
+      "Grasshopper",
+      "Grass",
+      "Frog",
+      "All three equally"
+    ],
+    "answer": 1,
+    "explanation": "Grass makes its own food using sunlight."
+  },
+  {
+    "id": "science-g4-06",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Plant structures",
+    "prompt": "Which part holds many leaves up toward sunlight?",
+    "options": [
+      "Seed coat",
+      "Root cap",
+      "Stem",
+      "Petal only"
+    ],
+    "answer": 2,
+    "explanation": "The stem supports leaves and carries materials through the plant."
+  },
+  {
+    "id": "science-g4-07",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Light",
+    "prompt": "Why can a mirror show your face?",
+    "options": [
+      "It produces your face",
+      "It absorbs all light",
+      "It turns sound into light",
+      "It reflects light"
+    ],
+    "answer": 3,
+    "explanation": "A smooth mirror reflects light from your face toward your eyes."
+  },
+  {
+    "id": "science-g4-08",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Heat",
+    "prompt": "Which material usually conducts heat better?",
+    "options": [
+      "Metal",
+      "Wood",
+      "Plastic foam",
+      "Wool"
+    ],
+    "answer": 0,
+    "explanation": "Metals generally transfer heat more readily than these insulating materials."
+  },
+  {
+    "id": "science-g4-09",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Weather tools",
+    "prompt": "Which tool measures the amount of rainfall?",
+    "options": [
+      "Compass",
+      "Rain gauge",
+      "Clock",
+      "Spring balance"
+    ],
+    "answer": 1,
+    "explanation": "A rain gauge collects rainfall so its depth can be measured."
+  },
+  {
+    "id": "science-g4-10",
+    "subject": "science",
+    "grade": 4,
+    "topic": "Earth resources",
+    "prompt": "Which action helps conserve water?",
+    "options": [
+      "Leaving a tap running all day",
+      "Throwing rubbish in rivers",
+      "Turning off a tap while brushing",
+      "Watering a path for hours"
+    ],
+    "answer": 2,
+    "explanation": "Turning off unused taps avoids wasting clean water."
+  },
+  {
+    "id": "science-g5-01",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Mixtures",
+    "prompt": "What happens to sugar when it dissolves in water?",
+    "options": [
+      "It turns into sand",
+      "It disappears from matter",
+      "It spreads through the water",
+      "It becomes a magnet"
+    ],
+    "answer": 2,
+    "explanation": "Dissolved sugar particles spread through the water but still exist."
+  },
+  {
+    "id": "science-g5-02",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Separating mixtures",
+    "prompt": "Which method can recover salt from saltwater?",
+    "options": [
+      "Picking with tweezers",
+      "Using a magnet",
+      "Using a coarse sieve",
+      "Evaporation"
+    ],
+    "answer": 3,
+    "explanation": "When the water evaporates, dissolved salt remains behind."
+  },
+  {
+    "id": "science-g5-03",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Digestive system",
+    "prompt": "Where does most nutrient absorption happen?",
+    "options": [
+      "Small intestine",
+      "Esophagus",
+      "Mouth",
+      "Large intestine"
+    ],
+    "answer": 0,
+    "explanation": "Most digested nutrients pass into the blood through the small intestine."
+  },
+  {
+    "id": "science-g5-04",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Animal reproduction",
+    "prompt": "Which animal normally gives birth to live young?",
+    "options": [
+      "Chicken",
+      "Dog",
+      "Butterfly",
+      "Frog"
+    ],
+    "answer": 1,
+    "explanation": "Dogs are mammals that normally give birth to live young."
+  },
+  {
+    "id": "science-g5-05",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Plant reproduction",
+    "prompt": "What is pollination?",
+    "options": [
+      "Movement of roots through soil",
+      "Loss of water from a rock",
+      "Transfer of pollen to a flower's stigma",
+      "Turning leaves into soil"
+    ],
+    "answer": 2,
+    "explanation": "Pollination transfers pollen to the stigma and can lead to fertilization."
+  },
+  {
+    "id": "science-g5-06",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Ecosystems",
+    "prompt": "What role do fungi often have in a forest?",
+    "options": [
+      "Sunlight makers",
+      "Rock producers",
+      "Rain controllers",
+      "Decomposers"
+    ],
+    "answer": 3,
+    "explanation": "Many fungi break down dead matter and recycle nutrients."
+  },
+  {
+    "id": "science-g5-07",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Electric circuits",
+    "prompt": "What is needed for a simple bulb circuit to light?",
+    "options": [
+      "A closed conducting path",
+      "A broken wire",
+      "An open switch",
+      "No energy source"
+    ],
+    "answer": 0,
+    "explanation": "Electric current can flow through a complete conducting path connected to a source."
+  },
+  {
+    "id": "science-g5-08",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Forces",
+    "prompt": "Which force pulls a dropped ball toward Earth?",
+    "options": [
+      "Magnetism in all balls",
+      "Gravity",
+      "Sound",
+      "Evaporation"
+    ],
+    "answer": 1,
+    "explanation": "Gravity attracts the ball toward Earth."
+  },
+  {
+    "id": "science-g5-09",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Earth motion",
+    "prompt": "What causes day and night?",
+    "options": [
+      "Earth changing size",
+      "The Moon blocking the Sun daily",
+      "Earth rotating on its axis",
+      "Clouds covering Earth every night"
+    ],
+    "answer": 2,
+    "explanation": "As Earth rotates, places face toward or away from the Sun."
+  },
+  {
+    "id": "science-g5-10",
+    "subject": "science",
+    "grade": 5,
+    "topic": "Disaster safety",
+    "prompt": "During earthquake shaking indoors, what is the recommended immediate action?",
+    "options": [
+      "Run to a window",
+      "Use an elevator",
+      "Stand beside a tall cabinet",
+      "Drop, cover, and hold on"
+    ],
+    "answer": 3,
+    "explanation": "Drop, cover, and hold on helps protect against falling objects."
+  },
+  {
+    "id": "science-g6-01",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Solutions",
+    "prompt": "Which mixture is a solution when fully mixed?",
+    "options": [
+      "Pebbles in sand",
+      "Oil floating on water",
+      "Rice mixed with beans",
+      "Salt dissolved in water"
+    ],
+    "answer": 3,
+    "explanation": "A salt solution has dissolved particles spread evenly through water."
+  },
+  {
+    "id": "science-g6-02",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Chemical changes",
+    "prompt": "Which observation is clear evidence that iron has rusted?",
+    "options": [
+      "A new reddish-brown substance forms",
+      "It is cut into pieces",
+      "It is bent slightly",
+      "It is moved to a shelf"
+    ],
+    "answer": 0,
+    "explanation": "Rust is a new substance formed when iron reacts with oxygen and moisture."
+  },
+  {
+    "id": "science-g6-03",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Body systems",
+    "prompt": "Which system carries blood, oxygen, and nutrients?",
+    "options": [
+      "Skeletal system",
+      "Circulatory system",
+      "Integumentary system",
+      "Muscular system only"
+    ],
+    "answer": 1,
+    "explanation": "The circulatory system includes the heart, blood, and blood vessels."
+  },
+  {
+    "id": "science-g6-04",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Vertebrates",
+    "prompt": "What feature is shared by vertebrates?",
+    "options": [
+      "Six legs",
+      "Feathers",
+      "A backbone",
+      "Gills throughout life"
+    ],
+    "answer": 2,
+    "explanation": "Vertebrates have a backbone or vertebral column."
+  },
+  {
+    "id": "science-g6-05",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Ecosystems",
+    "prompt": "Why do mangrove roots help coastlines?",
+    "options": [
+      "They stop every typhoon",
+      "They remove all salt from the sea",
+      "They prevent all tides",
+      "They hold sediment and reduce erosion"
+    ],
+    "answer": 3,
+    "explanation": "Mangrove roots trap sediment and help slow moving water."
+  },
+  {
+    "id": "science-g6-06",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Simple machines",
+    "prompt": "Which object is an example of an inclined plane?",
+    "options": [
+      "Ramp",
+      "Flat mirror",
+      "Battery",
+      "Light bulb"
+    ],
+    "answer": 0,
+    "explanation": "A ramp is a sloping surface that helps move loads between heights."
+  },
+  {
+    "id": "science-g6-07",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Energy",
+    "prompt": "In a battery-powered flashlight, stored chemical energy becomes mainly what useful output?",
+    "options": [
+      "Food",
+      "Light",
+      "Soil",
+      "Gravity"
+    ],
+    "answer": 1,
+    "explanation": "The battery supplies electrical energy that the lamp converts into light and heat."
+  },
+  {
+    "id": "science-g6-08",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Electricity safety",
+    "prompt": "Why should wet hands be kept away from electrical outlets?",
+    "options": [
+      "Water turns plastic into metal",
+      "Wet skin blocks all current",
+      "Water on skin can increase shock risk",
+      "Outlets produce rain"
+    ],
+    "answer": 2,
+    "explanation": "Moisture can lower resistance and increase the risk of electric shock."
+  },
+  {
+    "id": "science-g6-09",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Solar system",
+    "prompt": "Which planet is closest to the Sun?",
+    "options": [
+      "Earth",
+      "Mars",
+      "Neptune",
+      "Mercury"
+    ],
+    "answer": 3,
+    "explanation": "Mercury has the smallest orbit around the Sun among the eight planets."
+  },
+  {
+    "id": "science-g6-10",
+    "subject": "science",
+    "grade": 6,
+    "topic": "Seasons",
+    "prompt": "What is the main cause of Earth's seasons?",
+    "options": [
+      "Its tilted axis as it orbits the Sun",
+      "The Moon changing shape",
+      "Earth's distance changing greatly each day",
+      "The Sun turning off each winter"
+    ],
+    "answer": 0,
+    "explanation": "Earth's axial tilt changes sunlight angle and day length during its orbit."
+  },
+  {
+    "id": "science-g7-01",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Scientific investigation",
+    "prompt": "In a fair test of fertilizer, what should stay the same between plant groups?",
+    "options": [
+      "Amount of water",
+      "Type of fertilizer being tested",
+      "Fertilizer treatment",
+      "The independent variable"
+    ],
+    "answer": 0,
+    "explanation": "Keeping water the same helps isolate the effect of the fertilizer."
+  },
+  {
+    "id": "science-g7-02",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Scientific measurement",
+    "prompt": "A student records 12 cm, 14 cm, and 16 cm. What is the mean?",
+    "options": [
+      "12 cm",
+      "14 cm",
+      "16 cm",
+      "42 cm"
+    ],
+    "answer": 1,
+    "explanation": "Add 12, 14, and 16 to get 42, then divide by 3."
+  },
+  {
+    "id": "science-g7-03",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Cells",
+    "prompt": "Which cell structure controls many activities and holds most DNA in a plant cell?",
+    "options": [
+      "Cell wall",
+      "Vacuole only",
+      "Nucleus",
+      "Chlorophyll"
+    ],
+    "answer": 2,
+    "explanation": "The nucleus contains most of the cell's DNA and helps control cell activities."
+  },
+  {
+    "id": "science-g7-04",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Cells",
+    "prompt": "Which structure is present in plant cells but not animal cells?",
+    "options": [
+      "Cell membrane",
+      "Cytoplasm",
+      "Nucleus",
+      "Cell wall"
+    ],
+    "answer": 3,
+    "explanation": "Plant cells have a rigid cell wall outside the cell membrane."
+  },
+  {
+    "id": "science-g7-05",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Acids and bases",
+    "prompt": "A solution with pH 3 is classified as what?",
+    "options": [
+      "Acidic",
+      "Neutral",
+      "Basic",
+      "Always harmless"
+    ],
+    "answer": 0,
+    "explanation": "On the usual pH scale, values below 7 are acidic."
+  },
+  {
+    "id": "science-g7-06",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Motion",
+    "prompt": "A cyclist travels 60 m in 10 s. What is the average speed?",
+    "options": [
+      "0.17 m/s",
+      "6 m/s",
+      "50 m/s",
+      "600 m/s"
+    ],
+    "answer": 1,
+    "explanation": "Average speed is distance divided by time: 60 ÷ 10 = 6 m/s."
+  },
+  {
+    "id": "science-g7-07",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Heat transfer",
+    "prompt": "Which process transfers heat through direct contact?",
+    "options": [
+      "Condensation",
+      "Refraction",
+      "Conduction",
+      "Photosynthesis"
+    ],
+    "answer": 2,
+    "explanation": "Conduction transfers thermal energy through interactions between nearby particles."
+  },
+  {
+    "id": "science-g7-08",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Waves",
+    "prompt": "Which wave property describes the number of vibrations per second?",
+    "options": [
+      "Wavelength",
+      "Amplitude",
+      "Distance",
+      "Frequency"
+    ],
+    "answer": 3,
+    "explanation": "Frequency is measured in hertz, or cycles per second."
+  },
+  {
+    "id": "science-g7-09",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Earth systems",
+    "prompt": "Which layer of Earth lies between the crust and core?",
+    "options": [
+      "Mantle",
+      "Atmosphere",
+      "Hydrosphere",
+      "Inner core"
+    ],
+    "answer": 0,
+    "explanation": "The mantle is the thick rocky layer below the crust and above the core."
+  },
+  {
+    "id": "science-g7-10",
+    "subject": "science",
+    "grade": 7,
+    "topic": "Ecology",
+    "prompt": "What is biodiversity?",
+    "options": [
+      "Number of rocks only",
+      "Variety of living organisms",
+      "Amount of road traffic",
+      "Size of a single leaf"
+    ],
+    "answer": 1,
+    "explanation": "Biodiversity describes variation in living things, including species and ecosystems."
+  },
+  {
+    "id": "science-g8-01",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Newton's laws",
+    "prompt": "A book rests on a table. Why does it remain at rest?",
+    "options": [
+      "Gravity disappears",
+      "The forces on it are balanced",
+      "It has no mass",
+      "The table exerts no force"
+    ],
+    "answer": 1,
+    "explanation": "The table's upward force balances the book's downward weight."
+  },
+  {
+    "id": "science-g8-02",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Force and motion",
+    "prompt": "What is the acceleration of a 2 kg object under a net force of 6 N?",
+    "options": [
+      "12 m/s²",
+      "8 m/s²",
+      "3 m/s²",
+      "0.33 m/s²"
+    ],
+    "answer": 2,
+    "explanation": "Newton's second law gives a = F ÷ m = 6 ÷ 2 = 3 m/s²."
+  },
+  {
+    "id": "science-g8-03",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Electricity",
+    "prompt": "A circuit has 6 V across a 3 Ω resistor. What is its current?",
+    "options": [
+      "18 A",
+      "9 A",
+      "0.5 A",
+      "2 A"
+    ],
+    "answer": 3,
+    "explanation": "Ohm's law gives I = V ÷ R = 6 ÷ 3 = 2 A."
+  },
+  {
+    "id": "science-g8-04",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Atomic structure",
+    "prompt": "Which particles are found in an atomic nucleus?",
+    "options": [
+      "Protons and neutrons",
+      "Electrons only",
+      "Protons and electrons only",
+      "Photons and electrons"
+    ],
+    "answer": 0,
+    "explanation": "The nucleus contains protons and, in most atoms, neutrons."
+  },
+  {
+    "id": "science-g8-05",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Periodic table",
+    "prompt": "What determines the atomic number of an element?",
+    "options": [
+      "Number of neutrons only",
+      "Number of protons",
+      "Number of electron shells",
+      "Number of chemical bonds"
+    ],
+    "answer": 1,
+    "explanation": "Every element is identified by its number of protons."
+  },
+  {
+    "id": "science-g8-06",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Genetics",
+    "prompt": "Which molecule carries inherited instructions in cells?",
+    "options": [
+      "Starch",
+      "Water",
+      "DNA",
+      "Table salt"
+    ],
+    "answer": 2,
+    "explanation": "DNA contains genetic information passed from parents to offspring."
+  },
+  {
+    "id": "science-g8-07",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Cell division",
+    "prompt": "What does mitosis usually produce from one parent cell?",
+    "options": [
+      "Four sperm cells",
+      "One cell with no DNA",
+      "Eight unrelated cells",
+      "Two genetically similar daughter cells"
+    ],
+    "answer": 3,
+    "explanation": "Mitosis separates copied chromosomes into two daughter cells."
+  },
+  {
+    "id": "science-g8-08",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Earthquakes",
+    "prompt": "Where does an earthquake start inside Earth?",
+    "options": [
+      "Focus",
+      "Epicenter",
+      "Cloud base",
+      "North Pole"
+    ],
+    "answer": 0,
+    "explanation": "The focus is the underground point where fault movement begins."
+  },
+  {
+    "id": "science-g8-09",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Weather systems",
+    "prompt": "What usually happens to warm air compared with cooler surrounding air?",
+    "options": [
+      "It always sinks",
+      "It rises because it is less dense",
+      "It becomes solid",
+      "It loses all molecules"
+    ],
+    "answer": 1,
+    "explanation": "Warm air expands and usually becomes less dense than cooler surrounding air."
+  },
+  {
+    "id": "science-g8-10",
+    "subject": "science",
+    "grade": 8,
+    "topic": "Food webs",
+    "prompt": "What may happen if a predator disappears from a food web?",
+    "options": [
+      "All producers vanish instantly",
+      "No population can change",
+      "Its prey population may increase",
+      "Every animal becomes a producer"
+    ],
+    "answer": 2,
+    "explanation": "With less predation, prey may increase, though other factors also affect populations."
+  },
+  {
+    "id": "science-g9-01",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Respiration",
+    "prompt": "What is a main purpose of cellular respiration?",
+    "options": [
+      "Making soil from air",
+      "Turning all oxygen into DNA",
+      "Releasing usable energy from food",
+      "Removing every cell membrane"
+    ],
+    "answer": 2,
+    "explanation": "Cells break down food molecules to release energy, much of it stored in ATP."
+  },
+  {
+    "id": "science-g9-02",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Circulation",
+    "prompt": "Which blood vessels carry blood away from the heart?",
+    "options": [
+      "Veins",
+      "Capillaries only",
+      "Airways",
+      "Arteries"
+    ],
+    "answer": 3,
+    "explanation": "Arteries carry blood away from the heart; oxygen content depends on the circuit."
+  },
+  {
+    "id": "science-g9-03",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Inheritance",
+    "prompt": "For a simple dominant trait, what genotype is heterozygous?",
+    "options": [
+      "Aa",
+      "AA",
+      "aa",
+      "AAA"
+    ],
+    "answer": 0,
+    "explanation": "Heterozygous means having two different alleles, such as A and a."
+  },
+  {
+    "id": "science-g9-04",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Biodiversity",
+    "prompt": "Why can habitat loss threaten species?",
+    "options": [
+      "It guarantees more resources",
+      "It removes food, shelter, and breeding spaces",
+      "It stops all competition",
+      "It makes every organism stronger"
+    ],
+    "answer": 1,
+    "explanation": "Species depend on suitable habitats for survival and reproduction."
+  },
+  {
+    "id": "science-g9-05",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Chemical bonding",
+    "prompt": "What happens in a covalent bond?",
+    "options": [
+      "Atoms share only protons",
+      "Nuclei disappear",
+      "Atoms share electron pairs",
+      "Neutrons flow between batteries"
+    ],
+    "answer": 2,
+    "explanation": "Covalent bonding involves shared pairs of electrons."
+  },
+  {
+    "id": "science-g9-06",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Moles",
+    "prompt": "Approximately how many particles are in one mole?",
+    "options": [
+      "6.02 × 10³",
+      "6.02 × 10⁻²³",
+      "602",
+      "6.02 × 10²³"
+    ],
+    "answer": 3,
+    "explanation": "Avogadro's constant is approximately 6.02 × 10²³ particles per mole."
+  },
+  {
+    "id": "science-g9-07",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Motion",
+    "prompt": "Ignoring air resistance, which horizontal force acts on a projectile after release?",
+    "options": [
+      "No horizontal force",
+      "A constant forward push",
+      "A force created by its speed",
+      "Gravity acting horizontally"
+    ],
+    "answer": 0,
+    "explanation": "Gravity acts vertically, so horizontal velocity stays constant without air resistance."
+  },
+  {
+    "id": "science-g9-08",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Work",
+    "prompt": "A 10 N force moves an object 3 m in the force's direction. How much work is done?",
+    "options": [
+      "3 J",
+      "30 J",
+      "13 J",
+      "0.3 J"
+    ],
+    "answer": 1,
+    "explanation": "Work equals force times displacement in the force's direction: 10 × 3 = 30 J."
+  },
+  {
+    "id": "science-g9-09",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Volcanoes",
+    "prompt": "Which warning is a reason to follow official evacuation advice near a volcano?",
+    "options": [
+      "A clear night sky alone",
+      "A change in the weekday",
+      "Increasing volcanic activity",
+      "A distant rainbow"
+    ],
+    "answer": 2,
+    "explanation": "Monitoring changes in volcanic activity helps authorities assess danger."
+  },
+  {
+    "id": "science-g9-10",
+    "subject": "science",
+    "grade": 9,
+    "topic": "Climate",
+    "prompt": "What best describes climate?",
+    "options": [
+      "Only today's temperature",
+      "One thunderstorm",
+      "A single wind gust",
+      "Long-term patterns of weather"
+    ],
+    "answer": 3,
+    "explanation": "Climate summarizes typical weather patterns over many years."
+  },
+  {
+    "id": "science-g10-01",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Plate tectonics",
+    "prompt": "At a divergent plate boundary, what do plates do?",
+    "options": [
+      "Always stop moving",
+      "Slide into the same plate",
+      "Turn into clouds",
+      "Move apart"
+    ],
+    "answer": 3,
+    "explanation": "Divergent boundaries occur where tectonic plates separate."
+  },
+  {
+    "id": "science-g10-02",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Plate tectonics",
+    "prompt": "What often happens when a dense oceanic plate meets a continental plate?",
+    "options": [
+      "The oceanic plate subducts",
+      "Both plates vanish",
+      "The continental plate becomes air",
+      "The ocean instantly dries"
+    ],
+    "answer": 0,
+    "explanation": "The denser oceanic plate commonly sinks beneath the continental plate."
+  },
+  {
+    "id": "science-g10-03",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Electromagnetic waves",
+    "prompt": "Which electromagnetic wave has a longer wavelength than visible light?",
+    "options": [
+      "X-ray",
+      "Radio wave",
+      "Gamma ray",
+      "Ultraviolet ray"
+    ],
+    "answer": 1,
+    "explanation": "Radio waves have longer wavelengths and lower frequencies than visible light."
+  },
+  {
+    "id": "science-g10-04",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Optics",
+    "prompt": "What happens to light when it bends entering a different transparent medium?",
+    "options": [
+      "Combustion",
+      "Magnetization",
+      "Refraction",
+      "Evaporation"
+    ],
+    "answer": 2,
+    "explanation": "Refraction is a change in light's direction as its speed changes between media."
+  },
+  {
+    "id": "science-g10-05",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Electric motors",
+    "prompt": "What energy conversion occurs mainly in an electric motor?",
+    "options": [
+      "Chemical to nuclear",
+      "Mechanical to chemical",
+      "Light to gravitational",
+      "Electrical to mechanical"
+    ],
+    "answer": 3,
+    "explanation": "An electric motor uses electrical energy to produce motion."
+  },
+  {
+    "id": "science-g10-06",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Homeostasis",
+    "prompt": "Which response helps cool the human body?",
+    "options": [
+      "Sweating",
+      "Continuous shivering in heat",
+      "Closing all sweat glands",
+      "Increasing body temperature without limit"
+    ],
+    "answer": 0,
+    "explanation": "Evaporation of sweat takes heat from the skin."
+  },
+  {
+    "id": "science-g10-07",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Evolution",
+    "prompt": "What is natural selection?",
+    "options": [
+      "Every organism changes because it wants to",
+      "Inherited traits affecting survival and reproduction become more common",
+      "Individuals choose new genes during life",
+      "All species become identical"
+    ],
+    "answer": 1,
+    "explanation": "Traits that improve reproductive success can increase over generations."
+  },
+  {
+    "id": "science-g10-08",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Reaction rates",
+    "prompt": "Why can raising temperature speed up many chemical reactions?",
+    "options": [
+      "Atoms stop moving",
+      "All catalysts disappear",
+      "Particles collide more often and with more energy",
+      "Mass is created from nothing"
+    ],
+    "answer": 2,
+    "explanation": "Warmer particles generally move faster, producing more effective collisions."
+  },
+  {
+    "id": "science-g10-09",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Conservation of mass",
+    "prompt": "In a sealed reaction, 12 g of reactants form products. What total product mass is expected?",
+    "options": [
+      "6 g",
+      "24 g",
+      "0 g",
+      "12 g"
+    ],
+    "answer": 3,
+    "explanation": "Mass is conserved in an ordinary chemical reaction within a closed system."
+  },
+  {
+    "id": "science-g10-10",
+    "subject": "science",
+    "grade": 10,
+    "topic": "Environmental science",
+    "prompt": "Which action reduces carbon dioxide emissions from electricity use?",
+    "options": [
+      "Using less fossil-fuel-generated electricity",
+      "Burning more coal",
+      "Leaving unused lights on",
+      "Removing all insulation"
+    ],
+    "answer": 0,
+    "explanation": "Reducing electricity demand can reduce fossil fuel burning and associated emissions."
+  }
+]

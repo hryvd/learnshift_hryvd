@@ -555,7 +555,7 @@ const fil: Strings = {
     brandTip: (b: string) => `Sa ${b} phone, payagan din ang Autostart ng LearnShift (Settings › Apps › LearnShift).`,
   },
   onb: {
-    welcome: 'Parehong phone, mas magandang minuto',
+    welcome: 'Scrolling better minutes',
     welcomeSub: 'Kapag humaba ang scroll, inililipat ni Paty ang feed mo sa maliliit na aralin.',
     getStarted: 'Magsimula',
     role: 'Sino ka?',

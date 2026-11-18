@@ -21,6 +21,9 @@ export async function signUp(input: {
   grade?: number | null;
   lang: Lang;
 }) {
+  if (input.role === 'student' && (!Number.isInteger(input.grade) || input.grade! < 1 || input.grade! > 10)) {
+    throw new Error('Choose a grade from 1 to 10.');
+  }
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
     password: input.password,
@@ -80,6 +83,7 @@ export async function myLinkCode(regenerate = false): Promise<string> {
 export async function linkStudent(code: string): Promise<{ student_id: string; name: string }> {
   const { data, error } = await supabase.rpc('link_student', { p_code: code });
   if (error) fail(error);
+  if (data?.error) fail(data.error);
   return data as { student_id: string; name: string };
 }
 
@@ -95,6 +99,7 @@ export async function unlink(guardianId: string, studentId: string) {
 export async function joinClass(code: string): Promise<{ class_id: string; name: string; grade: number }> {
   const { data, error } = await supabase.rpc('join_class', { p_code: code });
   if (error) fail(error);
+  if (data?.error) fail(data.error);
   return data as { class_id: string; name: string; grade: number };
 }
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="a11y_description">Counts swipe cadence in student-chosen apps only. Never reads screen content, messages, or videos.</string>
+    <string name="a11y_description">Uses app identity and scroll-direction events to show a learning break after your next scroll. No touch coordinates, typed text, messages, or screen images are read or stored. Enable only if you want scroll-triggered breaks.</string>
 </resources>
 

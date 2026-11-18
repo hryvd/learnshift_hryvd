@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "english-g1-01",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Letter sounds",
+    "prompt": "Which word starts with the /b/ sound?",
+    "options": [
+      "cat",
+      "sun",
+      "ball",
+      "map"
+    ],
+    "answer": 2,
+    "explanation": "Ball starts with the /b/ sound made by the letter b."
+  },
+  {
+    "id": "english-g1-02",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Rhyming words",
+    "prompt": "Which word rhymes with cat?",
+    "options": [
+      "dog",
+      "cup",
+      "pen",
+      "hat"
+    ],
+    "answer": 3,
+    "explanation": "Cat and hat end with the same /at/ sound."
+  },
+  {
+    "id": "english-g1-03",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Naming words",
+    "prompt": "Which word names an animal?",
+    "options": [
+      "dog",
+      "run",
+      "blue",
+      "soft"
+    ],
+    "answer": 0,
+    "explanation": "A dog is an animal. The other words describe actions or qualities."
+  },
+  {
+    "id": "english-g1-04",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Action words",
+    "prompt": "Which word tells what you can do with your feet?",
+    "options": [
+      "red",
+      "walk",
+      "chair",
+      "small"
+    ],
+    "answer": 1,
+    "explanation": "Walk is an action you do with your feet."
+  },
+  {
+    "id": "english-g1-05",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Opposites",
+    "prompt": "What is the opposite of hot?",
+    "options": [
+      "warm",
+      "bright",
+      "cold",
+      "dry"
+    ],
+    "answer": 2,
+    "explanation": "Cold and hot describe opposite temperatures."
+  },
+  {
+    "id": "english-g1-06",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Describing words",
+    "prompt": "In 'the red bag,' which word tells the color?",
+    "options": [
+      "the",
+      "bag",
+      "tells",
+      "red"
+    ],
+    "answer": 3,
+    "explanation": "Red is the color word describing the bag."
+  },
+  {
+    "id": "english-g1-07",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Sentences",
+    "prompt": "Which sentence starts with a capital letter?",
+    "options": [
+      "I see a bird.",
+      "i see a bird.",
+      "i See a bird.",
+      "i see A bird."
+    ],
+    "answer": 0,
+    "explanation": "A sentence begins with a capital letter, and I is always capitalized."
+  },
+  {
+    "id": "english-g1-08",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Reading details",
+    "prompt": "Lina has a pet fish. What pet does Lina have?",
+    "options": [
+      "a cat",
+      "a fish",
+      "a duck",
+      "a dog"
+    ],
+    "answer": 1,
+    "explanation": "The sentence directly says that Lina has a pet fish."
+  },
+  {
+    "id": "english-g1-09",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Position words",
+    "prompt": "The ball is under the table. Where is the ball?",
+    "options": [
+      "on the table",
+      "inside a bag",
+      "below the table",
+      "above the table"
+    ],
+    "answer": 2,
+    "explanation": "Under means below something."
+  },
+  {
+    "id": "english-g1-10",
+    "subject": "english",
+    "grade": 1,
+    "topic": "Plural nouns",
+    "prompt": "Which word means more than one book?",
+    "options": [
+      "book",
+      "booked",
+      "booking",
+      "books"
+    ],
+    "answer": 3,
+    "explanation": "Adding s to book makes the plural books."
+  },
+  {
+    "id": "english-g2-01",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Nouns",
+    "prompt": "Which word names a place?",
+    "options": [
+      "happy",
+      "jump",
+      "quickly",
+      "school"
+    ],
+    "answer": 3,
+    "explanation": "School names a place where people learn."
+  },
+  {
+    "id": "english-g2-02",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Pronouns",
+    "prompt": "Mila is reading. Which word can replace Mila?",
+    "options": [
+      "She",
+      "It",
+      "They",
+      "We"
+    ],
+    "answer": 0,
+    "explanation": "She can replace the name of one girl or woman."
+  },
+  {
+    "id": "english-g2-03",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Verb agreement",
+    "prompt": "Choose the word: 'The dog ___ loudly.'",
+    "options": [
+      "bark",
+      "barks",
+      "barking",
+      "to bark"
+    ],
+    "answer": 1,
+    "explanation": "A single dog takes the present-tense verb barks."
+  },
+  {
+    "id": "english-g2-04",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Past tense",
+    "prompt": "Which word completes 'Yesterday, we ___ to the park'?",
+    "options": [
+      "walk",
+      "walking",
+      "walked",
+      "walks"
+    ],
+    "answer": 2,
+    "explanation": "Walked tells about an action that happened in the past."
+  },
+  {
+    "id": "english-g2-05",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Adjectives",
+    "prompt": "Which word describes size in 'a tiny kitten'?",
+    "options": [
+      "a",
+      "kitten",
+      "in",
+      "tiny"
+    ],
+    "answer": 3,
+    "explanation": "Tiny tells us that the kitten is very small."
+  },
+  {
+    "id": "english-g2-06",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Question marks",
+    "prompt": "Which mark ends 'Where is my pencil'?",
+    "options": [
+      "?",
+      ".",
+      ",",
+      "!"
+    ],
+    "answer": 0,
+    "explanation": "A question mark ends a sentence that asks a question."
+  },
+  {
+    "id": "english-g2-07",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Sequence",
+    "prompt": "First, wash your hands. Next, eat lunch. What comes first?",
+    "options": [
+      "Eat lunch.",
+      "Wash your hands.",
+      "Clear the table.",
+      "Brush your teeth."
+    ],
+    "answer": 1,
+    "explanation": "The word first tells us to wash our hands before eating."
+  },
+  {
+    "id": "english-g2-08",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Categories",
+    "prompt": "Which word belongs with apple, mango, and banana?",
+    "options": [
+      "carrot",
+      "spoon",
+      "orange",
+      "bread"
+    ],
+    "answer": 2,
+    "explanation": "An orange is a fruit, just like the other three items."
+  },
+  {
+    "id": "english-g2-09",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Contractions",
+    "prompt": "What does can't mean?",
+    "options": [
+      "can now",
+      "could not",
+      "can it",
+      "cannot"
+    ],
+    "answer": 3,
+    "explanation": "Can't is the shortened form of cannot."
+  },
+  {
+    "id": "english-g2-10",
+    "subject": "english",
+    "grade": 2,
+    "topic": "Reading inference",
+    "prompt": "Ben took an umbrella because dark clouds filled the sky. What did he expect?",
+    "options": [
+      "rain",
+      "snow inside",
+      "a rainbow at night",
+      "a very dry day"
+    ],
+    "answer": 0,
+    "explanation": "Dark clouds can signal rain, and an umbrella can keep Ben dry."
+  },
+  {
+    "id": "english-g3-01",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Common and proper nouns",
+    "prompt": "Which is a proper noun?",
+    "options": [
+      "Manila",
+      "city",
+      "street",
+      "country"
+    ],
+    "answer": 0,
+    "explanation": "Manila is the specific name of a city, so it begins with a capital letter."
+  },
+  {
+    "id": "english-g3-02",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Possessives",
+    "prompt": "Which means 'the bag belonging to one girl'?",
+    "options": [
+      "the girls bag",
+      "the girl's bag",
+      "the girls' bags",
+      "the girl bag's"
+    ],
+    "answer": 1,
+    "explanation": "An apostrophe followed by s shows that the bag belongs to one girl."
+  },
+  {
+    "id": "english-g3-03",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Comparisons",
+    "prompt": "Choose the correct word: 'This box is ___ than that one.'",
+    "options": [
+      "heaviest",
+      "heavy",
+      "heavier",
+      "heavily"
+    ],
+    "answer": 2,
+    "explanation": "Heavier compares the weight of two things."
+  },
+  {
+    "id": "english-g3-04",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Adverbs",
+    "prompt": "In 'The turtle moved slowly,' which word tells how it moved?",
+    "options": [
+      "turtle",
+      "the",
+      "moved",
+      "slowly"
+    ],
+    "answer": 3,
+    "explanation": "Slowly is an adverb that tells how the turtle moved."
+  },
+  {
+    "id": "english-g3-05",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Synonyms",
+    "prompt": "Which word means nearly the same as glad?",
+    "options": [
+      "happy",
+      "angry",
+      "tired",
+      "afraid"
+    ],
+    "answer": 0,
+    "explanation": "Glad and happy both express pleasure."
+  },
+  {
+    "id": "english-g3-06",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Antonyms",
+    "prompt": "Which word is the opposite of empty?",
+    "options": [
+      "open",
+      "full",
+      "wide",
+      "light"
+    ],
+    "answer": 1,
+    "explanation": "Full and empty describe opposite amounts in a container."
+  },
+  {
+    "id": "english-g3-07",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Cause and effect",
+    "prompt": "The road was wet because it rained. What caused the wet road?",
+    "options": [
+      "The road was long.",
+      "The sun was bright.",
+      "The rain fell.",
+      "The cars stopped."
+    ],
+    "answer": 2,
+    "explanation": "The word because introduces the cause: it rained."
+  },
+  {
+    "id": "english-g3-08",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Main idea",
+    "prompt": "Bees visit flowers. They carry pollen between plants. This helps many plants make seeds. What is the main idea?",
+    "options": [
+      "All flowers are yellow.",
+      "Bees live only in gardens.",
+      "Seeds always grow overnight.",
+      "Bees help plants reproduce."
+    ],
+    "answer": 3,
+    "explanation": "All three sentences explain how bees help plants make seeds."
+  },
+  {
+    "id": "english-g3-09",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Prefixes",
+    "prompt": "What does the prefix un- mean in unhappy?",
+    "options": [
+      "not",
+      "again",
+      "before",
+      "many"
+    ],
+    "answer": 0,
+    "explanation": "Unhappy means not happy; un- adds the meaning not."
+  },
+  {
+    "id": "english-g3-10",
+    "subject": "english",
+    "grade": 3,
+    "topic": "Reference words",
+    "prompt": "Sara gave Ana a book. Ana thanked her. Who does her refer to?",
+    "options": [
+      "Ana",
+      "Sara",
+      "the book",
+      "a teacher"
+    ],
+    "answer": 1,
+    "explanation": "Ana thanked Sara, the person who gave her the book."
+  },
+  {
+    "id": "english-g4-01",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Verb tense",
+    "prompt": "Which sentence is in the future tense?",
+    "options": [
+      "We planted a tree.",
+      "We will plant a tree.",
+      "We plant a tree.",
+      "We are planting a tree."
+    ],
+    "answer": 1,
+    "explanation": "Will plant describes something that will happen later."
+  },
+  {
+    "id": "english-g4-02",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Subject and predicate",
+    "prompt": "What is the subject in 'The young artist painted a mural'?",
+    "options": [
+      "painted a mural",
+      "a mural",
+      "The young artist",
+      "painted"
+    ],
+    "answer": 2,
+    "explanation": "The subject tells who performed the action: the young artist."
+  },
+  {
+    "id": "english-g4-03",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Coordinating conjunctions",
+    "prompt": "Choose the best connector: 'I wanted to play outside, ___ it was raining.'",
+    "options": [
+      "and",
+      "or",
+      "so",
+      "but"
+    ],
+    "answer": 3,
+    "explanation": "But shows a contrast between wanting to play and the rainy weather."
+  },
+  {
+    "id": "english-g4-04",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Context clues",
+    "prompt": "The room was silent; nobody spoke. What does silent mean?",
+    "options": [
+      "quiet",
+      "crowded",
+      "bright",
+      "messy"
+    ],
+    "answer": 0,
+    "explanation": "Nobody spoke gives a clue that the room was quiet."
+  },
+  {
+    "id": "english-g4-05",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Figurative language",
+    "prompt": "Which sentence uses a simile?",
+    "options": [
+      "The water filled the cup.",
+      "The water shone like glass.",
+      "The water was cold.",
+      "The water spilled."
+    ],
+    "answer": 1,
+    "explanation": "A simile compares things using like or as."
+  },
+  {
+    "id": "english-g4-06",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Fact and opinion",
+    "prompt": "Which statement is an opinion?",
+    "options": [
+      "Mangoes have seeds.",
+      "Mangoes grow on trees.",
+      "Mangoes are the tastiest fruit.",
+      "Mangoes can be green."
+    ],
+    "answer": 2,
+    "explanation": "Tastiest expresses a personal judgment, not a fact everyone must share."
+  },
+  {
+    "id": "english-g4-07",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Dictionary order",
+    "prompt": "Which word comes first in a dictionary?",
+    "options": [
+      "beach",
+      "bird",
+      "boat",
+      "basket"
+    ],
+    "answer": 3,
+    "explanation": "All start with b; a in basket comes before e, i, and o."
+  },
+  {
+    "id": "english-g4-08",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Pronoun agreement",
+    "prompt": "Choose the pronoun: 'Rico and I packed ___ lunches.'",
+    "options": [
+      "our",
+      "his",
+      "her",
+      "its"
+    ],
+    "answer": 0,
+    "explanation": "Rico and I refers to we, so the matching possessive word is our."
+  },
+  {
+    "id": "english-g4-09",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Summarizing",
+    "prompt": "Nena planted seeds, watered them daily, and watched them sprout. Which is the best summary?",
+    "options": [
+      "Nena bought a new watering can.",
+      "Nena cared for seeds as they grew.",
+      "Nena forgot her plants.",
+      "Nena picked ripe fruit."
+    ],
+    "answer": 1,
+    "explanation": "The summary includes the main actions without adding new events."
+  },
+  {
+    "id": "english-g4-10",
+    "subject": "english",
+    "grade": 4,
+    "topic": "Author's purpose",
+    "prompt": "A recipe lists ingredients and steps for cooking rice. What is its main purpose?",
+    "options": [
+      "to frighten",
+      "to persuade voters",
+      "to instruct",
+      "to tell a fantasy"
+    ],
+    "answer": 2,
+    "explanation": "A recipe gives instructions for preparing food."
+  },
+  {
+    "id": "english-g5-01",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Irregular past tense",
+    "prompt": "Choose the correct word: 'Yesterday, the children ___ a song.'",
+    "options": [
+      "sing",
+      "sung",
+      "sang",
+      "singing"
+    ],
+    "answer": 2,
+    "explanation": "Sang is the simple past form of sing."
+  },
+  {
+    "id": "english-g5-02",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Present perfect",
+    "prompt": "Which sentence uses the present perfect tense?",
+    "options": [
+      "I finished my homework yesterday.",
+      "I am finishing my homework.",
+      "I will finish my homework.",
+      "I have finished my homework."
+    ],
+    "answer": 3,
+    "explanation": "Have followed by the past participle finished forms the present perfect."
+  },
+  {
+    "id": "english-g5-03",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Relative pronouns",
+    "prompt": "Choose the word: 'The teacher ___ helped us is here.'",
+    "options": [
+      "who",
+      "which",
+      "where",
+      "when"
+    ],
+    "answer": 0,
+    "explanation": "Who introduces a clause about a person."
+  },
+  {
+    "id": "english-g5-04",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Direct speech",
+    "prompt": "Which sentence correctly punctuates direct speech?",
+    "options": [
+      "Ana said \"Please sit down\"",
+      "Ana said, \"Please sit down.\"",
+      "Ana said, Please sit down.",
+      "Ana said. \"Please sit down,\""
+    ],
+    "answer": 1,
+    "explanation": "A comma introduces the quoted words, and the sentence-ending period goes inside the quotation marks."
+  },
+  {
+    "id": "english-g5-05",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Context clues",
+    "prompt": "The trail was treacherous, with loose rocks and slippery mud. What does treacherous mean here?",
+    "options": [
+      "short",
+      "crowded",
+      "dangerous",
+      "beautiful"
+    ],
+    "answer": 2,
+    "explanation": "Loose rocks and slippery mud make the trail dangerous."
+  },
+  {
+    "id": "english-g5-06",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Metaphor",
+    "prompt": "Which sentence contains a metaphor?",
+    "options": [
+      "Her smile was wide.",
+      "She smiled at the baby.",
+      "Her smile lasted a moment.",
+      "Her smile was sunshine."
+    ],
+    "answer": 3,
+    "explanation": "Calling a smile sunshine directly compares it to something bright and comforting."
+  },
+  {
+    "id": "english-g5-07",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Text structure",
+    "prompt": "A paragraph explains how drought leads to crop loss. Which structure does it mainly use?",
+    "options": [
+      "cause and effect",
+      "alphabetical order",
+      "question and answer",
+      "time sequence only"
+    ],
+    "answer": 0,
+    "explanation": "The paragraph explains a cause, drought, and its result, crop loss."
+  },
+  {
+    "id": "english-g5-08",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Reliable information",
+    "prompt": "Which source is best for checking tomorrow's official weather forecast in the Philippines?",
+    "options": [
+      "an old storybook",
+      "PAGASA's forecast",
+      "an unnamed viral post",
+      "a friend's guess"
+    ],
+    "answer": 1,
+    "explanation": "PAGASA is the Philippine government agency that issues weather forecasts."
+  },
+  {
+    "id": "english-g5-09",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Conclusions",
+    "prompt": "A class used reusable bottles. Its bin contained fewer disposable bottles that week. Which conclusion is supported?",
+    "options": [
+      "All plastic waste disappeared worldwide.",
+      "Every class changed its habits.",
+      "Using reusable bottles reduced bottle waste in that class.",
+      "Reusable bottles never need washing."
+    ],
+    "answer": 2,
+    "explanation": "The evidence supports a local reduction in disposable bottle waste, not a worldwide claim."
+  },
+  {
+    "id": "english-g5-10",
+    "subject": "english",
+    "grade": 5,
+    "topic": "Theme",
+    "prompt": "In a story, a child admits breaking a vase and helps repair it. Which theme fits best?",
+    "options": [
+      "Winning is everything.",
+      "Mistakes should always be hidden.",
+      "Money solves every problem.",
+      "Taking responsibility builds trust."
+    ],
+    "answer": 3,
+    "explanation": "Admitting a mistake and helping fix it show responsibility and honesty."
+  },
+  {
+    "id": "english-g6-01",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Subject-verb agreement",
+    "prompt": "Choose the correct verb: 'Each of the players ___ a water bottle.'",
+    "options": [
+      "have",
+      "are having",
+      "were having",
+      "has"
+    ],
+    "answer": 3,
+    "explanation": "Each is singular, so it takes has."
+  },
+  {
+    "id": "english-g6-02",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Active and passive voice",
+    "prompt": "Which sentence is in the passive voice?",
+    "options": [
+      "The mural was painted by the class.",
+      "The class painted the mural.",
+      "The class paints murals.",
+      "The artists are painting."
+    ],
+    "answer": 0,
+    "explanation": "The subject, the mural, receives the action in the passive voice."
+  },
+  {
+    "id": "english-g6-03",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Conditionals",
+    "prompt": "Complete the sentence: 'If it rains tomorrow, we ___ indoors.'",
+    "options": [
+      "stayed",
+      "will stay",
+      "had stayed",
+      "were staying"
+    ],
+    "answer": 1,
+    "explanation": "A likely future condition uses if plus present tense and will in the result clause."
+  },
+  {
+    "id": "english-g6-04",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Pronoun reference",
+    "prompt": "Which sentence makes the reference clearest?",
+    "options": [
+      "After Carlo met Dan, he called his mother.",
+      "He met him and called her.",
+      "After Carlo met Dan, Carlo called his mother.",
+      "After they met, he called her."
+    ],
+    "answer": 2,
+    "explanation": "Repeating Carlo makes clear who made the call."
+  },
+  {
+    "id": "english-g6-05",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Figurative language",
+    "prompt": "What does 'I have a mountain of homework' suggest?",
+    "options": [
+      "The homework is on a real mountain.",
+      "The homework is made of stone.",
+      "The speaker has no homework.",
+      "The speaker has a large amount of homework."
+    ],
+    "answer": 3,
+    "explanation": "Mountain is used figuratively to suggest a very large amount."
+  },
+  {
+    "id": "english-g6-06",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Evaluating claims",
+    "prompt": "A post claims a drink cures every illness but gives no evidence. What should you do first?",
+    "options": [
+      "Check credible medical sources.",
+      "Share it immediately.",
+      "Assume many likes prove it.",
+      "Stop all medical treatment."
+    ],
+    "answer": 0,
+    "explanation": "Reliable sources and evidence should be checked before accepting a health claim."
+  },
+  {
+    "id": "english-g6-07",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Paraphrasing",
+    "prompt": "Which best paraphrases 'Regular practice improves a skill'?",
+    "options": [
+      "Skills improve without effort.",
+      "A skill gets better when you practise often.",
+      "Practice is only useful once.",
+      "Every skill takes the same time."
+    ],
+    "answer": 1,
+    "explanation": "The paraphrase keeps the original meaning in different words."
+  },
+  {
+    "id": "english-g6-08",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Point of view",
+    "prompt": "Which sentence is written in first person?",
+    "options": [
+      "She opened the gate and waved.",
+      "They opened the gate and waved.",
+      "I opened the gate and waved.",
+      "Marco opened the gate and waved."
+    ],
+    "answer": 2,
+    "explanation": "The pronoun I shows that the narrator tells the story from their own perspective."
+  },
+  {
+    "id": "english-g6-09",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Poetry",
+    "prompt": "What is a stanza?",
+    "options": [
+      "the title of every poem",
+      "a single letter",
+      "the author of a poem",
+      "a group of lines in a poem"
+    ],
+    "answer": 3,
+    "explanation": "A stanza groups lines in a poem, much as a paragraph groups sentences."
+  },
+  {
+    "id": "english-g6-10",
+    "subject": "english",
+    "grade": 6,
+    "topic": "Evidence",
+    "prompt": "Which detail best supports 'The library is accessible to wheelchair users'?",
+    "options": [
+      "It has a ramp and wide doorways.",
+      "Its roof is blue.",
+      "It owns mystery novels.",
+      "It opens on Tuesdays."
+    ],
+    "answer": 0,
+    "explanation": "A ramp and wide doorways directly support physical access for wheelchair users."
+  },
+  {
+    "id": "english-g7-01",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Sentence types",
+    "prompt": "Which is a complex sentence?",
+    "options": [
+      "Because it rained, the match stopped.",
+      "The match stopped.",
+      "The match stopped, and we left.",
+      "The match stopped; we left."
+    ],
+    "answer": 0,
+    "explanation": "A complex sentence includes an independent clause and a dependent clause such as because it rained."
+  },
+  {
+    "id": "english-g7-02",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Modifiers",
+    "prompt": "Which sentence avoids a dangling modifier?",
+    "options": [
+      "Walking home, a rainbow appeared.",
+      "Walking home, Liza saw a rainbow.",
+      "Walking home, the rain began.",
+      "Walking home, the road was wet."
+    ],
+    "answer": 1,
+    "explanation": "Liza is the person walking, so she correctly follows the introductory phrase."
+  },
+  {
+    "id": "english-g7-03",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Tone",
+    "prompt": "A writer says, 'We can rebuild together, one step at a time.' What tone is most evident?",
+    "options": [
+      "mocking",
+      "furious",
+      "hopeful",
+      "indifferent"
+    ],
+    "answer": 2,
+    "explanation": "The words suggest confidence that people can improve things together."
+  },
+  {
+    "id": "english-g7-04",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Characterization",
+    "prompt": "A character shares her last sandwich with a hungry friend. What trait does this action suggest?",
+    "options": [
+      "carelessness",
+      "jealousy",
+      "dishonesty",
+      "generosity"
+    ],
+    "answer": 3,
+    "explanation": "Sharing a limited resource to help someone suggests generosity."
+  },
+  {
+    "id": "english-g7-05",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Conflict",
+    "prompt": "A character struggles to decide whether to admit a mistake. What kind of conflict is this?",
+    "options": [
+      "internal conflict",
+      "conflict with weather",
+      "conflict with a machine",
+      "physical conflict with an animal"
+    ],
+    "answer": 0,
+    "explanation": "The struggle takes place within the character's thoughts and feelings."
+  },
+  {
+    "id": "english-g7-06",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Verifying sources",
+    "prompt": "Two websites disagree about a historical date. What is the best next step?",
+    "options": [
+      "Choose the brighter website.",
+      "Compare reliable references and original records.",
+      "Use the first search result without checking.",
+      "Average the two dates."
+    ],
+    "answer": 1,
+    "explanation": "Checking trustworthy references and original records helps resolve factual disagreement."
+  },
+  {
+    "id": "english-g7-07",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Persuasion",
+    "prompt": "Which sentence makes a claim that needs evidence?",
+    "options": [
+      "The library closes at five on its posted schedule.",
+      "The notice says 'Welcome.'",
+      "Longer library hours improve student reading habits.",
+      "The library's name is printed above the door."
+    ],
+    "answer": 2,
+    "explanation": "The claim connects longer hours with improved habits and needs supporting evidence."
+  },
+  {
+    "id": "english-g7-08",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Connotation",
+    "prompt": "Which word has the most positive meaning for someone who saves money carefully?",
+    "options": [
+      "stingy",
+      "miserly",
+      "cheap",
+      "thrifty"
+    ],
+    "answer": 3,
+    "explanation": "Thrifty usually praises careful spending, while the other choices often criticize it."
+  },
+  {
+    "id": "english-g7-09",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Figures of speech",
+    "prompt": "What device appears in 'The leaves danced in the wind'?",
+    "options": [
+      "personification",
+      "literal definition",
+      "onomatopoeia",
+      "technical description"
+    ],
+    "answer": 0,
+    "explanation": "The leaves are given the human action of dancing."
+  },
+  {
+    "id": "english-g7-10",
+    "subject": "english",
+    "grade": 7,
+    "topic": "Quotation and attribution",
+    "prompt": "When using a sentence exactly from a source, what should a writer do?",
+    "options": [
+      "Change one letter and claim authorship.",
+      "Use quotation marks and identify the source.",
+      "Leave out the source.",
+      "Present it as personal experience."
+    ],
+    "answer": 1,
+    "explanation": "Exact wording must be clearly marked as a quotation and attributed to its source."
+  },
+  {
+    "id": "english-g8-01",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Parallel structure",
+    "prompt": "Which sentence uses parallel structure?",
+    "options": [
+      "She enjoys reading, to draw, and swimming.",
+      "She enjoys reading, drawing, and swimming.",
+      "She enjoys to read, drawing, and swims.",
+      "She enjoys reading, drawing, and to swim."
+    ],
+    "answer": 1,
+    "explanation": "The three activities all use the same -ing form."
+  },
+  {
+    "id": "english-g8-02",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Reported speech",
+    "prompt": "Ana said, 'I am tired.' Which is a standard past-tense report?",
+    "options": [
+      "Ana said that I am tired.",
+      "Ana said that she were tired.",
+      "Ana said that she was tired.",
+      "Ana said that tired she is."
+    ],
+    "answer": 2,
+    "explanation": "In this report, I changes to she and am changes to was."
+  },
+  {
+    "id": "english-g8-03",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Modal verbs",
+    "prompt": "Which sentence expresses a polite request?",
+    "options": [
+      "You closed the window.",
+      "The window is closed.",
+      "You must have closed the window.",
+      "Could you close the window, please?"
+    ],
+    "answer": 3,
+    "explanation": "Could you with please politely asks someone to do something."
+  },
+  {
+    "id": "english-g8-04",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Irony",
+    "prompt": "A story's fire station burns down. Why might this be situational irony?",
+    "options": [
+      "The outcome contrasts with what readers expect.",
+      "The narrator uses a rhyme.",
+      "The story has no conflict.",
+      "The building speaks."
+    ],
+    "answer": 0,
+    "explanation": "Readers expect a fire station to prevent or fight fires, so its burning creates an unexpected contrast."
+  },
+  {
+    "id": "english-g8-05",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Evidence quality",
+    "prompt": "Which evidence best supports a claim about a school's average reading time?",
+    "options": [
+      "One student's guess about everyone.",
+      "A documented survey of a representative group of its students.",
+      "A celebrity's unrelated opinion.",
+      "A photo of one book."
+    ],
+    "answer": 1,
+    "explanation": "A representative survey provides relevant data about the school's students."
+  },
+  {
+    "id": "english-g8-06",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Bias",
+    "prompt": "An advertisement compares only its product's strengths with a competitor's weaknesses. What is a likely problem?",
+    "options": [
+      "balanced comparison",
+      "complete reporting",
+      "selective presentation of information",
+      "neutral wording"
+    ],
+    "answer": 2,
+    "explanation": "Leaving out inconvenient facts can make a comparison biased."
+  },
+  {
+    "id": "english-g8-07",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Text cohesion",
+    "prompt": "Which transition signals contrast?",
+    "options": [
+      "therefore",
+      "similarly",
+      "for example",
+      "however"
+    ],
+    "answer": 3,
+    "explanation": "However introduces an idea that contrasts with the previous one."
+  },
+  {
+    "id": "english-g8-08",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Argument structure",
+    "prompt": "What is a counterclaim?",
+    "options": [
+      "a position that opposes the main claim",
+      "the title of an argument",
+      "a repeated definition",
+      "an unrelated anecdote"
+    ],
+    "answer": 0,
+    "explanation": "A counterclaim presents an opposing position that an argument may address."
+  },
+  {
+    "id": "english-g8-09",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Literary setting",
+    "prompt": "What does setting mainly describe?",
+    "options": [
+      "only the main character's name",
+      "where and when a story occurs",
+      "the number of chapters",
+      "the author's signature"
+    ],
+    "answer": 1,
+    "explanation": "Setting includes the place, time, and surroundings of a story."
+  },
+  {
+    "id": "english-g8-10",
+    "subject": "english",
+    "grade": 8,
+    "topic": "Evaluating headlines",
+    "prompt": "A headline says 'Everyone hates the new rule,' but the article quotes only two people. What is the weakness?",
+    "options": [
+      "Two quotations always prove a universal claim.",
+      "A headline never needs support.",
+      "The evidence does not justify the word everyone.",
+      "The article must be a poem."
+    ],
+    "answer": 2,
+    "explanation": "Two opinions cannot establish what every person thinks."
+  },
+  {
+    "id": "english-g9-01",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Conditionals",
+    "prompt": "Complete: 'If I had more time now, I ___ another chapter.'",
+    "options": [
+      "will read",
+      "had read",
+      "would read",
+      "am reading"
+    ],
+    "answer": 2,
+    "explanation": "An unreal present condition commonly uses if plus past form and would plus base verb."
+  },
+  {
+    "id": "english-g9-02",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Participial phrases",
+    "prompt": "Which phrase modifies the correct subject?",
+    "options": [
+      "Exhausted after practice, the bus arrived.",
+      "Exhausted after practice, the rain fell.",
+      "Exhausted after practice, the clock struck six.",
+      "Exhausted after practice, the team rested."
+    ],
+    "answer": 3,
+    "explanation": "The team is exhausted, so it correctly follows the introductory phrase."
+  },
+  {
+    "id": "english-g9-03",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Formal register",
+    "prompt": "Which wording is most suitable for a formal school report?",
+    "options": [
+      "The results indicate a decrease in waste.",
+      "The results are, like, super cool.",
+      "Stuff got way better, you know.",
+      "OMG, trash went down!"
+    ],
+    "answer": 0,
+    "explanation": "The first option uses precise, neutral wording suitable for formal reporting."
+  },
+  {
+    "id": "english-g9-04",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Logical fallacies",
+    "prompt": "An argument says a claim is true only because many people believe it. What is this appeal called?",
+    "options": [
+      "cause and effect",
+      "bandwagon",
+      "definition",
+      "analogy"
+    ],
+    "answer": 1,
+    "explanation": "A bandwagon appeal treats popularity as proof, even though popularity alone does not establish truth."
+  },
+  {
+    "id": "english-g9-05",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Correlation and causation",
+    "prompt": "A survey finds that students who read more score higher. What can it establish by itself?",
+    "options": [
+      "that reading alone caused every higher score",
+      "that no other factor matters",
+      "an association between reading and scores",
+      "that all readers get perfect scores"
+    ],
+    "answer": 2,
+    "explanation": "A survey can show an association, but other factors may also influence scores."
+  },
+  {
+    "id": "english-g9-06",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Research questions",
+    "prompt": "Which question is focused enough for a small school research project?",
+    "options": [
+      "What is all knowledge?",
+      "Why does everything happen?",
+      "How can every problem in the world be solved?",
+      "How many students in Grade 9 use the school library each week?"
+    ],
+    "answer": 3,
+    "explanation": "The focused question identifies a specific group, behavior, and time frame."
+  },
+  {
+    "id": "english-g9-07",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Literary symbolism",
+    "prompt": "A repaired bridge in a story may symbolize renewed friendship. What makes this a symbol?",
+    "options": [
+      "A concrete object represents a broader idea.",
+      "Every bridge has only one meaning.",
+      "The object has no role in the story.",
+      "The writer gives a dictionary definition."
+    ],
+    "answer": 0,
+    "explanation": "Symbols connect concrete things to wider meanings supported by the story."
+  },
+  {
+    "id": "english-g9-08",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Synthesis",
+    "prompt": "What does it mean to synthesize information from two articles?",
+    "options": [
+      "Copy both articles word for word.",
+      "Combine relevant ideas into a new, connected understanding.",
+      "Ignore all differences.",
+      "Use only the shorter title."
+    ],
+    "answer": 1,
+    "explanation": "Synthesis brings ideas from sources together and explains their relationships."
+  },
+  {
+    "id": "english-g9-09",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Argument evaluation",
+    "prompt": "Which response addresses a claim instead of attacking a person?",
+    "options": [
+      "You are too young to be right.",
+      "Your clothes look strange.",
+      "The data covers only one class, so the conclusion may be too broad.",
+      "Nobody likes your voice."
+    ],
+    "answer": 2,
+    "explanation": "The first response evaluates the evidence and scope of the claim."
+  },
+  {
+    "id": "english-g9-10",
+    "subject": "english",
+    "grade": 9,
+    "topic": "Citing sources",
+    "prompt": "Why should a research paper include citations?",
+    "options": [
+      "To make every opinion a proven fact.",
+      "To replace all explanation.",
+      "To guarantee the writer never makes errors.",
+      "To credit sources and let readers trace evidence."
+    ],
+    "answer": 3,
+    "explanation": "Citations acknowledge others' work and help readers check the evidence."
+  },
+  {
+    "id": "english-g10-01",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Conditionals",
+    "prompt": "Complete: 'If we had left earlier yesterday, we ___ the bus.'",
+    "options": [
+      "will catch",
+      "would catch now",
+      "catch",
+      "would have caught"
+    ],
+    "answer": 3,
+    "explanation": "An unreal past condition uses had plus participle and would have plus participle."
+  },
+  {
+    "id": "english-g10-02",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Thesis statements",
+    "prompt": "Which is the clearest arguable thesis?",
+    "options": [
+      "Schools should provide refill stations because they can reduce disposable bottle waste.",
+      "Water exists.",
+      "This essay has five paragraphs.",
+      "Many things happen in schools."
+    ],
+    "answer": 0,
+    "explanation": "The statement takes a position and gives a reason that can be supported and debated."
+  },
+  {
+    "id": "english-g10-03",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Qualified claims",
+    "prompt": "Which claim is most carefully qualified?",
+    "options": [
+      "Everyone everywhere prefers printed notes.",
+      "In this survey, most respondents preferred printed notes.",
+      "Printed notes always cause perfect grades.",
+      "No learner ever likes digital notes."
+    ],
+    "answer": 1,
+    "explanation": "The first limits the conclusion to the survey and avoids unsupported universal language."
+  },
+  {
+    "id": "english-g10-04",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Source evaluation",
+    "prompt": "Which detail most strengthens a research article's transparency?",
+    "options": [
+      "It uses many exclamation marks.",
+      "It hides who conducted the study.",
+      "It explains its methods and acknowledges limitations.",
+      "It promises its results can never be questioned."
+    ],
+    "answer": 2,
+    "explanation": "Methods and limitations help readers evaluate how conclusions were reached."
+  },
+  {
+    "id": "english-g10-05",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Rhetorical appeals",
+    "prompt": "A speaker uses data and a clear chain of reasoning. Which appeal is emphasized?",
+    "options": [
+      "pathos",
+      "rhyme",
+      "alliteration",
+      "logos"
+    ],
+    "answer": 3,
+    "explanation": "Logos appeals to reason through evidence and logical explanation."
+  },
+  {
+    "id": "english-g10-06",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Logical fallacies",
+    "prompt": "An advertisement says, 'Buy this app or you will never learn anything.' What is the main flaw?",
+    "options": [
+      "It presents a false dilemma.",
+      "It gives a balanced set of alternatives.",
+      "It proves a causal relationship.",
+      "It provides a neutral summary."
+    ],
+    "answer": 0,
+    "explanation": "The statement wrongly reduces learning to only two possibilities."
+  },
+  {
+    "id": "english-g10-07",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Evaluating arguments",
+    "prompt": "Which question best tests whether evidence is relevant?",
+    "options": [
+      "Is the evidence printed in a large font?",
+      "Does this evidence directly support the claim?",
+      "Does the writer use a long name?",
+      "Is the page mostly blue?"
+    ],
+    "answer": 1,
+    "explanation": "Relevant evidence bears directly on the claim being made."
+  },
+  {
+    "id": "english-g10-08",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Literary criticism",
+    "prompt": "Which interpretation is best supported?",
+    "options": [
+      "A claim based only on the cover color.",
+      "A claim that ignores contradictory scenes.",
+      "A claim about a character supported by several specific passages.",
+      "A claim based only on the reader's favorite actor."
+    ],
+    "answer": 2,
+    "explanation": "Specific passages provide textual evidence for an interpretation."
+  },
+  {
+    "id": "english-g10-09",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Revision",
+    "prompt": "A paragraph repeats one idea three times but gives no example. What revision would improve it most?",
+    "options": [
+      "Add more repeated sentences.",
+      "Replace every short word with a long word.",
+      "Delete the main idea entirely.",
+      "Remove repetition and add a relevant example."
+    ],
+    "answer": 3,
+    "explanation": "Concise wording and a relevant example make the explanation clearer and better supported."
+  },
+  {
+    "id": "english-g10-10",
+    "subject": "english",
+    "grade": 10,
+    "topic": "Academic integrity",
+    "prompt": "A tool suggests an answer with an unfamiliar quotation. What should a student do before using it?",
+    "options": [
+      "Verify the quotation in its original source and cite it accurately.",
+      "Assume generated quotations are always exact.",
+      "Invent a page number.",
+      "Present it as a personal memory."
+    ],
+    "answer": 0,
+    "explanation": "Unverified quotations can be inaccurate; checking the original source supports honest, accurate work."
+  }
+]

@@ -58,7 +58,7 @@ export function PhoneFrame() {
             <PatyAvatar size={36} background="#FDF1E2" />
             <div style={styles.brand}>LearnShift</div>
           </div>
-          <div style={styles.tag}>Same phone, better minutes.</div>
+          <div style={styles.tag}>Scrolling better minutes.</div>
           <p style={styles.copy}>
             Paty notices long scrolls and turns them into 45-second lessons. One app for students, guardians and
             teachers.

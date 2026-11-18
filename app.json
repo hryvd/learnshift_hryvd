@@ -25,11 +25,9 @@
       "permissions": [
         "android.permission.PACKAGE_USAGE_STATS",
         "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
-        "android.permission.PACKAGE_USAGE_STATS",
-        "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
-      ]
+      ],
+      "allowBackup": false
     },
     "web": {
       "output": "single",
@@ -52,7 +50,8 @@
           "color": "#E2582B",
           "defaultChannel": "family"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -70,7 +69,7 @@
     },
     "owner": "janveryu1",
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/37b7ce87-f558-4b93-9e85-d3d0ccd4927b"

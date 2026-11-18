@@ -38,6 +38,7 @@ export default function Privacy() {
   const sentinel = useAppStore((s) => s.sentinel ?? DEFAULT_SENTINEL);
   const [open, setOpen] = useState(false);
   const [exported, setExported] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [receiptCleared, setReceiptCleared] = useState(false);
   const seesIcons = [Clock, Timer, AppWindow, LockOpen];
   const neverIcons = [ChatsCircle, Monitor, Globe, Keyboard];
@@ -50,6 +51,8 @@ export default function Privacy() {
   const grade = useAuth((s) => s.profile?.grade ?? (IS_PITCH ? 8 : null));
 
   const exportData = async () => {
+    setExportError(null);
+    try {
     const s = useAppStore.getState();
     const data = IS_PITCH
       ? {
@@ -60,8 +63,9 @@ export default function Privacy() {
           note: 'Usage metadata stays on this phone. No messages, screens or browsing are ever collected.',
         }
       : await exportMyData();
-    setExported(true);
-    Share.share({ message: JSON.stringify(data, null, 2) }).catch(() => {});
+    const result = await Share.share({ message: JSON.stringify(data, null, 2) });
+    if (result.action === Share.sharedAction) setExported(true);
+    } catch { setExportError('Could not export your data. Please try again when connected.'); }
   };
   const holdItems = t.privacy.holdItems.map(([k, v], idx) =>
     idx === 0 ? [k, [name, grade ? `Grade ${grade}` : ''].filter(Boolean).join(' · ')] : idx === 2 ? [k, `${answers}`] : [k, v],
@@ -128,13 +132,13 @@ export default function Privacy() {
               {t.privacy.receiptTitle}
             </Text>
             <Chip
-              label='canRetrieveWindowContent="false"'
+              label="No screen reading"
               icon={<ShieldCheck size={13} weight="fill" color={c.success} />}
               tint={{ bg: c.inset, fg: c.success }}
             />
           </View>
           <Text variant="body" color="textSecondary">
-            {t.privacy.receiptBody(swipesToday, sentinel.watchedApps)}
+            {`In-app preview: ${swipesToday} swipes counted today. The Android scroll detector checks direction and app identity in memory only; it does not save touch coordinates, screen text or a scroll history.`}
           </Text>
           <PillButton
             label={receiptCleared || swipesToday === 0 ? t.privacy.receiptCleared : t.privacy.receiptClear}
@@ -157,7 +161,7 @@ export default function Privacy() {
           </View>
           <View style={styles.flex}>
             <Text variant="headline">{t.privacy.onPhone}</Text>
-            <Text variant="subhead">{t.privacy.onPhoneSub}</Text>
+            <Text variant="subhead">Local questions and scroll detection run here. Signed-in accounts sync learning progress and app-usage summaries with the configured service. Linked guardians can see habits; teachers can see learning.</Text>
           </View>
         </Card>
       </Stagger>
@@ -230,6 +234,7 @@ export default function Privacy() {
         </ListGroup>
       </Stagger>
 
+      {exportError ? <Text color="danger" accessibilityRole="alert">{exportError}</Text> : null}
       <Stagger index={i++}>
         <PillButton
           label={exported ? t.privacy.exported : t.privacy.export}

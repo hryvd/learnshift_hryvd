@@ -64,8 +64,8 @@ try {
   console.log('Guardian linking');
   const { data: code } = await student.c.rpc('my_link_code');
   ok(/^\d{6}$/.test(code), 'student gets a 6-digit code', code);
-  const { error: badLink } = await guardian.c.rpc('link_student', { p_code: '000000' === code ? '111111' : '000000' });
-  ok(!!badLink, 'wrong code is rejected');
+  const { data: badLink, error: badLinkError } = await guardian.c.rpc('link_student', { p_code: 'not-a-code' });
+  ok(!badLinkError && badLink?.code === 'invalid_code', 'wrong code is rejected and counted');
   const { data: linked, error: linkErr } = await guardian.c.rpc('link_student', { p_code: code });
   ok(!linkErr && linked.student_id === student.id, 'guardian links with the code', linkErr);
   const { error: teacherLink } = await teacher.c.rpc('link_student', { p_code: code });

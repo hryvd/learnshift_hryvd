@@ -18,7 +18,7 @@ export function SessionEffects() {
   const storeRole = useAppStore((s) => s.role);
   const id = profile?.id ?? null;
   const role = profile?.role ?? null;
-  useMonitorBridge((role ?? storeRole) === 'student' ? (id ?? 'local-student') : null);
+  useMonitorBridge(IS_PITCH ? (storeRole === 'student' ? 'local-student' : null) : role === 'student' ? id : null);
 
   useEffect(() => {
     if (IS_PITCH) return;
@@ -41,6 +41,7 @@ export function SessionEffects() {
       role: p.role,
       lang: p.lang,
       studentName: p.role === 'student' ? p.display_name : '',
+      ...(p.grade && s.userId !== id ? { learningGrade: Math.max(1, Math.min(10, p.grade)) } : {}),
       // Guardians and teachers finish setup inside their own home screens.
       ...(p.role !== 'student' ? { onboarded: true } : {}),
     });

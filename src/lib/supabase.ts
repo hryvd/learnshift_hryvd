@@ -1,21 +1,23 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
-import { SUPABASE_KEY, SUPABASE_URL } from './config';
+import { HAS_BACKEND_CONFIG, SUPABASE_KEY, SUPABASE_URL } from './config';
+import { credentialStorage } from './credentialStorage';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+export const supabase: SupabaseClient = HAS_BACKEND_CONFIG ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     // AsyncStorage on native, localStorage on web.
-    storage: Platform.OS === 'web' && typeof window === 'undefined' ? undefined : AsyncStorage,
+    storage: Platform.OS === 'web' && typeof window === 'undefined' ? undefined : credentialStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
+}) : new Proxy({} as SupabaseClient, {
+  get() { throw new Error('Account services are not configured in this build.'); },
 });
 
 // Refresh the session only while the app is in the foreground.
-if (Platform.OS !== 'web') {
+if (HAS_BACKEND_CONFIG && Platform.OS !== 'web') {
   AppState.addEventListener('change', (state) => {
     if (state === 'active') supabase.auth.startAutoRefresh();
     else supabase.auth.stopAutoRefresh();

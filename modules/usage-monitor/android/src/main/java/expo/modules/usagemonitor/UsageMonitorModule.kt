@@ -36,6 +36,9 @@ class UsageMonitorModule : Module() {
       }
     }
 
+    Function("hasScrollAccess") { ScrollService.isEnabled(ctx) }
+    Function("openScrollSettings") { launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+
     Function("canDrawOverlays") { Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(ctx) }
 
     Function("openOverlaySettings") {
@@ -77,10 +80,13 @@ class UsageMonitorModule : Module() {
 
     /** Saves the config and starts or stops the background monitor to match. */
     Function("configure") { json: String ->
+      ScrollGate.clear()
+      OverlayController.dismiss(ctx)
+      if (!JSONObject(json).optBoolean("enabled", false)) MonitorService.stop(ctx)
       Store.saveConfig(ctx, json)
       Store.putString(ctx, "watchedPkg", "")
       val cfg = Store.config(ctx)
-      val canWatch = cfg.enabled && (Perms.hasUsageAccess(ctx) || OverlayController.canOverlay(ctx))
+      val canWatch = cfg.enabled && Perms.hasUsageAccess(ctx)
       if (canWatch) MonitorService.start(ctx) else MonitorService.stop(ctx)
       MonitorService.running || canWatch
     }
@@ -133,6 +139,8 @@ class UsageMonitorModule : Module() {
         "lastNudge" to Store.getLong(ctx, "lastNudge"),
         "lastNotifyFailed" to Store.getLong(ctx, "lastNotifyFailed"),
         "notifications" to Notifier.breaksEnabled(ctx),
+        "scrollAccess" to ScrollService.isEnabled(ctx),
+        "awaitingSwipe" to ScrollGate.isArmed(),
       )
     }
 
@@ -196,11 +204,9 @@ class UsageMonitorModule : Module() {
       Store.putLong(ctx, "watchedAt", System.currentTimeMillis())
       MonitorService.start(ctx)
 
-      if (OverlayController.canOverlay(ctx)) {
-        val cfg = Store.config(ctx)
-        val waitSec = delaySeconds.coerceIn(2, 3600)
-        OverlayController.scheduleOverlay(ctx, cfg, appLabel, resolvedPkg, 1, "quiz", waitSec.toLong() * 1000L)
-      }
+      // Monitoring uses fresh foreground usage events; a delayed launcher task
+      // must not arm a stale app after the student switches elsewhere.
+
       true
     }
 
@@ -213,6 +219,10 @@ class UsageMonitorModule : Module() {
       }
     }
 
-    Function("lastConfig") { JSONObject(Store.getString(ctx, "config") ?: "{}").toString() }
+    Function("lastConfig") {
+      val cfg = Store.config(ctx)
+      JSONObject().put("enabled", cfg.enabled).put("grade", cfg.grade)
+        .put("subject", cfg.subject).put("overlayIntervalSec", cfg.overlayIntervalSec).toString()
+    }
   }
 }

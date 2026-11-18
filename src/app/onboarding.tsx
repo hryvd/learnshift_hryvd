@@ -99,7 +99,7 @@ export default function Onboarding() {
   );
   const [i, setI] = useState(0);
   const [dir, setDir] = useState(1);
-  const [draft, setDraft] = useState<Draft>({ role: 'student', grade: 8 });
+  const [draft, setDraft] = useState<Draft>({ role: 'student', grade: useAppStore.getState().learningGrade });
   const step = flow[i];
 
   if (!IS_PITCH && status === 'signedIn' && profile) {
@@ -110,6 +110,12 @@ export default function Onboarding() {
 
   const next = () => {
     haptic.light();
+    // The existing adaptive diagnostic covers secondary-school math only.
+    // Younger learners start with their grade-filtered local practice bank.
+    if (flow[i + 1] === 'pretest' && (profile?.grade ?? draft.grade) < 7) {
+      void finish();
+      return;
+    }
     setDir(1);
     setI((k) => Math.min(flow.length - 1, k + 1));
   };
@@ -137,6 +143,7 @@ export default function Onboarding() {
   const finishPitch = (role: Role) => {
     const s = useAppStore.getState();
     s.setRole(role);
+    s.setLearningGrade(draft.grade);
     s.setOnboarded(true);
     router.replace(role === 'student' ? '/home' : role === 'guardian' ? '/guardian' : '/teacher');
   };
@@ -376,7 +383,7 @@ function GradeStep({ grade, setGrade, next }: { grade: number; setGrade: (g: num
   return (
     <Shell title={t.onb.grade} footer={<PillButton label={t.common.continue} size="lg" block onPress={next} />}>
       <View style={styles.grades}>
-        {[7, 8, 9, 10, 11, 12].map((g) => (
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((g) => (
           <PressableScale
             key={g}
             onPress={() => setGrade(g)}

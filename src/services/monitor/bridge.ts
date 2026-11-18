@@ -12,7 +12,7 @@ import { pullStudent } from '@/services/backend/sync';
 import { todayKey, useAppStore } from '@/store/useAppStore';
 import { useSession } from '@/store/useSession';
 
-import { configure, getDays, getLive, platform, reportNow, status, type MonitorStatus } from './index';
+import { configure, getDays, getLive, platform, reportNow, status, stopMonitoring, type MonitorStatus } from './index';
 
 type DeviceState = {
   status: MonitorStatus;
@@ -61,12 +61,13 @@ export function useMonitorBridge(userId: string | null) {
   const s = useAppStore();
   const focusUntil = useSession((x) => x.focusUntil);
   const root = gapEngine.rootGap(s.mastery);
-  const overlayIntervalSec = s.sentinel?.overlayIntervalSec ?? 30;
-  const monitorAllApps = s.sentinel?.monitorAllApps ?? true;
+  const overlayIntervalSec = s.sentinel?.overlayIntervalSec ?? 15;
+  const monitorAllApps = s.sentinel?.monitorAllApps ?? false;
 
   // Push config whenever something the monitor needs changes.
   useEffect(() => {
-    if (!userId || platform === 'none') return;
+    if (platform === 'none') return;
+    if (!userId) { stopMonitoring(); return; }
     configure({
       userId,
       enabled: true,
@@ -86,6 +87,8 @@ export function useMonitorBridge(userId: string | null) {
       gamesLimit: s.guardian.linked ? s.limits.games : null,
       overlayIntervalSec,
       monitorAllApps,
+      grade: s.learningGrade,
+      subject: s.learningSubject,
     }).catch(() => {});
   }, [
     userId,
@@ -106,6 +109,8 @@ export function useMonitorBridge(userId: string | null) {
     root,
     overlayIntervalSec,
     monitorAllApps,
+    s.learningGrade,
+    s.learningSubject,
   ]);
 
   // Live usage while the app is open; re-push config + report + re-sync when returning to front.
@@ -136,8 +141,10 @@ export function useMonitorBridge(userId: string | null) {
         guardianName: cur.guardian.name,
         scrollLimit: cur.guardian.linked ? cur.limits.scroll : null,
         gamesLimit: cur.guardian.linked ? cur.limits.games : null,
-        overlayIntervalSec: cur.sentinel?.overlayIntervalSec ?? 30,
-        monitorAllApps: cur.sentinel?.monitorAllApps ?? true,
+        overlayIntervalSec: cur.sentinel?.overlayIntervalSec ?? 15,
+        monitorAllApps: cur.sentinel?.monitorAllApps ?? false,
+        grade: cur.learningGrade,
+        subject: cur.learningSubject,
       }).catch(() => {});
       refresh();
       reportNow().then(() => pullStudent(userId).catch(() => {}));

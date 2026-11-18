@@ -90,10 +90,10 @@ object Notifier {
     return PendingIntent.getActivity(ctx, req, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
   }
 
-  fun monitor(ctx: Context, cfg: Config) = NotificationCompat.Builder(ctx, CH_MONITOR)
+  fun monitor(ctx: Context, cfg: Config, message: String? = null) = NotificationCompat.Builder(ctx, CH_MONITOR)
     .setSmallIcon(R.drawable.ls_notify)
     .setContentTitle(if (cfg.fil) "Nagbabantay si Paty" else "Paty is looking out for you")
-    .setContentText(if (cfg.fil) "Paalala lang kapag matagal na sa videos." else "Only nudges you after long scrolls.")
+    .setContentText(message ?: if (cfg.fil) "Maghihintay sa iyong pag-scroll." else "Breaks wait for your next upward scroll.")
     .setOngoing(true)
     .setSilent(true)
     .setPriority(NotificationCompat.PRIORITY_MIN)

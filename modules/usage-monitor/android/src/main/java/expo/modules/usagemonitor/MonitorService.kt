@@ -1,6 +1,8 @@
 package expo.modules.usagemonitor
 
 import android.app.Service
+import android.app.KeyguardManager
+import android.os.PowerManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -62,6 +64,8 @@ class MonitorService : Service() {
 
   override fun onDestroy() {
     running = false
+    ScrollGate.clear()
+    OverlayController.dismiss(this)
     handler?.removeCallbacksAndMessages(null)
     thread?.quitSafely()
     thread = null
@@ -91,11 +95,30 @@ class MonitorService : Service() {
   private var activeAccumMs = 0L
   private var lastTickAt = 0L
   private var lastTargetPkg: String? = null
+  private var lastIndicator: String? = null
 
   /** One detection pass. Returns the delay until the next pass, or -1 to stop. */
   private fun step(): Long {
     countdownThisTick = false
     val next = decide()
+    if (next >= 0) {
+      val cfg = Store.config(this)
+      val seconds = ((cfg.overlayIntervalSec * 1000L - activeAccumMs).coerceAtLeast(0) + 999) / 1000
+      val indicator = when {
+        cfg.paused -> if (cfg.fil) "Naka-pause ang learning breaks" else "Learning breaks paused"
+        OverlayController.isShowing() -> if (cfg.fil) "Kasalukuyang learning break" else "Learning break in progress"
+        ScrollGate.isArmed() -> if (cfg.fil) "Handa na. Mag-swipe pataas kapag gusto mo." else "Break ready. Waiting for your next upward scroll."
+        lastTargetPkg != null -> if (cfg.fil) "Susunod na pahinga: ${seconds}s · maghihintay sa pag-swipe" else "Next break: ${seconds}s · then wait for your swipe"
+        else -> if (cfg.fil) "Maghihintay sa suportadong app" else "Waiting for a supported app"
+      }
+      if (indicator != lastIndicator) {
+        lastIndicator = indicator
+        runCatching {
+          val manager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+          manager.notify(Notifier.MONITOR_ID, Notifier.monitor(this, cfg, indicator))
+        }
+      }
+    }
     // Leaving the app (or a snooze, bedtime, the lock) ends the countdown.
     if (!countdownThisTick && countdownShowing) {
       Notifier.cancelCountdown(this)
@@ -107,7 +130,7 @@ class MonitorService : Service() {
   private fun decide(): Long {
     val cfg = Store.config(this)
     val hasUsage = Perms.hasUsageAccess(this)
-    if (!cfg.enabled || (!hasUsage && !OverlayController.canOverlay(this))) return -1
+    if (!cfg.enabled || !hasUsage) return -1
     val now = System.currentTimeMillis()
     val live = if (hasUsage) tracker!!.update(now) else Live(null, Cat.OTHER, 0.0, 0)
     val cal = Calendar.getInstance()
@@ -116,15 +139,28 @@ class MonitorService : Service() {
     val inBed = Schedule.bedtimeApplies(cfg, clock) && Schedule.inWindow(clock, cfg.bedtimeStart, cfg.bedtimeEnd)
     val lockWindow = cfg.lockEnabled && Schedule.inWindow(clock, cfg.lockStart, cfg.lockEnd)
     val locked = lockWindow && now > cfg.unlockUntil
-    val activePkg = (if (hasUsage) live.pkg else null)
-      ?: Store.getString(this, "watchedPkg")?.takeIf { it.isNotBlank() && now - Store.getLong(this, "watchedAt") < 180_000L }
+    val activePkg = live.pkg
     val mine = activePkg == packageName
 
     maybeReport(cfg, now)
     if (hasUsage) updateLive(cfg, now, live)
 
+    // A sleeping or locked device must not accumulate time or hold audio focus.
+    val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+    val keyguard = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+    if (!power.isInteractive || keyguard.isKeyguardLocked || cfg.paused || now < cfg.focusUntil) {
+      activeAccumMs = 0L
+      lastTargetPkg = null
+      lastTickAt = now
+      ScrollGate.clear()
+      OverlayController.dismiss(this)
+      return 2_000L
+    }
+
     // 1. Guardian lock: a blocked app in front during lock hours.
     if (locked && live.cat.distracting && !mine) {
+      ScrollGate.clear()
+      OverlayController.dismiss(this)
       if (canOverlay()) openLock()
       else if (now - Store.getLong(this, "lastLockNotice") > 60_000L) {
         Notifier.nudge(this, cfg, "lock", "lock", live.cat, 0, clock, 0)
@@ -146,6 +182,7 @@ class MonitorService : Service() {
     // 2. Guardrails: paused, focusing, or currently inside LearnShift itself.
     if (cfg.paused || now < cfg.focusUntil || mine) {
       activeAccumMs = 0L
+      ScrollGate.clear()
       lastTickAt = now
       return idle
     }
@@ -154,6 +191,7 @@ class MonitorService : Service() {
     if (activePkg != null && Categories.isTargetApp(this, activePkg, cfg.monitorAllApps)) {
       if (now < Store.getLong(this, "snoozeUntil")) {
         activeAccumMs = 0L
+        ScrollGate.clear()
         lastTickAt = now
         return idle
       }
@@ -183,6 +221,7 @@ class MonitorService : Service() {
       val dt = if (lastTickAt > 0L) (now - lastTickAt).coerceIn(500L, 5_000L) else 2_000L
       lastTickAt = now
       if (activePkg != lastTargetPkg) {
+        ScrollGate.clear()
         lastTargetPkg = activePkg
         activeAccumMs = dt
       } else {
@@ -192,21 +231,25 @@ class MonitorService : Service() {
       val intervalMs = cfg.overlayIntervalSec.coerceIn(10, 3600) * 1000L
       if (activeAccumMs >= intervalMs) {
         activeAccumMs = 0L
-        val mins = maxOf(1, live.sessionMin.roundToInt())
-        val reasons = Risk.reasons(clock, maxOf(1.0, live.sessionMin), cat, live.unlocksLastHour, schoolDay, inBed)
-        val level = if (inBed) "winddown" else "break"
-        val id = record(cfg, level, reasons, "quiet", clock, 0)
-        if (canOverlay()) {
-          OverlayController.showQuizOverlay(this, cfg, label, activePkg, mins)
-        } else if (!Notifier.nudge(this, cfg, level, id, cat, mins, clock, 0)) {
-          Store.putLong(this, "lastNotifyFailed", now)
+        if (canOverlay() && ScrollService.isEnabled(this)) {
+          // Deadline is an indicator. Only a later forward scroll may show the lesson.
+          ScrollGate.arm(activePkg, android.os.SystemClock.uptimeMillis())
+        } else if (now - Store.getLong(this, "lastNudge") > 60_000L) {
+          // Without opt-in scroll events, offer a notification the student can open.
+          val mins = maxOf(1, live.sessionMin.roundToInt())
+          val reasons = Risk.reasons(clock, maxOf(1.0, live.sessionMin), cat, live.unlocksLastHour, schoolDay, inBed)
+          val level = if (inBed) "winddown" else "break"
+          val id = record(cfg, level, reasons, "quiet", clock, 0)
+          Notifier.nudge(this, cfg, level, id, cat, mins, clock, 0)
+          Store.putLong(this, "lastNudge", now)
+          countNudge(now)
+          reportSoon(cfg)
         }
-        Store.putLong(this, "lastNudge", now)
-        countNudge(now)
-        reportSoon(cfg)
       }
     } else {
-      if (now - lastTickAt > 30_000L) activeAccumMs = 0L
+      ScrollGate.clear()
+      activeAccumMs = 0L
+      lastTargetPkg = null
       lastTickAt = now
     }
     return idle
@@ -300,7 +343,7 @@ class MonitorService : Service() {
 
     fun start(ctx: Context) {
       val cfg = Store.config(ctx)
-      if (!cfg.enabled || (!Perms.hasUsageAccess(ctx) && !OverlayController.canOverlay(ctx))) return
+      if (!cfg.enabled || !Perms.hasUsageAccess(ctx)) return
       try {
         ContextCompat.startForegroundService(ctx, Intent(ctx, MonitorService::class.java))
       } catch (e: Exception) {

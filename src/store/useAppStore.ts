@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { SUBJECTS, type SubjectId } from '@/data/localQuestions';
 import type { DeckLang } from '@/data/decks';
 import { SEED_REVIEW, type ReviewItem } from '@/data/class';
 import { SEED_BUILT, seedNudges, type BuildingId, type NudgeEntry, type NudgeResponse } from '@/data/seed';
@@ -116,6 +117,8 @@ type State = {
   role: Role;
   lang: Lang;
   themePref: ThemePref;
+  learningGrade: number;
+  learningSubject: SubjectId | 'mixed';
   bedtime: Bedtime;
   bedtimeDays: BedtimeDays;
   onboarded: boolean;
@@ -160,6 +163,8 @@ type Actions = {
   setRole: (role: Role) => void;
   setLang: (lang: Lang) => void;
   setThemePref: (pref: ThemePref) => void;
+  setLearningGrade: (grade: number) => void;
+  setLearningSubject: (subject: SubjectId | 'mixed') => void;
   setBedtime: (bedtime: Bedtime, days?: BedtimeDays) => void;
   setDemo: (patch: Partial<DemoOverrides>) => void;
   setOnboarded: (v: boolean) => void;
@@ -231,12 +236,14 @@ export const DEFAULT_SENTINEL: SentinelSlice = {
   timingVotes: { good: 0, bad: 0 },
   regretVotes: { yes: 0, no: 0 },
   deckLang: 'taglish',
-  overlayIntervalSec: 30,
-  monitorAllApps: true,
+  overlayIntervalSec: 15,
+  monitorAllApps: false,
 };
 
 const shared = () => ({
   themePref: 'auto' as ThemePref,
+  learningGrade: 1,
+  learningSubject: 'mixed' as SubjectId | 'mixed',
   bedtime: { start: 22 * 60, end: 6 * 60 },
   bedtimeDays: 'school' as BedtimeDays,
   demo: { clock: null, schoolDay: null, risk: null },
@@ -326,6 +333,12 @@ export const useAppStore = create<State & Actions>()(
       setRole: (role) => set({ role }),
       setLang: (lang) => set({ lang }),
       setThemePref: (themePref) => set({ themePref }),
+      setLearningGrade: (grade) => {
+        if (Number.isInteger(grade) && grade >= 1 && grade <= 10) set({ learningGrade: grade });
+      },
+      setLearningSubject: (subject) => {
+        if (subject === 'mixed' || SUBJECTS.some((s) => s.id === subject)) set({ learningSubject: subject });
+      },
       setBedtime: (bedtime, days) =>
         set((s) => ({ bedtime, bedtimeDays: days ?? s.bedtimeDays, dirty: { ...s.dirty, settings: true } })),
       setDemo: (patch) => set((s) => ({ demo: { ...s.demo, ...patch } })),
@@ -536,7 +549,7 @@ export const useAppStore = create<State & Actions>()(
         set((s) => {
           const cur = s.sentinel ?? DEFAULT_SENTINEL;
           return {
-            sentinel: { ...cur, overlayIntervalSec },
+            sentinel: { ...cur, overlayIntervalSec: Number.isFinite(overlayIntervalSec) ? Math.min(3600, Math.max(10, Math.round(overlayIntervalSec))) : DEFAULT_SENTINEL.overlayIntervalSec },
             dirty: { ...s.dirty, settings: true },
           };
         }),

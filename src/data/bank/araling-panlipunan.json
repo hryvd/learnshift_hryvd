@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "araling-panlipunan-g1-01",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Pagkilala sa sarili",
+    "prompt": "Ano ang dapat mong ibigay kapag tinanong ng guro ang iyong pangalan?",
+    "options": [
+      "Pangalan ng laruan",
+      "Pangalan ng tindahan",
+      "Ang sarili mong pangalan",
+      "Pangalan ng alagang pusa"
+    ],
+    "answer": 2,
+    "explanation": "Ang pangalan ay ginagamit upang makilala ang isang tao."
+  },
+  {
+    "id": "araling-panlipunan-g1-02",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Pamilya",
+    "prompt": "Alin ang halimbawa ng pagtutulungan sa bahay?",
+    "options": [
+      "Pag-aagawan ng pagkain",
+      "Pagliligpit ng sariling laruan",
+      "Pagsira ng gamit",
+      "Pagtatapon ng basura sa sahig"
+    ],
+    "answer": 1,
+    "explanation": "Ang pagliligpit ng sariling laruan ay nakatutulong sa kalinisan at kaayusan ng bahay."
+  },
+  {
+    "id": "araling-panlipunan-g1-03",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Paaralan",
+    "prompt": "Sino ang karaniwang gumagabay sa mga bata sa kanilang pag-aaral sa silid-aralan?",
+    "options": [
+      "Guro",
+      "Mangingisda",
+      "Mekaniko",
+      "Magsasaka"
+    ],
+    "answer": 0,
+    "explanation": "Ang guro ang nagtuturo at gumagabay sa mga mag-aaral."
+  },
+  {
+    "id": "araling-panlipunan-g1-04",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Paggalang",
+    "prompt": "Paano mo maipakikita ang paggalang kapag may nagsasalita?",
+    "options": [
+      "Sigawan siya",
+      "Agawin ang sinasabi niya",
+      "Takpan ang kanyang bibig",
+      "Makinig at hintaying matapos siya"
+    ],
+    "answer": 3,
+    "explanation": "Ang pakikinig at paghihintay ng pagkakataong magsalita ay nagpapakita ng paggalang."
+  },
+  {
+    "id": "araling-panlipunan-g1-05",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Mga pangangailangan",
+    "prompt": "Alin ang pangunahing pangangailangan ng tao?",
+    "options": [
+      "Laruang robot",
+      "Dekorasyon",
+      "Malinis na tubig",
+      "Larong video"
+    ],
+    "answer": 2,
+    "explanation": "Kailangan ng katawan ang malinis na tubig upang mabuhay at manatiling malusog."
+  },
+  {
+    "id": "araling-panlipunan-g1-06",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Panahon at gawain",
+    "prompt": "Alin ang karaniwang ginagawa bago pumasok sa paaralan?",
+    "options": [
+      "Sirain ang bag",
+      "Maghanda ng gamit sa pag-aaral",
+      "Itapon ang mga kuwaderno",
+      "Iwan ang lahat ng gamit"
+    ],
+    "answer": 1,
+    "explanation": "Ang paghahanda ng gamit ay nakatutulong upang maging handa sa klase."
+  },
+  {
+    "id": "araling-panlipunan-g1-07",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Kaligtasan",
+    "prompt": "Hindi mo makita ang iyong kasama sa mall. Sino ang maaari mong lapitan para humingi ng tulong?",
+    "options": [
+      "Naka-unipormeng security guard",
+      "Sinumang nagyayayang sumama sa kotse",
+      "Taong humihingi ng password mo",
+      "Taong ayaw magpakilala"
+    ],
+    "answer": 0,
+    "explanation": "Humingi ng tulong sa nakatalagang kawani o security guard at manatili sa ligtas na pampublikong lugar."
+  },
+  {
+    "id": "araling-panlipunan-g1-08",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Pagkakaiba-iba",
+    "prompt": "Magkaiba ang wikang gamit ninyo ng bagong kaklase. Ano ang mabuting gawin?",
+    "options": [
+      "Tawanan ang kanyang wika",
+      "Huwag siyang isali sa laro",
+      "Sabihing mali ang kanyang pamilya",
+      "Maging magalang at tulungan siyang makipag-usap"
+    ],
+    "answer": 3,
+    "explanation": "Maaaring magkaiba ang wika ng mga tao at nararapat pa rin silang igalang."
+  },
+  {
+    "id": "araling-panlipunan-g1-09",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Pag-aalaga ng gamit",
+    "prompt": "Alin ang wastong pag-aalaga sa aklat na hiniram?",
+    "options": [
+      "Sulatan ang lahat ng larawan",
+      "Itago upang hindi maibalik",
+      "Panatilihing malinis at ibalik sa takdang araw",
+      "Punitin ang mga pahina"
+    ],
+    "answer": 2,
+    "explanation": "Ang hiniram na gamit ay dapat alagaan at ibalik upang magamit din ng iba."
+  },
+  {
+    "id": "araling-panlipunan-g1-10",
+    "subject": "araling-panlipunan",
+    "grade": 1,
+    "topic": "Pagkakasunod-sunod",
+    "prompt": "Anong gawain ang dapat gawin bago kumain?",
+    "options": [
+      "Maglaro sa putikan",
+      "Maghugas ng kamay",
+      "Iwan ang pagkain sa sahig",
+      "Itapon ang kutsara"
+    ],
+    "answer": 1,
+    "explanation": "Ang paghuhugas ng kamay bago kumain ay tumutulong maiwasan ang pagkalat ng mikrobyo."
+  },
+  {
+    "id": "araling-panlipunan-g2-01",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Komunidad",
+    "prompt": "Ano ang komunidad?",
+    "options": [
+      "Uri ng pagkain",
+      "Pangkat ng mga taong naninirahan o nagsasama sa isang lugar",
+      "Isang lapis lamang",
+      "Pangalan ng isang ulap"
+    ],
+    "answer": 1,
+    "explanation": "Ang komunidad ay binubuo ng mga taong may ugnayan sa isang lugar o pangkat."
+  },
+  {
+    "id": "araling-panlipunan-g2-02",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Mga lingkod",
+    "prompt": "Sino ang tumutulong sa pag-apula ng sunog?",
+    "options": [
+      "Bumbero",
+      "Mananahi",
+      "Panadero",
+      "Mangingisda"
+    ],
+    "answer": 0,
+    "explanation": "May kagamitan at pagsasanay ang mga bumbero upang tumugon sa sunog."
+  },
+  {
+    "id": "araling-panlipunan-g2-03",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Mga lugar",
+    "prompt": "Saan karaniwang humihiram at nagbabasa ng mga aklat?",
+    "options": [
+      "Talipapa",
+      "Terminal",
+      "Palengke",
+      "Aklatan"
+    ],
+    "answer": 3,
+    "explanation": "Ang aklatan ay lugar para sa pagbabasa at paghiram ng mga aklat."
+  },
+  {
+    "id": "araling-panlipunan-g2-04",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Direksiyon",
+    "prompt": "Sa karaniwang mapa na may hilaga sa itaas, anong direksiyon ang nasa kanan?",
+    "options": [
+      "Timog",
+      "Hilaga",
+      "Silangan",
+      "Kanluran"
+    ],
+    "answer": 2,
+    "explanation": "Kapag nakaharap sa hilaga sa mapa, nasa kanan ang silangan at nasa kaliwa ang kanluran."
+  },
+  {
+    "id": "araling-panlipunan-g2-05",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Simbolo sa mapa",
+    "prompt": "Ano ang gamit ng legend sa mapa?",
+    "options": [
+      "Palitan ang pangalan ng bansa",
+      "Ipaliwanag ang kahulugan ng mga simbolo",
+      "Baguhin ang panahon",
+      "Bilangan ang mga bituin"
+    ],
+    "answer": 1,
+    "explanation": "Ang legend o pananda ay nagpapaliwanag ng mga simbolo sa mapa."
+  },
+  {
+    "id": "araling-panlipunan-g2-06",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Kapaligiran",
+    "prompt": "Saan dapat ilagay ang balat ng saging ayon sa wastong paghihiwalay ng basura?",
+    "options": [
+      "Lalagyan para sa nabubulok",
+      "Ilog",
+      "Kalsada",
+      "Lalagyan para sa basag na salamin"
+    ],
+    "answer": 0,
+    "explanation": "Nabubulok ang balat ng saging at maaari itong gawing compost kung may angkop na sistema."
+  },
+  {
+    "id": "araling-panlipunan-g2-07",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Pampublikong gamit",
+    "prompt": "Bakit kailangang alagaan ang palaruan ng komunidad?",
+    "options": [
+      "Para walang makapaglaro",
+      "Upang masira ito agad",
+      "Dahil pag-aari ito ng iisang bata",
+      "Ginagamit ito ng maraming tao"
+    ],
+    "answer": 3,
+    "explanation": "Ang pampublikong palaruan ay pinagsasaluhan kaya dapat itong panatilihing ligtas at malinis."
+  },
+  {
+    "id": "araling-panlipunan-g2-08",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Mga tuntunin",
+    "prompt": "Bakit pumipila sa kantina?",
+    "options": [
+      "Para walang makabili",
+      "Para itago ang pagkain",
+      "Para magkaroon ng maayos na pagkakataon ang bawat isa",
+      "Para laging mauna ang pinakamalakas"
+    ],
+    "answer": 2,
+    "explanation": "Ang pagpila ay nagbibigay ng maayos at patas na paraan ng paghihintay."
+  },
+  {
+    "id": "araling-panlipunan-g2-09",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Hanapbuhay",
+    "prompt": "Sino ang nagtatanim ng palay upang makagawa ng bigas?",
+    "options": [
+      "Karpintero",
+      "Magsasaka",
+      "Barbero",
+      "Drayber"
+    ],
+    "answer": 1,
+    "explanation": "Ang magsasaka ay nagtatanim at nag-aani ng palay na pinagmumulan ng bigas."
+  },
+  {
+    "id": "araling-panlipunan-g2-10",
+    "subject": "araling-panlipunan",
+    "grade": 2,
+    "topic": "Pakikiisa",
+    "prompt": "May clean-up drive sa komunidad. Ano ang ligtas na paraan ng pagtulong ng bata?",
+    "options": [
+      "Magpulot ng ligtas na kalat kasama ang nakatatanda",
+      "Humawak ng bubog nang walang proteksiyon",
+      "Pumasok sa rumaragasang kanal",
+      "Magsunog ng plastik"
+    ],
+    "answer": 0,
+    "explanation": "Makibahagi sa gawaing angkop sa edad at sundin ang gabay ng nakatatanda."
+  },
+  {
+    "id": "araling-panlipunan-g3-01",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Lalawigan",
+    "prompt": "Ano ang tawag sa yunit ng pamahalaang lokal na binubuo ng mga bayan at ilang lungsod?",
+    "options": [
+      "Lalawigan",
+      "Kontinente",
+      "Karagatan",
+      "Planeta"
+    ],
+    "answer": 0,
+    "explanation": "Ang lalawigan ay yunit ng pamahalaang lokal na may mga bayang nasasakupan at, sa ilang kaso, mga lungsod."
+  },
+  {
+    "id": "araling-panlipunan-g3-02",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Anyong lupa",
+    "prompt": "Alin ang anyong lupa na malawak, patag, at maaaring pagtamnan?",
+    "options": [
+      "Talon",
+      "Look",
+      "Ilog",
+      "Kapatagan"
+    ],
+    "answer": 3,
+    "explanation": "Ang kapatagan ay malawak at patag na anyong lupa."
+  },
+  {
+    "id": "araling-panlipunan-g3-03",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Anyong tubig",
+    "prompt": "Alin ang umaagos na anyong tubig?",
+    "options": [
+      "Burol",
+      "Talampas",
+      "Ilog",
+      "Bundok"
+    ],
+    "answer": 2,
+    "explanation": "Ang ilog ay umaagos na tubig na karaniwang patungo sa lawa, dagat, o ibang ilog."
+  },
+  {
+    "id": "araling-panlipunan-g3-04",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Kultura",
+    "prompt": "Alin ang halimbawa ng kulturang maaaring maipasa sa susunod na salinlahi?",
+    "options": [
+      "Bilis ng hangin",
+      "Lokal na awit at sayaw",
+      "Bilang ng ulan ngayong araw",
+      "Taas ng puno ngayong linggo"
+    ],
+    "answer": 1,
+    "explanation": "Ang mga awit at sayaw ay bahagi ng kultura at maaaring ituro sa mga susunod na salinlahi."
+  },
+  {
+    "id": "araling-panlipunan-g3-05",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Kabuhayan",
+    "prompt": "Aling hanapbuhay ang karaniwang kaugnay ng pamayanang malapit sa dagat?",
+    "options": [
+      "Pangingisda",
+      "Pagmimina sa buwan",
+      "Pagtatanim sa yelo",
+      "Pag-aalaga ng penguin"
+    ],
+    "answer": 0,
+    "explanation": "Maaaring pinagkukunan ng isda at kabuhayan ang dagat para sa mga pamayanang baybayin."
+  },
+  {
+    "id": "araling-panlipunan-g3-06",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Mapa",
+    "prompt": "Ano ang tinutukoy ng iskala ng mapa?",
+    "options": [
+      "Kulay ng damit ng mga tao",
+      "Dami ng ulap",
+      "Edad ng gumawa ng mapa",
+      "Ugnayan ng sukat sa mapa at tunay na distansiya"
+    ],
+    "answer": 3,
+    "explanation": "Ginagamit ang iskala upang maiugnay ang distansiya sa mapa sa tunay na distansiya."
+  },
+  {
+    "id": "araling-panlipunan-g3-07",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Kasaysayang lokal",
+    "prompt": "Alin ang maaaring gamiting sanggunian sa pag-aaral ng nakaraan ng isang bayan?",
+    "options": [
+      "Kuwentong alam na gawa-gawa",
+      "Bilang ng laruan sa bahay",
+      "Lumang tala at larawan na sinuri ang pinagmulan",
+      "Hulang walang batayan"
+    ],
+    "answer": 2,
+    "explanation": "Makakatulong ang lumang tala at larawan kung susuriin ang pinagmulan, petsa, at nilalaman nito."
+  },
+  {
+    "id": "araling-panlipunan-g3-08",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Pagkakaisa",
+    "prompt": "Paano maipakikita ang paggalang sa pagdiriwang ng ibang pangkat?",
+    "options": [
+      "Pilitin silang palitan ang lahat ng tradisyon",
+      "Alamin ang kahulugan at igalang ang kaugalian",
+      "Laitin ang kanilang kasuotan",
+      "Sirain ang kanilang kagamitan"
+    ],
+    "answer": 1,
+    "explanation": "Ang pag-unawa at paggalang sa kaugalian ng iba ay nakatutulong sa mapayapang pamayanan."
+  },
+  {
+    "id": "araling-panlipunan-g3-09",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Paghahanda sa sakuna",
+    "prompt": "Ano ang dapat alamin bago magkaroon ng baha?",
+    "options": [
+      "Ligtas na daan at evacuation center",
+      "Pinakamalalim na bahagi ng baha",
+      "Paraan ng paglalaro sa baha",
+      "Lugar na may nakabiting kawad"
+    ],
+    "answer": 0,
+    "explanation": "Mahalagang malaman ang ligtas na ruta at evacuation center bago dumating ang sakuna."
+  },
+  {
+    "id": "araling-panlipunan-g3-10",
+    "subject": "araling-panlipunan",
+    "grade": 3,
+    "topic": "Likas na yaman",
+    "prompt": "Alin ang halimbawa ng yamang kagubatan?",
+    "options": [
+      "Isdang dagat",
+      "Asin mula sa dagat",
+      "Alon",
+      "Kawayan"
+    ],
+    "answer": 3,
+    "explanation": "Ang kawayan ay halamang maaaring tumubo sa kagubatan at mapakinabangan nang responsable."
+  },
+  {
+    "id": "araling-panlipunan-g4-01",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Pilipinas",
+    "prompt": "Ano ang ibig sabihin ng kapuluan?",
+    "options": [
+      "Isang malawak na disyerto",
+      "Isang ilog lamang",
+      "Bundok na walang paligid",
+      "Pangkat ng mga pulo"
+    ],
+    "answer": 3,
+    "explanation": "Ang kapuluan ay pangkat ng mga pulo; isang kapuluan ang Pilipinas."
+  },
+  {
+    "id": "araling-panlipunan-g4-02",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Lokasyon",
+    "prompt": "Saang rehiyon ng Asya matatagpuan ang Pilipinas?",
+    "options": [
+      "Gitnang Asya",
+      "Timog Asya",
+      "Timog-Silangang Asya",
+      "Kanlurang Asya"
+    ],
+    "answer": 2,
+    "explanation": "Ang Pilipinas ay kabilang sa Timog-Silangang Asya."
+  },
+  {
+    "id": "araling-panlipunan-g4-03",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Mga pangkat ng pulo",
+    "prompt": "Alin ang tatlong pangunahing pangkat ng mga pulo sa Pilipinas?",
+    "options": [
+      "Maynila, Pasig, at Cebu",
+      "Luzon, Visayas, at Mindanao",
+      "Luzon, Asya, at Europa",
+      "Visayas, Aprika, at Mindanao"
+    ],
+    "answer": 1,
+    "explanation": "Karaniwang hinahati sa Luzon, Visayas, at Mindanao ang mga pulo ng Pilipinas."
+  },
+  {
+    "id": "araling-panlipunan-g4-04",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Klima",
+    "prompt": "Ano ang inilalarawan ng klima?",
+    "options": [
+      "Karaniwang kalagayan ng panahon sa mahabang panahon",
+      "Ulan sa loob lamang ng isang minuto",
+      "Temperatura ng pagkain",
+      "Direksiyon ng isang sasakyan"
+    ],
+    "answer": 0,
+    "explanation": "Ang klima ay pangmatagalang padron ng panahon sa isang lugar."
+  },
+  {
+    "id": "araling-panlipunan-g4-05",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Pamahalaan",
+    "prompt": "Anong sangay ng pamahalaan ang pangunahing gumagawa ng mga batas?",
+    "options": [
+      "Ehekutibo",
+      "Hudikatura",
+      "Pribadong negosyo",
+      "Lehislatibo"
+    ],
+    "answer": 3,
+    "explanation": "Ang lehislatibong sangay, na kinabibilangan ng Kongreso, ang gumagawa ng mga batas."
+  },
+  {
+    "id": "araling-panlipunan-g4-06",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Karapatan",
+    "prompt": "Alin ang halimbawa ng karapatan ng bata?",
+    "options": [
+      "Magnakaw ng gamit",
+      "Magtapon ng basura saanman",
+      "Makapag-aral",
+      "Manakit ng kaklase"
+    ],
+    "answer": 2,
+    "explanation": "Karapatan ng bawat bata ang edukasyon; kaakibat nito ang paggalang sa karapatan ng iba."
+  },
+  {
+    "id": "araling-panlipunan-g4-07",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Pananagutan",
+    "prompt": "Alin ang responsableng paggamit ng tubig?",
+    "options": [
+      "Maglaro ng tagas ng tubig",
+      "Isara ang gripo kapag hindi ginagamit",
+      "Iwanang bukas ang gripo buong araw",
+      "Sirain ang tubo"
+    ],
+    "answer": 1,
+    "explanation": "Nakatitipid ng tubig ang pagsasara ng gripo kapag hindi ito ginagamit."
+  },
+  {
+    "id": "araling-panlipunan-g4-08",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Mga sagisag",
+    "prompt": "Ano ang sinasagisag ng tatlong bituin sa watawat ayon sa karaniwang paliwanag sa kasalukuyan?",
+    "options": [
+      "Luzon, Visayas, at Mindanao",
+      "Tatlong sangay ng isang puno",
+      "Tatlong pinakamalaking lungsod",
+      "Tatlong karagatan"
+    ],
+    "answer": 0,
+    "explanation": "Sa karaniwang paliwanag sa watawat, ang tatlong bituin ay kumakatawan sa Luzon, Visayas, at Mindanao."
+  },
+  {
+    "id": "araling-panlipunan-g4-09",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Likas-kayang paggamit",
+    "prompt": "Alin ang tumutulong sa pangangalaga ng yamang-dagat?",
+    "options": [
+      "Paggamit ng dinamita",
+      "Pagtapon ng langis sa dagat",
+      "Pagsira sa bahura",
+      "Pagsunod sa mga tuntunin laban sa mapanirang pangingisda"
+    ],
+    "answer": 3,
+    "explanation": "Ang pagsunod sa wastong paraan at hangganan ng pangingisda ay tumutulong mapangalagaan ang yamang-dagat."
+  },
+  {
+    "id": "araling-panlipunan-g4-10",
+    "subject": "araling-panlipunan",
+    "grade": 4,
+    "topic": "Pagkamamamayan",
+    "prompt": "Alin ang paraan ng pakikilahok ng bata sa komunidad?",
+    "options": [
+      "Pagsira ng anunsiyo",
+      "Pananakot ng kapitbahay",
+      "Pagsali sa ligtas na gawaing pangkalinisan",
+      "Pagbili ng boto"
+    ],
+    "answer": 2,
+    "explanation": "Maaaring makilahok ang bata sa ligtas at angkop na gawaing nakatutulong sa komunidad."
+  },
+  {
+    "id": "araling-panlipunan-g5-01",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Sinaunang pamayanan",
+    "prompt": "Ano ang barangay sa maraming sinaunang pamayanang Pilipino?",
+    "options": [
+      "Istasyon ng tren",
+      "Modernong lalawigan",
+      "Pamayanang pinamumunuan ng datu",
+      "Malaking pabrika"
+    ],
+    "answer": 2,
+    "explanation": "Sa maraming sinaunang pamayanan, ang barangay ay pangkat na pinamumunuan ng datu."
+  },
+  {
+    "id": "araling-panlipunan-g5-02",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Kalakalan",
+    "prompt": "Ano ang barter?",
+    "options": [
+      "Pag-iimbak ng barya",
+      "Pagpapalitan ng produkto o serbisyo nang walang salapi",
+      "Pag-imprenta ng perang papel",
+      "Pagbabayad gamit ang credit card"
+    ],
+    "answer": 1,
+    "explanation": "Sa barter, tuwirang ipinagpapalit ang produkto o serbisyo sa iba pang produkto o serbisyo."
+  },
+  {
+    "id": "araling-panlipunan-g5-03",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Sanggunian",
+    "prompt": "Alin ang pangunahing sanggunian tungkol sa isang pangyayari?",
+    "options": [
+      "Talaarawan ng taong nakasaksi rito",
+      "Nobelang isinulat pagkalipas ng maraming taon",
+      "Hulang walang ebidensiya",
+      "Patalastas na walang kaugnayan"
+    ],
+    "answer": 0,
+    "explanation": "Ang tala ng isang saksi ay pangunahing sanggunian, ngunit kailangan pa ring suriin ang pananaw at pagiging maaasahan nito."
+  },
+  {
+    "id": "araling-panlipunan-g5-04",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Sinaunang pagsulat",
+    "prompt": "Ano ang Baybayin?",
+    "options": [
+      "Uri ng barkong pandigma",
+      "Pangalan ng salaping papel",
+      "Makabagong search engine",
+      "Isang katutubong sistema ng pagsulat"
+    ],
+    "answer": 3,
+    "explanation": "Ang Baybayin ay katutubong sistema ng pagsulat na ginamit sa ilang pamayanan sa kapuluan."
+  },
+  {
+    "id": "araling-panlipunan-g5-05",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Ugnayang pangkalakalan",
+    "prompt": "Aling produkto ang iniugnay sa kalakalang Tsino sa sinaunang Pilipinas?",
+    "options": [
+      "Eroplano",
+      "Telebisyon",
+      "Porselana",
+      "Kompyuter"
+    ],
+    "answer": 2,
+    "explanation": "Kabilang ang porselana sa mga kalakal na dinala ng mga mangangalakal na Tsino."
+  },
+  {
+    "id": "araling-panlipunan-g5-06",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Islam sa kapuluan",
+    "prompt": "Paano nakatulong ang mga mangangalakal at misyonerong Muslim sa kasaysayan ng kapuluan?",
+    "options": [
+      "Inalis nila ang lahat ng wikang katutubo",
+      "Naipalaganap nila ang Islam sa ilang pamayanan",
+      "Itinatag nila ang lahat ng paaralang Amerikano",
+      "Dinala nila ang unang telebisyon"
+    ],
+    "answer": 1,
+    "explanation": "Nakatulong ang mga mangangalakal at misyonero sa paglaganap ng Islam, lalo na sa mga pamayanan sa timog."
+  },
+  {
+    "id": "araling-panlipunan-g5-07",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Kolonyalismo",
+    "prompt": "Ano ang kolonyalismo?",
+    "options": [
+      "Pagkontrol ng isang kapangyarihan sa ibang lupain at mamamayan",
+      "Pantay na paligsahan sa palakasan",
+      "Pagtutulungan sa iisang pamilya",
+      "Paglalakbay nang walang pamamahala"
+    ],
+    "answer": 0,
+    "explanation": "Sa kolonyalismo, nagtatatag ang isang kapangyarihan ng kontrol sa ibang lupain at mamamayan."
+  },
+  {
+    "id": "araling-panlipunan-g5-08",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Paglaban sa pananakop",
+    "prompt": "Saang labanan napatay si Ferdinand Magellan noong 1521?",
+    "options": [
+      "Labanan sa Tirad Pass",
+      "Labanan sa Bataan",
+      "Labanan sa Imus",
+      "Labanan sa Mactan"
+    ],
+    "answer": 3,
+    "explanation": "Napatay si Magellan sa Mactan noong 1521 sa paglaban ng pangkat na pinamunuan ni Lapulapu."
+  },
+  {
+    "id": "araling-panlipunan-g5-09",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Pamahalaang Espanyol",
+    "prompt": "Sino ang pinakamataas na pinunong kolonyal ng Espanya sa Pilipinas?",
+    "options": [
+      "Punong-guro",
+      "Alkalde ng bawat lungsod",
+      "Gobernador-heneral",
+      "Pangulo ng barangay"
+    ],
+    "answer": 2,
+    "explanation": "Ang gobernador-heneral ang pinakamataas na kinatawan ng pamahalaang Espanyol sa kolonya."
+  },
+  {
+    "id": "araling-panlipunan-g5-10",
+    "subject": "araling-panlipunan",
+    "grade": 5,
+    "topic": "Kalakalang galyon",
+    "prompt": "Aling dalawang lungsod ang pangunahing pinag-ugnay ng kalakalang galyon?",
+    "options": [
+      "Davao at Berlin",
+      "Maynila at Acapulco",
+      "Maynila at Tokyo",
+      "Cebu at Paris"
+    ],
+    "answer": 1,
+    "explanation": "Pinag-ugnay ng kalakalang galyon ang Maynila at Acapulco sa Mexico sa ilalim ng Espanya."
+  },
+  {
+    "id": "araling-panlipunan-g6-01",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Kilusang Propaganda",
+    "prompt": "Ano ang pangunahing layunin ng Kilusang Propaganda?",
+    "options": [
+      "Ipatigil ang lahat ng pag-aaral",
+      "Humingi ng mga reporma sa pamamahalang Espanyol",
+      "Magtatag ng kumpanyang panghimpapawid",
+      "Magpalaganap ng larong video"
+    ],
+    "answer": 1,
+    "explanation": "Ipinaglaban ng mga propagandista ang mga reporma at karapatan sa ilalim ng pamamahalang Espanyol."
+  },
+  {
+    "id": "araling-panlipunan-g6-02",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Mga akda ni Rizal",
+    "prompt": "Alin ang nobelang isinulat ni Jose Rizal?",
+    "options": [
+      "Noli Me Tangere",
+      "Florante at Laura",
+      "Ibong Adarna",
+      "Biag ni Lam-ang"
+    ],
+    "answer": 0,
+    "explanation": "Isinulat ni Jose Rizal ang Noli Me Tangere upang ilantad ang mga suliranin sa lipunang kolonyal."
+  },
+  {
+    "id": "araling-panlipunan-g6-03",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Katipunan",
+    "prompt": "Ano ang pangunahing layunin ng Katipunan?",
+    "options": [
+      "Magtayo ng unang internet network",
+      "Ibalik ang kalakalang galyon",
+      "Palitan ang lahat ng wika ng Latin",
+      "Makamit ang kalayaan mula sa Espanya"
+    ],
+    "answer": 3,
+    "explanation": "Itinatag ang Katipunan upang ipaglaban ang kalayaan ng Pilipinas mula sa Espanya."
+  },
+  {
+    "id": "araling-panlipunan-g6-04",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Pagpapahayag ng kalayaan",
+    "prompt": "Kailan ipinahayag ang kalayaan ng Pilipinas sa Kawit, Cavite?",
+    "options": [
+      "Agosto 21, 1983",
+      "Pebrero 25, 1986",
+      "Hunyo 12, 1898",
+      "Hulyo 4, 1946"
+    ],
+    "answer": 2,
+    "explanation": "Ipinahayag ang kalayaan sa Kawit noong Hunyo 12, 1898; iba ito sa pagkilala ng Estados Unidos noong 1946."
+  },
+  {
+    "id": "araling-panlipunan-g6-05",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Unang Republika",
+    "prompt": "Saan pinasinayaan ang Unang Republika ng Pilipinas noong 1899?",
+    "options": [
+      "Iloilo",
+      "Malolos, Bulacan",
+      "Baguio",
+      "Davao"
+    ],
+    "answer": 1,
+    "explanation": "Pinasinayaan ang Unang Republika sa Malolos, Bulacan noong Enero 23, 1899."
+  },
+  {
+    "id": "araling-panlipunan-g6-06",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Digmaang Pilipino-Amerikano",
+    "prompt": "Aling dalawang panig ang naglaban sa Digmaang Pilipino-Amerikano?",
+    "options": [
+      "Mga puwersang Pilipino at Estados Unidos",
+      "Pilipinas at Canada",
+      "Espanya at Brazil",
+      "Japan at Russia"
+    ],
+    "answer": 0,
+    "explanation": "Nagsimula noong 1899 ang digmaan sa pagitan ng mga puwersang Pilipino at Estados Unidos."
+  },
+  {
+    "id": "araling-panlipunan-g6-07",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Komonwelt",
+    "prompt": "Sino ang unang pangulo ng Komonwelt ng Pilipinas?",
+    "options": [
+      "Emilio Aguinaldo",
+      "Jose P. Laurel",
+      "Ramon Magsaysay",
+      "Manuel L. Quezon"
+    ],
+    "answer": 3,
+    "explanation": "Si Manuel L. Quezon ang unang pangulo ng Komonwelt, na itinatag noong 1935."
+  },
+  {
+    "id": "araling-panlipunan-g6-08",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Ikalawang Digmaang Pandaigdig",
+    "prompt": "Aling bansa ang sumakop sa Pilipinas noong Ikalawang Digmaang Pandaigdig?",
+    "options": [
+      "New Zealand",
+      "Mexico",
+      "Japan",
+      "Switzerland"
+    ],
+    "answer": 2,
+    "explanation": "Sinakop ng Japan ang Pilipinas sa panahon ng Ikalawang Digmaang Pandaigdig."
+  },
+  {
+    "id": "araling-panlipunan-g6-09",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "Kalayaan noong 1946",
+    "prompt": "Ano ang naganap noong Hulyo 4, 1946 sa ugnayan ng Pilipinas at Estados Unidos?",
+    "options": [
+      "Dumating si Magellan",
+      "Kinilala ng Estados Unidos ang kalayaan ng Pilipinas",
+      "Itinatag ang Katipunan",
+      "Nagsimula ang kalakalang galyon"
+    ],
+    "answer": 1,
+    "explanation": "Noong Hulyo 4, 1946, kinilala ng Estados Unidos ang kalayaan ng Pilipinas."
+  },
+  {
+    "id": "araling-panlipunan-g6-10",
+    "subject": "araling-panlipunan",
+    "grade": 6,
+    "topic": "People Power",
+    "prompt": "Ano ang mahalagang katangian ng EDSA People Power noong 1986?",
+    "options": [
+      "Malawakang pagkilos ng mga mamamayan na humantong sa pagbabago ng pamumuno",
+      "Paglulunsad ng unang galyon",
+      "Pagtatatag ng Komonwelt",
+      "Pagdating ng mga Espanyol"
+    ],
+    "answer": 0,
+    "explanation": "Naging mahalaga ang malawakang pagkilos ng mga mamamayan sa pagtatapos ng pamumuno ni Ferdinand Marcos Sr. noong 1986."
+  },
+  {
+    "id": "araling-panlipunan-g7-01",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Heograpiya ng Asya",
+    "prompt": "Aling hanay ng bundok ang kinaroroonan ng Mount Everest?",
+    "options": [
+      "Himalayas",
+      "Andes",
+      "Alps",
+      "Rockies"
+    ],
+    "answer": 0,
+    "explanation": "Matatagpuan ang Mount Everest sa Himalayas sa hangganan ng Nepal at China."
+  },
+  {
+    "id": "araling-panlipunan-g7-02",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Mga ilog at kabihasnan",
+    "prompt": "Bakit mahalaga ang mga ilog sa maraming sinaunang kabihasnan?",
+    "options": [
+      "Pinatigil nila ang lahat ng kalakalan",
+      "Walang taong maaaring manirahan malapit dito",
+      "Hindi magagamit ang tubig sa pagsasaka",
+      "Nagbigay ang mga ito ng tubig, matabang lupa, at daanan"
+    ],
+    "answer": 3,
+    "explanation": "Nakatulong ang mga ilog sa irigasyon, pagsasaka, transportasyon, at kalakalan."
+  },
+  {
+    "id": "araling-panlipunan-g7-03",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Mesopotamia",
+    "prompt": "Sa pagitan ng aling dalawang ilog umusbong ang Mesopotamia?",
+    "options": [
+      "Yangtze at Mekong",
+      "Ganges at Pasig",
+      "Tigris at Euphrates",
+      "Nile at Amazon"
+    ],
+    "answer": 2,
+    "explanation": "Ang Mesopotamia ay rehiyon sa pagitan ng mga ilog Tigris at Euphrates."
+  },
+  {
+    "id": "araling-panlipunan-g7-04",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Kabihasnang Indus",
+    "prompt": "Aling tampok ang kilala sa mga lungsod ng kabihasnang Indus?",
+    "options": [
+      "Mga gusaling gawa sa plastik",
+      "Maayos na pagpaplano ng mga lansangan at daluyan ng tubig",
+      "Mga paliparang pandaigdig",
+      "Mga tren na de-kuryente"
+    ],
+    "answer": 1,
+    "explanation": "Kilala ang Harappa at Mohenjo-daro sa planadong mga lansangan at sistema ng paagusan."
+  },
+  {
+    "id": "araling-panlipunan-g7-05",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Silk Road",
+    "prompt": "Ano ang Silk Road?",
+    "options": [
+      "Ugnayan ng mga rutang pangkalakalan sa Asya at iba pang rehiyon",
+      "Iisang tulay sa Maynila",
+      "Isang modernong expressway lamang",
+      "Isang bansang nasa Europa"
+    ],
+    "answer": 0,
+    "explanation": "Ang Silk Road ay network ng mga ruta kung saan dumaloy ang produkto, ideya, at kultura."
+  },
+  {
+    "id": "araling-panlipunan-g7-06",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Mga relihiyon",
+    "prompt": "Saan nagmula ang Buddhism?",
+    "options": [
+      "Hilagang Amerika",
+      "Antarctica",
+      "Timog Amerika",
+      "Timog Asya"
+    ],
+    "answer": 3,
+    "explanation": "Nagmula ang Buddhism sa Timog Asya kaugnay ng mga aral ni Siddhartha Gautama."
+  },
+  {
+    "id": "araling-panlipunan-g7-07",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Monsoon",
+    "prompt": "Ano ang monsoon?",
+    "options": [
+      "Pagyanig ng lupa",
+      "Pagsabog ng bulkan",
+      "Pana-panahong pagbabago ng nangingibabaw na direksiyon ng hangin",
+      "Araw-araw na pagtaas ng tubig lamang"
+    ],
+    "answer": 2,
+    "explanation": "Ang monsoon ay pana-panahong pagbabago ng hangin na may malaking epekto sa pag-ulan sa Asya."
+  },
+  {
+    "id": "araling-panlipunan-g7-08",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "ASEAN",
+    "prompt": "Ano ang pangunahing layunin ng ASEAN?",
+    "options": [
+      "Ipagbawal ang kalakalan sa rehiyon",
+      "Itaguyod ang kooperasyon ng mga bansa sa Timog-Silangang Asya",
+      "Palitan ang lahat ng pambansang pamahalaan",
+      "Gawing iisa ang lahat ng wika"
+    ],
+    "answer": 1,
+    "explanation": "Layunin ng ASEAN ang kooperasyong pang-ekonomiya, pampolitika, panlipunan, at pangkultura sa rehiyon."
+  },
+  {
+    "id": "araling-panlipunan-g7-09",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Nasyonalismo",
+    "prompt": "Ano ang nasyonalismo sa konteksto ng paglaya ng mga bansa sa Asya?",
+    "options": [
+      "Pagkakakilanlan at pagkilos para sa sariling bansa",
+      "Paniniwalang walang kasaysayan ang bansa",
+      "Pagsuko sa lahat ng mananakop",
+      "Paglimot sa karapatan ng mamamayan"
+    ],
+    "answer": 0,
+    "explanation": "Nakatulong ang nasyonalismo sa pagkilos para sa kasarinlan at sariling pamamahala."
+  },
+  {
+    "id": "araling-panlipunan-g7-10",
+    "subject": "araling-panlipunan",
+    "grade": 7,
+    "topic": "Pagkakaiba-iba",
+    "prompt": "Bakit hindi dapat ipalagay na iisa ang kultura ng lahat ng Asyano?",
+    "options": [
+      "Walang tao sa ibang bahagi ng Asya",
+      "Iisang lungsod lamang ang Asya",
+      "Lahat ay may parehong karanasan",
+      "Maraming wika, relihiyon, kasaysayan, at pamumuhay sa Asya"
+    ],
+    "answer": 3,
+    "explanation": "Malawak at sari-sari ang Asya; mahalagang kilalanin ang mga pagkakaiba sa loob at pagitan ng mga bansa."
+  },
+  {
+    "id": "araling-panlipunan-g8-01",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Sinaunang Egypt",
+    "prompt": "Aling ilog ang mahalaga sa pag-unlad ng sinaunang Egypt?",
+    "options": [
+      "Mekong",
+      "Amazon",
+      "Danube",
+      "Nile"
+    ],
+    "answer": 3,
+    "explanation": "Ang Nile ay nagbigay ng tubig at matabang lupa na nakatulong sa pagsasaka sa Egypt."
+  },
+  {
+    "id": "araling-panlipunan-g8-02",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Sinaunang Greece",
+    "prompt": "Aling lungsod-estado ang kilala sa maagang anyo ng demokrasya?",
+    "options": [
+      "Memphis",
+      "Babylon",
+      "Athens",
+      "Sparta"
+    ],
+    "answer": 2,
+    "explanation": "Kilala ang Athens sa maagang demokrasya, ngunit limitado noon ang mga pinahihintulutang makilahok."
+  },
+  {
+    "id": "araling-panlipunan-g8-03",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Roma",
+    "prompt": "Ano ang isang mahalagang pamana ng sinaunang Roma?",
+    "options": [
+      "Paglulunsad ng unang satellite",
+      "Mga prinsipyo ng batas at pamamahala",
+      "Paglikha ng internet",
+      "Pag-imbento ng smartphone"
+    ],
+    "answer": 1,
+    "explanation": "Nakaimpluwensiya ang batas at mga institusyong Romano sa mga sumunod na sistema ng pamamahala."
+  },
+  {
+    "id": "araling-panlipunan-g8-04",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Renaissance",
+    "prompt": "Ano ang Renaissance sa kasaysayan ng Europa?",
+    "options": [
+      "Panahon ng muling pagsigla ng sining at pag-aaral ng mga klasikong akda",
+      "Panahon ng paggamit ng mga smartphone",
+      "Pagwawakas ng lahat ng kalakalan",
+      "Pagbubuo ng unang dinosaur"
+    ],
+    "answer": 0,
+    "explanation": "Naging mahalaga sa Renaissance ang sining, humanismo, at muling pag-aaral ng mga akdang klasikal."
+  },
+  {
+    "id": "araling-panlipunan-g8-05",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Rebolusyong Siyentipiko",
+    "prompt": "Ano ang mahalagang paraan ng pagbuo ng kaalaman sa Rebolusyong Siyentipiko?",
+    "options": [
+      "Pagtanggap sa lahat ng sabi-sabi",
+      "Pag-iwas sa lahat ng eksperimento",
+      "Pagpili ng sagot batay sa kasikatan",
+      "Obserbasyon, pagsubok, at pagsusuri ng ebidensiya"
+    ],
+    "answer": 3,
+    "explanation": "Binigyang-diin ng mga siyentista ang obserbasyon at ebidensiya sa pagpapaliwanag ng kalikasan."
+  },
+  {
+    "id": "araling-panlipunan-g8-06",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Rebolusyong Industriyal",
+    "prompt": "Aling pagbabago ang kaugnay ng Rebolusyong Industriyal?",
+    "options": [
+      "Pagkawala ng lahat ng lungsod",
+      "Pagtigil ng produksyon ng tela",
+      "Paglawak ng paggamit ng makina at pabrika",
+      "Pagbabalik ng lahat ng paggawa sa kamay lamang"
+    ],
+    "answer": 2,
+    "explanation": "Binago ng mga makina at pabrika ang produksyon, paggawa, at pamumuhay."
+  },
+  {
+    "id": "araling-panlipunan-g8-07",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Rebolusyong Pranses",
+    "prompt": "Aling pangkat ng mga ideya ang kaugnay ng Rebolusyong Pranses?",
+    "options": [
+      "Pagbabawal sa lahat ng batas",
+      "Kalayaan, pagkakapantay-pantay, at pagkakapatiran",
+      "Ganap na kapangyarihan ng hari lamang",
+      "Pagtigil ng lahat ng karapatan"
+    ],
+    "answer": 1,
+    "explanation": "Kaugnay ng Rebolusyong Pranses ang mga mithiin ng kalayaan, pagkakapantay-pantay, at pagkakapatiran."
+  },
+  {
+    "id": "araling-panlipunan-g8-08",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Unang Digmaang Pandaigdig",
+    "prompt": "Aling taon nagsimula ang Unang Digmaang Pandaigdig?",
+    "options": [
+      "1914",
+      "1814",
+      "1945",
+      "2001"
+    ],
+    "answer": 0,
+    "explanation": "Nagsimula ang Unang Digmaang Pandaigdig noong 1914 at natapos noong 1918."
+  },
+  {
+    "id": "araling-panlipunan-g8-09",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "United Nations",
+    "prompt": "Bakit itinatag ang United Nations noong 1945?",
+    "options": [
+      "Upang gawing iisang lungsod ang mundo",
+      "Upang ipagbawal ang lahat ng paaralan",
+      "Upang palitan ang lahat ng wikang ginagamit",
+      "Upang itaguyod ang kapayapaan at kooperasyong pandaigdig"
+    ],
+    "answer": 3,
+    "explanation": "Itinatag ang UN matapos ang Ikalawang Digmaang Pandaigdig upang itaguyod ang kapayapaan, karapatan, at kooperasyon."
+  },
+  {
+    "id": "araling-panlipunan-g8-10",
+    "subject": "araling-panlipunan",
+    "grade": 8,
+    "topic": "Pagsusuri ng kasaysayan",
+    "prompt": "Magkaiba ang ulat ng dalawang saksi. Ano ang pinakamainam na gawin?",
+    "options": [
+      "Itapon ang dalawang ulat nang walang pagsusuri",
+      "Paniwalaan ang may pinakamaraming tagasunod",
+      "Ihambing ang pinagmulan, pananaw, at iba pang ebidensiya",
+      "Piliin agad ang mas mahabang ulat"
+    ],
+    "answer": 2,
+    "explanation": "Mahalagang suriin at paghambingin ang mga sanggunian upang maunawaan ang pagkakaiba ng mga ulat."
+  },
+  {
+    "id": "araling-panlipunan-g9-01",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Kakapusan",
+    "prompt": "Ano ang kakapusan sa ekonomiks?",
+    "options": [
+      "Lahat ng produkto ay libre",
+      "Walang kailangang pagpili",
+      "Limitado ang mga yaman kumpara sa maraming pangangailangan at kagustuhan",
+      "Walang anumang yaman sa mundo"
+    ],
+    "answer": 2,
+    "explanation": "Dahil limitado ang mga yaman, kailangang pumili kung paano gagamitin ang mga ito."
+  },
+  {
+    "id": "araling-panlipunan-g9-02",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Opportunity cost",
+    "prompt": "Ginamit mo ang natitirang oras sa pag-aaral sa halip na manood ng pelikula. Ano ang opportunity cost?",
+    "options": [
+      "Bilang ng araw sa taon",
+      "Ang piniling isakripisyong pagkakataong manood ng pelikula",
+      "Lahat ng nagawa mo kahapon",
+      "Presyo ng lahat ng aklat sa tindahan"
+    ],
+    "answer": 1,
+    "explanation": "Ang opportunity cost ay halaga ng pinakamainam na alternatibong hindi pinili."
+  },
+  {
+    "id": "araling-panlipunan-g9-03",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Demand",
+    "prompt": "Kung bumaba ang presyo ng isang produkto at walang ibang nagbago, ano ang karaniwang mangyayari sa quantity demanded?",
+    "options": [
+      "Tataas",
+      "Laging magiging zero",
+      "Hindi kailanman magbabago",
+      "Awtomatikong magiging negatibo"
+    ],
+    "answer": 0,
+    "explanation": "Ayon sa batas ng demand, karaniwang tumataas ang dami ng gustong bilhin kapag bumababa ang presyo, kung pareho ang ibang salik."
+  },
+  {
+    "id": "araling-panlipunan-g9-04",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Supply",
+    "prompt": "Kung tumaas ang presyo at walang ibang nagbago, ano ang karaniwang tugon ng mga prodyuser sa quantity supplied?",
+    "options": [
+      "Laging titigil sa produksyon",
+      "Laging mamimigay nang libre",
+      "Hindi kailanman tutugon",
+      "Mag-aalok ng mas maraming produkto"
+    ],
+    "answer": 3,
+    "explanation": "Ayon sa batas ng supply, karaniwang dumarami ang iniaalok kapag tumataas ang presyo, kung pareho ang ibang salik."
+  },
+  {
+    "id": "araling-panlipunan-g9-05",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Badyet",
+    "prompt": "Ano ang pangunahing gamit ng personal na badyet?",
+    "options": [
+      "Itago ang lahat ng utang sa sarili",
+      "Bilhin ang lahat ng nakikita",
+      "Planuhin ang paggastos at pag-iipon ayon sa kita",
+      "Gumastos nang higit sa lahat ng kita"
+    ],
+    "answer": 2,
+    "explanation": "Tinutulungan ng badyet ang isang tao na ihambing ang kita, gastusin, at layunin sa pag-iipon."
+  },
+  {
+    "id": "araling-panlipunan-g9-06",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Implasyon",
+    "prompt": "Ano ang implasyon?",
+    "options": [
+      "Pagbaba ng lahat ng presyo sa bawat sandali",
+      "Pangkalahatang pagtaas ng presyo ng mga produkto at serbisyo sa paglipas ng panahon",
+      "Pagtaas lamang ng marka sa pagsusulit",
+      "Pagdami ng mga araw sa isang linggo"
+    ],
+    "answer": 1,
+    "explanation": "Sa implasyon, tumataas ang pangkalahatang antas ng presyo at nababawasan ang kayang bilhin ng parehong halaga ng salapi."
+  },
+  {
+    "id": "araling-panlipunan-g9-07",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Mga sektor",
+    "prompt": "Saang sektor kabilang ang pagsasaka at pangingisda?",
+    "options": [
+      "Agrikultura",
+      "Industriya ng software",
+      "Serbisyong legal",
+      "Pagbabangko"
+    ],
+    "answer": 0,
+    "explanation": "Kabilang sa sektor ng agrikultura ang pagsasaka, pangingisda, paggugubat, at pag-aalaga ng hayop."
+  },
+  {
+    "id": "araling-panlipunan-g9-08",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Buwis",
+    "prompt": "Alin ang isang layunin ng pangongolekta ng buwis?",
+    "options": [
+      "Gawing pribado ang lahat ng kalsada",
+      "Alisin ang lahat ng ospital",
+      "Pigilan ang lahat ng kalakalan",
+      "Tustusan ang mga pampublikong serbisyo"
+    ],
+    "answer": 3,
+    "explanation": "Ginagamit ang kita sa buwis upang pondohan ang mga serbisyo at proyektong pampubliko."
+  },
+  {
+    "id": "araling-panlipunan-g9-09",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Karapatan ng mamimili",
+    "prompt": "May sira ang bagong produktong binili mo. Ano ang responsableng unang hakbang?",
+    "options": [
+      "Magsinungaling tungkol sa nangyari",
+      "Ibigay ang password ng bangko sa sinuman",
+      "Itabi ang katibayan ng pagbili at ipaalam ang problema sa nagbenta",
+      "Manira agad ng ibang produkto"
+    ],
+    "answer": 2,
+    "explanation": "Makakatulong ang resibo at malinaw na paliwanag sa paghingi ng angkop na lunas sa problema."
+  },
+  {
+    "id": "araling-panlipunan-g9-10",
+    "subject": "araling-panlipunan",
+    "grade": 9,
+    "topic": "Pag-iimpok",
+    "prompt": "Bakit makatutulong ang emergency fund?",
+    "options": [
+      "Ginagawa nitong libre ang lahat ng bilihin",
+      "May nakalaang pera para sa di-inaasahang pangangailangan",
+      "Tinitiyak nitong hindi na kailanman magkakaproblema",
+      "Pinapalitan nito ang lahat ng uri ng kita"
+    ],
+    "answer": 1,
+    "explanation": "Ang emergency fund ay reserbang ipon para sa mga hindi planadong gastusin; hindi nito inaalis ang lahat ng panganib."
+  },
+  {
+    "id": "araling-panlipunan-g10-01",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Mapanuring pagbasa",
+    "prompt": "May kumakalat na nakagugulat na balita online. Ano ang dapat gawin bago ito ibahagi?",
+    "options": [
+      "Paniwalaan dahil may malaking larawan",
+      "Suriin ang pinagmulan, petsa, at mapagkakatiwalaang ulat",
+      "Ibahagi dahil maraming nag-like",
+      "Baguhin ang pamagat para mas kapanapanabik"
+    ],
+    "answer": 1,
+    "explanation": "Ang pagsusuri sa sanggunian, petsa, at ibang mapagkakatiwalaang ulat ay tumutulong maiwasan ang pagpapakalat ng maling impormasyon."
+  },
+  {
+    "id": "araling-panlipunan-g10-02",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Pagbabago ng klima",
+    "prompt": "Alin ang halimbawa ng climate mitigation?",
+    "options": [
+      "Pagbawas ng emisyon ng greenhouse gases",
+      "Pagtaas ng pader laban sa baha lamang",
+      "Paglipat sa evacuation center",
+      "Paglikas bago ang bagyo"
+    ],
+    "answer": 0,
+    "explanation": "Ang mitigation ay paglimita sa sanhi ng pagbabago ng klima, gaya ng pagbabawas ng greenhouse gas emissions."
+  },
+  {
+    "id": "araling-panlipunan-g10-03",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Pag-angkop sa klima",
+    "prompt": "Alin ang halimbawa ng climate adaptation?",
+    "options": [
+      "Pagdaragdag ng basura sa ilog",
+      "Pagtatago ng babala sa bagyo",
+      "Pagpapakalat ng maling impormasyon",
+      "Pag-angkop ng iskedyul at uri ng pananim sa nagbabagong klima"
+    ],
+    "answer": 3,
+    "explanation": "Ang adaptation ay pag-aangkop upang mabawasan ang pinsala o panganib mula sa epekto ng pagbabago ng klima."
+  },
+  {
+    "id": "araling-panlipunan-g10-04",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Disaster risk",
+    "prompt": "Aling sitwasyon ang nagpapataas ng panganib sa baha?",
+    "options": [
+      "Regular na pagsasanay sa paglikas",
+      "Malinis at maayos na daluyan ng tubig",
+      "Mga bahay sa flood-prone area na walang maayos na babala o evacuation plan",
+      "Maayos na babala at ligtas na ruta"
+    ],
+    "answer": 2,
+    "explanation": "Tumataas ang panganib kapag may mga taong lantad sa hazard at kulang ang kakayahang maghanda at tumugon."
+  },
+  {
+    "id": "araling-panlipunan-g10-05",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Karapatang pantao",
+    "prompt": "Kanino nakalaan ang mga karapatang pantao?",
+    "options": [
+      "Sa may parehong paniniwala lamang",
+      "Sa lahat ng tao",
+      "Sa mayayaman lamang",
+      "Sa may kapangyarihan lamang"
+    ],
+    "answer": 1,
+    "explanation": "Ang karapatang pantao ay para sa lahat, anuman ang katayuan, kasarian, relihiyon, o pinagmulan."
+  },
+  {
+    "id": "araling-panlipunan-g10-06",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Diskriminasyon",
+    "prompt": "Alin ang halimbawa ng diskriminasyon?",
+    "options": [
+      "Pagtanggi sa isang kwalipikadong aplikante dahil lamang sa kanyang relihiyon",
+      "Pagpili batay sa kaugnay na kakayahan",
+      "Pagbibigay ng pantay na pagkakataon",
+      "Pag-aayos ng pasukan para sa may kapansanan"
+    ],
+    "answer": 0,
+    "explanation": "Diskriminasyon ang hindi makatarungang pagtrato batay sa katangiang walang kaugnayan sa lehitimong pamantayan."
+  },
+  {
+    "id": "araling-panlipunan-g10-07",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Migrasyon",
+    "prompt": "Ano ang isang halimbawa ng push factor sa migrasyon?",
+    "options": [
+      "Mas magandang trabaho sa lilipatang lugar",
+      "Mas maraming paaralan sa destinasyon",
+      "Mas ligtas na tirahan sa destinasyon",
+      "Kakulangan ng ligtas na hanapbuhay sa pinanggalingang lugar"
+    ],
+    "answer": 3,
+    "explanation": "Ang push factor ay kondisyon sa pinanggalingang lugar na nagtutulak sa isang tao na lumipat."
+  },
+  {
+    "id": "araling-panlipunan-g10-08",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Pakikilahok sa demokrasya",
+    "prompt": "Alin ang responsableng pakikilahok sa pampublikong usapin?",
+    "options": [
+      "Pagbili ng boto",
+      "Pagpapakalat ng alam na kasinungalingan",
+      "Pagsusuri ng ebidensiya at magalang na pagpapahayag ng pananaw",
+      "Pagbabanta sa hindi kasundo"
+    ],
+    "answer": 2,
+    "explanation": "Ang makabuluhang pakikilahok ay gumagamit ng ebidensiya at gumagalang sa karapatan ng iba."
+  },
+  {
+    "id": "araling-panlipunan-g10-09",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Digital na pribasiya",
+    "prompt": "Alin ang mas ligtas na gawain online?",
+    "options": [
+      "Gamitin ang iisang password sa lahat ng account",
+      "Limitahan ang pagbabahagi ng tirahan, lokasyon, at sensitibong datos",
+      "I-post ang password para madaling matandaan",
+      "Ipadala ang one-time password sa estranghero"
+    ],
+    "answer": 1,
+    "explanation": "Ang paglimita sa sensitibong impormasyon ay nakababawas sa panganib ng panloloko at hindi gustong pagsubaybay."
+  },
+  {
+    "id": "araling-panlipunan-g10-10",
+    "subject": "araling-panlipunan",
+    "grade": 10,
+    "topic": "Likas-kayang pag-unlad",
+    "prompt": "Ano ang layunin ng likas-kayang pag-unlad?",
+    "options": [
+      "Tugunan ang pangangailangan ngayon nang hindi sinisira ang kakayahan ng susunod na salinlahi",
+      "Ubusing agad ang lahat ng likas na yaman",
+      "Unahin ang kita kahit masira ang kalusugan",
+      "Ipagpaliban ang lahat ng pangangailangan magpakailanman"
+    ],
+    "answer": 0,
+    "explanation": "Pinag-uugnay ng likas-kayang pag-unlad ang kabuhayan, kapakanan ng tao, at pangangalaga sa kapaligiran para sa kasalukuyan at hinaharap."
+  }
+]

@@ -5,29 +5,23 @@ import { Play } from 'phosphor-react-native';
 
 import { SkillGraph } from '@/components/learn/SkillGraph';
 import { Screen } from '@/components/student/Screen';
-import { BooksArt, FeedArt, TutorArt } from '@/components/student/TileArt';
 import {
   Card,
   Chip,
-  DarkTile,
   LargeTitleHeader,
   ListGroup,
   ListRow,
-  PressableScale,
-  ProgressBar,
   SegmentedControl,
   Stagger,
   Text,
 } from '@/components/ui';
-import { lessonFor } from '@/data/lessons';
+import { SUBJECTS } from '@/data/localQuestions';
 import { SKILL_BY_ID, SKILLS } from '@/data/skills';
-import { pressScale } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { useLive } from '@/hooks/useLive';
 import { useL, useT } from '@/i18n/useT';
-import { MAX_DECKS_PER_DAY } from '@/services/sentinel';
-import { DEFAULT_SENTINEL, todayKey, useAppStore } from '@/store/useAppStore';
+import { useAppStore } from '@/store/useAppStore';
 
 type Seg = 'you' | 'skills';
 
@@ -46,7 +40,7 @@ export default function Learn() {
       <SegmentedControl<Seg>
         options={[
           { value: 'you', label: t.learn.forYou },
-          { value: 'skills', label: t.learn.skills },
+          { value: 'skills', label: 'Extra math practice' },
         ]}
         value={tab}
         onChange={setTab}
@@ -59,96 +53,24 @@ export default function Learn() {
 
 function ForYou() {
   const { c } = useTheme();
-  const t = useT();
-  const L = useL();
-  const live = useLive();
-  const sentinel = useAppStore((s) => s.sentinel ?? DEFAULT_SENTINEL);
-  const offline = useAppStore((s) => s.offline);
-  const lesson = lessonFor(live.root);
-  const usedDecks = sentinel.day === todayKey() ? Math.min(MAX_DECKS_PER_DAY, sentinel.decksToday) : 0;
-
+  const grade = useAppStore((s) => s.learningGrade);
+  const fil = useAppStore((s) => s.lang === 'fil');
   return (
-    <>
-      <Stagger index={0}>
-        <Card
-          onPress={() => router.push({ pathname: '/break/[id]', params: { id: live.root } })}
-          style={styles.continue}
-          accessibilityLabel={t.learn.continue}
-        >
-          <View style={styles.flexGap}>
-            <Text variant="overline">{t.learn.continue}</Text>
-            <Text variant="title">{L(SKILL_BY_ID[lesson.id].name)}</Text>
-            <Text variant="subhead" numberOfLines={1}>
-              {L(lesson.concepts[1].text)}
-            </Text>
-            <ProgressBar progress={0.34} style={styles.mt} accessibilityLabel={t.brk.concept(1, 3)} />
-          </View>
-          <View style={[styles.play, { backgroundColor: c.accent }]}>
-            <Play size={22} weight="fill" color={c.onAccent} />
-          </View>
+    <View style={{ gap: 14 }}>
+      <Card style={{ gap: 12 }}>
+        <Text variant="overline">{fil ? 'ANG IYONG PRACTICE' : 'YOUR PRACTICE'}</Text>
+        <Text variant="title">Grade {grade} · {fil ? 'Piliin ang paksa' : 'Pick a subject'}</Text>
+        <Text variant="body" color="textSecondary">{fil ? 'Maiikling tanong, malinaw na sagot. Kahit walang internet.' : 'Small questions. Clear explanations. Ready without internet.'}</Text>
+        <Chip label={fil ? 'Palitan ang baitang' : 'Change grade'} onPress={() => router.push('/profile')} />
+      </Card>
+      {[{ id: 'mixed' as const, label: fil ? 'Surprise me · All subjects' : 'Surprise me · All subjects' }, ...SUBJECTS].map((subject, index) => (
+        <Card key={subject.id} onPress={() => { useAppStore.getState().setLearningSubject(subject.id); router.push('/feed'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }} accessibilityLabel={`Practice ${subject.label}, grade ${grade}`}>
+          <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: c.accentTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="title" color="accent">{['✦', '＋', 'Aa', 'Ab', '⚗', '◎'][index]}</Text></View>
+          <View style={{ flex: 1, gap: 4 }}><Text variant="headline">{subject.label}</Text><Text variant="subhead">{subject.id === 'mixed' ? '50' : '10'} {fil ? 'tanong sa baitang mo' : 'questions for your grade'}</Text></View>
+          <Play size={20} color={c.accent} weight="fill" />
         </Card>
-      </Stagger>
-
-      <Stagger index={1}>
-        <PressableScale
-          scaleTo={pressScale.card}
-          onPress={() => router.push('/feed')}
-          accessibilityLabel={`${t.learn.openFeed}, ${t.learn.deckCap(usedDecks, MAX_DECKS_PER_DAY)}`}
-          style={[styles.feed, { backgroundColor: c.tileDark }]}
-        >
-          <View style={styles.feedArt} pointerEvents="none">
-            <FeedArt size={130} />
-          </View>
-          <View style={styles.feedText}>
-            <Text variant="title" color={c.tileDarkText}>
-              {t.learn.openFeed}
-            </Text>
-            <Text variant="subhead" color={c.tileDarkSecondary}>
-              {t.learn.feedSub}
-            </Text>
-          </View>
-          <View style={styles.feedMeter}>
-            <Text variant="subhead" color={c.tileDarkText} tabular>
-              {t.learn.deckCap(usedDecks, MAX_DECKS_PER_DAY)}
-            </Text>
-            <ProgressBar progress={Math.min(1, usedDecks / MAX_DECKS_PER_DAY)} color={c.spark} style={styles.darkTrack} />
-          </View>
-        </PressableScale>
-      </Stagger>
-
-      <Stagger index={2}>
-        <Card onPress={() => router.push({ pathname: '/simulate', params: { app: 'tiktok' } })} style={styles.continue} accessibilityLabel={t.learn.simTitle}>
-          <View style={styles.flexGap}>
-            <Text variant="overline" color="accent">
-              LAUNCHER & OVERLAY
-            </Text>
-            <Text variant="headline">{t.learn.simTitle}</Text>
-            <Text variant="subhead" numberOfLines={1}>
-              {t.learn.simSub}
-            </Text>
-          </View>
-          <Chip label={t.learn.simAction} kind="accent" onPress={() => router.push({ pathname: '/simulate', params: { app: 'tiktok' } })} />
-        </Card>
-      </Stagger>
-
-      <Stagger index={3} style={styles.row}>
-        <DarkTile
-          title={t.learn.askTutor}
-          status={t.learn.tutorStatus}
-          style={styles.flex}
-          onPress={() => router.push('/tutor')}
-          art={<TutorArt />}
-        />
-        <DarkTile
-          title={t.learn.offline}
-          status={t.learn.offlineStatus(offline.length)}
-          statusAccent
-          style={styles.flex}
-          onPress={() => router.push('/offline')}
-          art={<BooksArt />}
-        />
-      </Stagger>
-    </>
+      ))}
+    </View>
   );
 }
 

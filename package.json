@@ -23,6 +23,7 @@
     "expo-linking": "~58.0.16",
     "expo-notifications": "~58.1.8",
     "expo-router": "~58.0.30",
+    "expo-secure-store": "~58.0.2",
     "expo-splash-screen": "~58.0.13",
     "expo-status-bar": "~58.0.4",
     "expo-symbols": "~58.0.4",
@@ -57,7 +58,9 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:local": "node scripts/validate-content.mjs && node scripts/test-learning-break.mjs && node scripts/test-credential-storage.mjs",
+    "test:database": "node scripts/test-database.mjs"
   },
   "private": true
 }

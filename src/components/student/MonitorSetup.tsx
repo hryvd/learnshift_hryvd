@@ -10,6 +10,7 @@ import {
   openBatterySettings,
   openNotificationSettings,
   openOverlaySettings,
+  openScrollSettings,
   platform,
   requestAccess,
   status,
@@ -166,6 +167,14 @@ export function MonitorSetup() {
         optional
         label={t.acct.allow}
         onPress={openOverlaySettings}
+      />
+      <Step
+        icon={<Eye size={20} color={c.accent} />}
+        title="Wait for your scroll"
+        sub="Uses scroll direction only. No screen text, messages or touch coordinates. Turn off anytime in Android settings."
+        done={s.scrollAccess}
+        label="Set up"
+        onPress={openScrollSettings}
       />
       <Step
         icon={<BatteryCharging size={20} weight="fill" color={c.accent} />}

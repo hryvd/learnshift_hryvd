@@ -549,7 +549,7 @@ const en = {
     brandTip: (b: string) => `On ${b} phones, also allow Autostart for LearnShift (Settings › Apps › LearnShift).`,
   },
   onb: {
-    welcome: 'Same phone, better minutes',
+    welcome: 'Scrolling better minutes',
     welcomeSub: 'When scrolling runs long, Paty shifts your feed into tiny lessons you need.',
     getStarted: 'Get started',
     role: 'Who’s here?',

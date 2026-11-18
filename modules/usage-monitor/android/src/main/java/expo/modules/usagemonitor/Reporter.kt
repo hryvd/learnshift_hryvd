@@ -72,7 +72,11 @@ object Reporter {
 
   private fun post(cfg: Config, body: JSONObject): Boolean {
     return try {
-      val conn = (URL("${cfg.url.trimEnd('/')}/functions/v1/ingest").openConnection() as HttpURLConnection).apply {
+      val endpoint = URL("${cfg.url.trimEnd('/')}/functions/v1/ingest")
+      if (endpoint.protocol != "https" || endpoint.userInfo != null) return false
+      val conn = (endpoint.openConnection() as HttpURLConnection).apply {
+        // Device credentials must not follow a redirect to a different destination.
+        instanceFollowRedirects = false
         requestMethod = "POST"
         connectTimeout = 15000
         readTimeout = 20000
@@ -91,7 +95,7 @@ object Reporter {
         false
       }
     } catch (e: Exception) {
-      Log.w(TAG, "ingest failed: ${e.message}")
+      Log.w(TAG, "ingest request failed")
       false
     }
   }

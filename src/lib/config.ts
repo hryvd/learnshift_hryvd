@@ -11,3 +11,5 @@ export const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY ?? '';
 
 /** Names used in pitch mode copy. */
 export const PITCH_NAMES = { student: 'Mika', guardian: 'Mom', section: 'Sampaguita' };
+
+export const HAS_BACKEND_CONFIG = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_KEY.length > 0;

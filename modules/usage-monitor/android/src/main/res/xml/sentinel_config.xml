@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   LearnShift Sentinel Accessibility configuration (Blueprint v2 Section 2.2).
-  android:canRetrieveWindowContent="false" ensures the OS blocks reading any
-  text, messages, view hierarchies, or video frames from watched apps.
+  android:canRetrieveWindowContent="false" blocks access to the window hierarchy.
+  ScrollService also never accesses event text/source, screenshots or typed keys.
   Do NOT set android:isAccessibilityTool so LearnShift follows the standard
   prominent-disclosure Play Store compliance path (Section 5).
 -->

@@ -63,7 +63,7 @@ export function VerticalPager({
   const hostRef = useRef<ComponentRef<typeof View>>(null);
   const lastWheelRef = useRef(0);
 
-  const duration = reduced ? 120 : mode === 'decelerate' ? DECEL_DURATION_MS : BURST_DURATION_MS;
+  const duration = reduced ? 0 : mode === 'decelerate' ? DECEL_DURATION_MS : BURST_DURATION_MS;
   const curve = mode === 'decelerate' ? ease.inOut : ease.out;
 
   useEffect(() => {
@@ -207,7 +207,12 @@ export function VerticalPager({
         <View style={[styles.viewport, { height: pageHeight, width: pageWidth }]}>
           <Animated.View style={[styles.track, { height: pageHeight * count, width: pageWidth }, trackStyle]}>
             {pages.map((page, i) => (
-              <View key={i} style={{ height: pageHeight, width: pageWidth, overflow: 'hidden' }}>
+              <View
+                key={i}
+                accessibilityElementsHidden={i !== currentIndex}
+                importantForAccessibility={i !== currentIndex ? 'no-hide-descendants' : 'auto'}
+                style={{ height: pageHeight, width: pageWidth, overflow: 'hidden' }}
+              >
                 {page}
               </View>
             ))}
@@ -226,13 +231,7 @@ export function VerticalPager({
         >
           <View style={styles.dots} accessible={false}>
             {pages.map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  i === currentIndex ? styles.dotActive : styles.dotIdle,
-                ]}
-              />
+              <View key={i} style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotIdle]} />
             ))}
           </View>
           <View style={styles.arrows}>
@@ -241,10 +240,7 @@ export function VerticalPager({
               disabled={currentIndex === 0 && !onFlickDownAtTop}
               accessibilityLabel={currentIndex === 0 && onFlickDownAtTop ? 'Dismiss' : 'Previous card'}
               hitSlop={6}
-              style={[
-                styles.arrowBtn,
-                currentIndex === 0 && !onFlickDownAtTop ? styles.arrowDisabled : null,
-              ]}
+              style={[styles.arrowBtn, currentIndex === 0 && !onFlickDownAtTop ? styles.arrowDisabled : null]}
             >
               <CaretUp size={16} weight="bold" color="#FFFFFF" />
             </PressableScale>
@@ -253,10 +249,7 @@ export function VerticalPager({
               disabled={currentIndex >= count - 1}
               accessibilityLabel="Next card"
               hitSlop={6}
-              style={[
-                styles.arrowBtn,
-                currentIndex >= count - 1 ? styles.arrowDisabled : null,
-              ]}
+              style={[styles.arrowBtn, currentIndex >= count - 1 ? styles.arrowDisabled : null]}
             >
               <CaretDown size={16} weight="bold" color="#FFFFFF" />
             </PressableScale>
@@ -294,9 +287,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   arrowBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(18, 18, 18, 0.68)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.16)',
@@ -305,4 +298,3 @@ const styles = StyleSheet.create({
   },
   arrowDisabled: { opacity: 0.3 },
 });
-

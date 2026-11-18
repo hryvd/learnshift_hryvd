@@ -16,6 +16,7 @@ import {
   ListRow,
   Notice,
   PillButton,
+  PressableScale,
   SegmentedControl,
   Stagger,
   Text,
@@ -135,6 +136,7 @@ function Frame({ title, subtitle, children }: { title: string; subtitle: string;
 }
 
 function CreateClass({ first, onDone, onCancel }: { first: boolean; onDone: () => void; onCancel?: () => void }) {
+  const { c } = useTheme();
   const [name, setName] = useState('');
   const [grade, setGrade] = useState('8');
   const [busy, setBusy] = useState(false);
@@ -163,12 +165,19 @@ function CreateClass({ first, onDone, onCancel }: { first: boolean; onDone: () =
       <Text variant="subhead" color="text">
         {T.grade}
       </Text>
-      <SegmentedControl
-        options={['7', '8', '9', '10', '11', '12'].map((g) => ({ value: g, label: g }))}
-        value={grade}
-        onChange={setGrade}
-        compact
-      />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {Array.from({ length: 10 }, (_, i) => String(i + 1)).map((g) => (
+          <PressableScale
+            key={g}
+            accessibilityLabel={`Grade ${g}`}
+            accessibilityState={{ selected: grade === g }}
+            onPress={() => setGrade(g)}
+            style={{ minWidth: 48, minHeight: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: grade === g ? c.accent : c.inset }}
+          >
+            <Text color={grade === g ? c.onAccent : c.text}>{g}</Text>
+          </PressableScale>
+        ))}
+      </View>
       <PillButton label={busy ? '…' : T.create} block disabled={busy || !name.trim()} onPress={create} />
       {onCancel ? <PillButton label="Cancel" kind="neutral" block onPress={onCancel} /> : null}
     </Card>

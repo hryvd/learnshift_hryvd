@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
-import { IS_PITCH } from '@/lib/config';
+import { HAS_BACKEND_CONFIG, IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 
 import type { Lang, Role } from './useAppStore';
@@ -90,7 +90,13 @@ let started = false;
 export function startAuth() {
   if (started || IS_PITCH) return;
   started = true;
-  supabase.auth.getSession().then(({ data }) => apply(data.session));
+  if (!HAS_BACKEND_CONFIG) {
+    useAuth.setState({ status: 'signedOut', error: 'Account services are not configured in this build.' });
+    return;
+  }
+  supabase.auth.getSession().then(({ data }) => apply(data.session)).catch(() => {
+    useAuth.setState({ status: 'signedOut', session: null, profile: null, error: 'Could not restore your session. Please sign in again.' });
+  });
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'INITIAL_SESSION') return;
     if (event === 'TOKEN_REFRESHED') {

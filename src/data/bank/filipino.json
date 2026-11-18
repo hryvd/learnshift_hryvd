@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "filipino-g1-01",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Tunog at titik",
+    "prompt": "Aling salita ang nagsisimula sa tunog /m/?",
+    "options": [
+      "bata",
+      "sako",
+      "mata",
+      "pusa"
+    ],
+    "answer": 2,
+    "explanation": "Nagsisimula sa titik m at tunog /m/ ang mata."
+  },
+  {
+    "id": "filipino-g1-02",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Pantig",
+    "prompt": "Ilang pantig mayroon ang salitang 'bata'?",
+    "options": [
+      "1",
+      "3",
+      "4",
+      "2"
+    ],
+    "answer": 3,
+    "explanation": "Ang paghahati ay ba-ta, kaya may dalawang pantig."
+  },
+  {
+    "id": "filipino-g1-03",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Tugma",
+    "prompt": "Aling salita ang katugma ng 'bata'?",
+    "options": [
+      "mata",
+      "puno",
+      "saging",
+      "lapis"
+    ],
+    "answer": 0,
+    "explanation": "Magkatulad ang hulihang tunog ng bata at mata."
+  },
+  {
+    "id": "filipino-g1-04",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Pangngalan",
+    "prompt": "Alin ang pangalan ng isang hayop?",
+    "options": [
+      "takbo",
+      "pusa",
+      "maliit",
+      "asul"
+    ],
+    "answer": 1,
+    "explanation": "Ang pusa ay isang hayop. Ang pangngalan ay ngalan ng tao, hayop, bagay, lugar, o pangyayari."
+  },
+  {
+    "id": "filipino-g1-05",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Kilos",
+    "prompt": "Aling salita ang nagsasabi ng kilos?",
+    "options": [
+      "mesa",
+      "berde",
+      "talon",
+      "bilog"
+    ],
+    "answer": 2,
+    "explanation": "Ang talon ay isang kilos na maaaring gawin ng katawan."
+  },
+  {
+    "id": "filipino-g1-06",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Kulay",
+    "prompt": "Sa 'pulang bola,' aling salita ang nagsasaad ng kulay?",
+    "options": [
+      "bola",
+      "bilog",
+      "laro",
+      "pula"
+    ],
+    "answer": 3,
+    "explanation": "Pula ang salitang nagsasabi ng kulay ng bola."
+  },
+  {
+    "id": "filipino-g1-07",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Magkasalungat",
+    "prompt": "Ano ang kasalungat ng malaki?",
+    "options": [
+      "maliit",
+      "mahaba",
+      "mabigat",
+      "malapad"
+    ],
+    "answer": 0,
+    "explanation": "Magkasalungat na sukat ang malaki at maliit."
+  },
+  {
+    "id": "filipino-g1-08",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Pag-unawa",
+    "prompt": "May dalang payong si Aya. Ano ang dala ni Aya?",
+    "options": [
+      "sombrero",
+      "payong",
+      "bag",
+      "sapatos"
+    ],
+    "answer": 1,
+    "explanation": "Tuwirang sinabi sa pangungusap na payong ang dala ni Aya."
+  },
+  {
+    "id": "filipino-g1-09",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Paggalang",
+    "prompt": "Ano ang magalang na sasabihin kapag may tumulong sa iyo?",
+    "options": [
+      "Umalis ka.",
+      "Akin iyan!",
+      "Salamat po.",
+      "Bilisan mo!"
+    ],
+    "answer": 2,
+    "explanation": "Ang salamat po ay magalang na pagpapasalamat sa tumulong."
+  },
+  {
+    "id": "filipino-g1-10",
+    "subject": "filipino",
+    "grade": 1,
+    "topic": "Lokasyon",
+    "prompt": "Nasa ilalim ng upuan ang tsinelas. Nasaan ang tsinelas?",
+    "options": [
+      "sa ibabaw ng upuan",
+      "sa loob ng bag",
+      "sa labas ng bahay",
+      "sa ibaba ng upuan"
+    ],
+    "answer": 3,
+    "explanation": "Ang ilalim ay tumutukoy sa bahaging nasa ibaba."
+  },
+  {
+    "id": "filipino-g2-01",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pantig",
+    "prompt": "Alin ang tamang pagpapantig ng 'kamatis'?",
+    "options": [
+      "kam-a-tis",
+      "ka-mat-is",
+      "k-a-matis",
+      "ka-ma-tis"
+    ],
+    "answer": 3,
+    "explanation": "Ang kamatis ay may tatlong pantig: ka-ma-tis."
+  },
+  {
+    "id": "filipino-g2-02",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pangngalang pantangi",
+    "prompt": "Alin ang tiyak na pangalan ng isang tao?",
+    "options": [
+      "Rosa",
+      "guro",
+      "bata",
+      "kaibigan"
+    ],
+    "answer": 0,
+    "explanation": "Ang Rosa ay tiyak na pangalan kaya nagsisimula ito sa malaking titik."
+  },
+  {
+    "id": "filipino-g2-03",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Panghalip",
+    "prompt": "Si Lito ay nagbabasa. Aling salita ang maaaring ipalit sa 'Si Lito'?",
+    "options": [
+      "Sila",
+      "Siya",
+      "Kami",
+      "Tayo"
+    ],
+    "answer": 1,
+    "explanation": "Ang siya ay panghalip para sa isang taong tinutukoy."
+  },
+  {
+    "id": "filipino-g2-04",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pandiwa",
+    "prompt": "Alin ang kilos sa pangungusap na 'Sumayaw ang mga bata'?",
+    "options": [
+      "ang",
+      "mga",
+      "Sumayaw",
+      "bata"
+    ],
+    "answer": 2,
+    "explanation": "Sumayaw ang pandiwang nagsasabi ng ginawa ng mga bata."
+  },
+  {
+    "id": "filipino-g2-05",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pang-uri",
+    "prompt": "Alin ang naglalarawan sa 'matamis na mangga'?",
+    "options": [
+      "na",
+      "mangga",
+      "prutas",
+      "matamis"
+    ],
+    "answer": 3,
+    "explanation": "Inilalarawan ng matamis ang lasa ng mangga."
+  },
+  {
+    "id": "filipino-g2-06",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Bantas",
+    "prompt": "Anong bantas ang ilalagay sa dulo ng 'Nasaan ang aklat ko'?",
+    "options": [
+      "tandang pananong (?)",
+      "tuldok (.)",
+      "kuwit (,)",
+      "gitling (-)"
+    ],
+    "answer": 0,
+    "explanation": "Tanong ang pangungusap, kaya tandang pananong ang kailangan."
+  },
+  {
+    "id": "filipino-g2-07",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pagkakasunod-sunod",
+    "prompt": "Una, maghugas ng kamay. Pagkatapos, kumain. Ano ang dapat mauna?",
+    "options": [
+      "Kumain.",
+      "Maghugas ng kamay.",
+      "Maglaro.",
+      "Matulog."
+    ],
+    "answer": 1,
+    "explanation": "Ipinapakita ng salitang una ang hakbang na dapat gawin bago kumain."
+  },
+  {
+    "id": "filipino-g2-08",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Magkasingkahulugan",
+    "prompt": "Ano ang kasingkahulugan ng masaya?",
+    "options": [
+      "malungkot",
+      "galit",
+      "maligaya",
+      "takot"
+    ],
+    "answer": 2,
+    "explanation": "Parehong nagpapahayag ng kasiyahan ang masaya at maligaya."
+  },
+  {
+    "id": "filipino-g2-09",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Magkasalungat",
+    "prompt": "Ano ang kasalungat ng malinis?",
+    "options": [
+      "maliwanag",
+      "malamig",
+      "malambot",
+      "marumi"
+    ],
+    "answer": 3,
+    "explanation": "Magkasalungat ang malinis at marumi."
+  },
+  {
+    "id": "filipino-g2-10",
+    "subject": "filipino",
+    "grade": 2,
+    "topic": "Pag-unawa",
+    "prompt": "Diniligan ni Nilo ang halaman dahil tuyo ang lupa. Bakit niya ito diniligan?",
+    "options": [
+      "Tuyo ang lupa.",
+      "Mataas ang puno.",
+      "Bago ang paso.",
+      "Gabi na."
+    ],
+    "answer": 0,
+    "explanation": "Ang dahilan sa pangungusap ay ang pagkatuyo ng lupa."
+  },
+  {
+    "id": "filipino-g3-01",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Pangngalan",
+    "prompt": "Alin ang pangngalang pambalana?",
+    "options": [
+      "lungsod",
+      "Maynila",
+      "Pilipinas",
+      "Luzon"
+    ],
+    "answer": 0,
+    "explanation": "Pangkalahatang tawag ang lungsod. Tiyak na pangalan ang ibang pagpipilian."
+  },
+  {
+    "id": "filipino-g3-02",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Panghalip panao",
+    "prompt": "Aling panghalip ang tumutukoy sa nagsasalita at sa kausap?",
+    "options": [
+      "kami",
+      "tayo",
+      "sila",
+      "siya"
+    ],
+    "answer": 1,
+    "explanation": "Kasama ang kausap sa tayo, ngunit hindi sa kami."
+  },
+  {
+    "id": "filipino-g3-03",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Aspekto ng pandiwa",
+    "prompt": "Alin ang nagpapakita ng kilos na natapos na?",
+    "options": [
+      "nagsusulat",
+      "magsusulat",
+      "nagsulat",
+      "susulat"
+    ],
+    "answer": 2,
+    "explanation": "Ipinapakita ng nagsulat na natapos na ang kilos."
+  },
+  {
+    "id": "filipino-g3-04",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Pang-uri",
+    "prompt": "Anong uri ng salita ang 'mabango' sa 'mabangong bulaklak'?",
+    "options": [
+      "pandiwa",
+      "panghalip",
+      "pang-ukol",
+      "pang-uri"
+    ],
+    "answer": 3,
+    "explanation": "Inilalarawan nito ang amoy ng bulaklak, kaya pang-uri ito."
+  },
+  {
+    "id": "filipino-g3-05",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Pang-abay",
+    "prompt": "Sa 'Mabilis tumakbo si Leo,' alin ang nagsasabi kung paano tumakbo?",
+    "options": [
+      "Mabilis",
+      "tumakbo",
+      "si",
+      "Leo"
+    ],
+    "answer": 0,
+    "explanation": "Inilalarawan ng mabilis ang paraan ng pagtakbo."
+  },
+  {
+    "id": "filipino-g3-06",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Tambalang salita",
+    "prompt": "Alin ang tambalang salita?",
+    "options": [
+      "mesa",
+      "bahaghari",
+      "saging",
+      "lapis"
+    ],
+    "answer": 1,
+    "explanation": "Ang bahaghari ay nabuo mula sa mga salitang bahag at hari."
+  },
+  {
+    "id": "filipino-g3-07",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Sanhi at bunga",
+    "prompt": "Nabasa ang kalsada dahil umulan. Ano ang bunga?",
+    "options": [
+      "Umulan.",
+      "Uminit ang panahon.",
+      "Nabasa ang kalsada.",
+      "Natuyo ang damit."
+    ],
+    "answer": 2,
+    "explanation": "Ang pagkabasa ng kalsada ang resulta o bunga ng pag-ulan."
+  },
+  {
+    "id": "filipino-g3-08",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Pangunahing diwa",
+    "prompt": "Nagtanim ang klase. Diniligan nila ang mga tanim. Inalis din nila ang damo. Ano ang pangunahing diwa?",
+    "options": [
+      "Namasyal ang klase sa dagat.",
+      "Naglaro ang klase buong araw.",
+      "Bumili ang klase ng mga laruan.",
+      "Inalagaan ng klase ang mga halaman."
+    ],
+    "answer": 3,
+    "explanation": "Lahat ng pangungusap ay tungkol sa pag-aalaga ng mga halaman."
+  },
+  {
+    "id": "filipino-g3-09",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Paghihinuha",
+    "prompt": "Nagsuot ng kapote si Bea bago lumabas. Makulimlim ang langit. Ano ang malamang na inaasahan niya?",
+    "options": [
+      "Uulan.",
+      "May lindol.",
+      "Iinit nang husto sa loob.",
+      "May paligsahan sa paglangoy."
+    ],
+    "answer": 0,
+    "explanation": "Ang kapote at makulimlim na langit ay mga palatandaang inaasahan niya ang ulan."
+  },
+  {
+    "id": "filipino-g3-10",
+    "subject": "filipino",
+    "grade": 3,
+    "topic": "Wastong gamit ng po",
+    "prompt": "Alin ang magalang na pagtatanong sa nakatatanda?",
+    "options": [
+      "Sagutin mo ako agad!",
+      "Maaari po bang magtanong?",
+      "Hoy, makinig ka!",
+      "Bakit ang bagal mo?"
+    ],
+    "answer": 1,
+    "explanation": "Magalang ang maaari po bang at nagbibigay ito ng maayos na paraan ng pagtatanong."
+  },
+  {
+    "id": "filipino-g4-01",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Aspekto ng pandiwa",
+    "prompt": "Alin ang pandiwang nagsasaad ng kilos na kasalukuyang ginagawa?",
+    "options": [
+      "nagbasa",
+      "nagbabasa",
+      "magbabasa",
+      "babasahin"
+    ],
+    "answer": 1,
+    "explanation": "Ang pag-uulit sa nagbabasa ay nagpapakita ng kilos na nagpapatuloy."
+  },
+  {
+    "id": "filipino-g4-02",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Panghalip pamatlig",
+    "prompt": "Aling salita ang tumutukoy sa bagay na malapit sa nagsasalita?",
+    "options": [
+      "iyan",
+      "iyon",
+      "ito",
+      "sila"
+    ],
+    "answer": 2,
+    "explanation": "Ang ito ay ginagamit sa bagay na malapit sa nagsasalita."
+  },
+  {
+    "id": "filipino-g4-03",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Pang-ugnay",
+    "prompt": "Piliin ang angkop: 'Gusto kong maglaro, ___ umuulan.'",
+    "options": [
+      "dahil",
+      "upang",
+      "kaya",
+      "ngunit"
+    ],
+    "answer": 3,
+    "explanation": "Nagpapakita ng pagsalungat ang ngunit sa kagustuhang maglaro at sa pag-ulan."
+  },
+  {
+    "id": "filipino-g4-04",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Paghahambing",
+    "prompt": "Alin ang pahambing na pang-uri?",
+    "options": [
+      "mas mataas",
+      "mataas",
+      "napakataas",
+      "pinakamataas"
+    ],
+    "answer": 0,
+    "explanation": "Ang mas mataas ay ginagamit upang maghambing ng taas."
+  },
+  {
+    "id": "filipino-g4-05",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Simuno",
+    "prompt": "Ano ang simuno sa 'Ang masipag na mag-aaral ay nagbasa'?",
+    "options": [
+      "ay nagbasa",
+      "Ang masipag na mag-aaral",
+      "nagbasa",
+      "masipag"
+    ],
+    "answer": 1,
+    "explanation": "Ang simuno ang pinag-uusapan sa pangungusap."
+  },
+  {
+    "id": "filipino-g4-06",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Katotohanan at opinyon",
+    "prompt": "Alin ang opinyon?",
+    "options": [
+      "May buto ang mangga.",
+      "Tumubo sa puno ang mangga.",
+      "Pinakamasarap ang mangga sa lahat ng prutas.",
+      "Maaaring berde ang balat ng mangga."
+    ],
+    "answer": 2,
+    "explanation": "Ang pinakamasarap ay personal na paghatol na maaaring magkaiba sa bawat tao."
+  },
+  {
+    "id": "filipino-g4-07",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Pagbibigay-kahulugan",
+    "prompt": "Matamlay si Ben; wala siyang siglang maglaro. Ano ang ibig sabihin ng matamlay?",
+    "options": [
+      "napakaingay",
+      "matulin",
+      "masiglang-masigla",
+      "mahina ang sigla"
+    ],
+    "answer": 3,
+    "explanation": "Ang pariralang wala siyang sigla ang pahiwatig sa kahulugan ng matamlay."
+  },
+  {
+    "id": "filipino-g4-08",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Pagtutulad",
+    "prompt": "Alin ang halimbawa ng pagtutulad?",
+    "options": [
+      "Ang ulap ay parang bulak.",
+      "Mataas ang ulap.",
+      "Umuulan mula sa ulap.",
+      "Maraming ulap sa langit."
+    ],
+    "answer": 0,
+    "explanation": "Gumagamit ng parang ang pagtutulad upang ihambing ang ulap sa bulak."
+  },
+  {
+    "id": "filipino-g4-09",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Pagbubuod",
+    "prompt": "Nanghiram si Mila ng aklat, binasa ito, at ibinalik sa takdang araw. Alin ang pinakamahusay na buod?",
+    "options": [
+      "Nawala ni Mila ang aklat.",
+      "Responsableng ginamit at ibinalik ni Mila ang hiniram na aklat.",
+      "Hindi marunong magbasa si Mila.",
+      "Bumili si Mila ng bagong aparador."
+    ],
+    "answer": 1,
+    "explanation": "Saklaw ng buod ang mahahalagang ginawa nang walang dagdag na pangyayaring wala sa teksto."
+  },
+  {
+    "id": "filipino-g4-10",
+    "subject": "filipino",
+    "grade": 4,
+    "topic": "Layunin ng teksto",
+    "prompt": "Ano ang pangunahing layunin ng tekstong may mga hakbang sa pagtatanim?",
+    "options": [
+      "manakot",
+      "magpatawa lamang",
+      "magbigay ng panuto",
+      "magtago ng impormasyon"
+    ],
+    "answer": 2,
+    "explanation": "Ang sunod-sunod na hakbang ay gumagabay sa paggawa ng isang gawain."
+  },
+  {
+    "id": "filipino-g5-01",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Ng at nang",
+    "prompt": "Piliin ang tama: 'Bumili siya ___ tinapay.'",
+    "options": [
+      "nang",
+      "kung",
+      "ng",
+      "kapag"
+    ],
+    "answer": 2,
+    "explanation": "Ng ang ginagamit bago ang bagay na binili, ang tinapay."
+  },
+  {
+    "id": "filipino-g5-02",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Ng at nang",
+    "prompt": "Piliin ang tama: 'Naglakad siya ___ mabilis.'",
+    "options": [
+      "ng",
+      "sa",
+      "para",
+      "nang"
+    ],
+    "answer": 3,
+    "explanation": "Nang ang ginagamit bago ang salitang naglalarawan sa paraan ng pagkilos."
+  },
+  {
+    "id": "filipino-g5-03",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Sanhi at bunga",
+    "prompt": "Piliin ang angkop: 'Nag-aral siya nang mabuti, ___ naunawaan niya ang aralin.'",
+    "options": [
+      "kaya",
+      "ngunit",
+      "bagaman",
+      "kahit"
+    ],
+    "answer": 0,
+    "explanation": "Ipinakikilala ng kaya ang bunga ng masusing pag-aaral."
+  },
+  {
+    "id": "filipino-g5-04",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Pang-abay na pamanahon",
+    "prompt": "Alin ang nagsasabi kung kailan sa 'Bukas kami pupunta sa museo'?",
+    "options": [
+      "kami",
+      "Bukas",
+      "pupunta",
+      "museo"
+    ],
+    "answer": 1,
+    "explanation": "Bukas ang pang-abay na nagsasaad ng panahon."
+  },
+  {
+    "id": "filipino-g5-05",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Idyoma",
+    "prompt": "Ano ang ibig sabihin ng 'bukas-palad'?",
+    "options": [
+      "laging nakataas ang kamay",
+      "madaling mapagod",
+      "mapagbigay",
+      "mahilig makipagtalo"
+    ],
+    "answer": 2,
+    "explanation": "Tumutukoy ang bukas-palad sa taong handang magbigay o tumulong."
+  },
+  {
+    "id": "filipino-g5-06",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Pagwawangis",
+    "prompt": "Alin ang halimbawa ng pagwawangis?",
+    "options": [
+      "Siya ay kasingtangkad ko.",
+      "Parang bituin ang kaniyang mata.",
+      "Tulad ng bulak ang ulap.",
+      "Siya ang ilaw ng aming pangkat."
+    ],
+    "answer": 3,
+    "explanation": "Tuwirang inihahambing ang tao sa ilaw nang walang parang o tulad."
+  },
+  {
+    "id": "filipino-g5-07",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Tema",
+    "prompt": "Sa kuwento, inamin ng bata ang pagkabasag ng plorera at tumulong sa pag-aayos. Anong tema ang angkop?",
+    "options": [
+      "Pananagutan sa sariling pagkakamali.",
+      "Pagtatago ng katotohanan.",
+      "Pagiging sikat sa lahat ng oras.",
+      "Pag-iwas sa lahat ng gawain."
+    ],
+    "answer": 0,
+    "explanation": "Ang pag-amin at pagtulong sa pag-aayos ay nagpapakita ng pananagutan."
+  },
+  {
+    "id": "filipino-g5-08",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Mapagkakatiwalaang sanggunian",
+    "prompt": "Saan pinakamainam tingnan ang opisyal na babala sa bagyo?",
+    "options": [
+      "sa lumang komiks",
+      "sa PAGASA",
+      "sa post na walang pinagmulan",
+      "sa hula ng hindi kakilala"
+    ],
+    "answer": 1,
+    "explanation": "Ang PAGASA ang ahensiyang nagbibigay ng opisyal na ulat at babala sa panahon."
+  },
+  {
+    "id": "filipino-g5-09",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Paghihinuha",
+    "prompt": "Nabawasan ang basurang bote matapos gumamit ng tumbler ang klase. Aling hinuha ang may suporta?",
+    "options": [
+      "Nawala ang lahat ng basura sa bansa.",
+      "Wala nang kailangang linisin.",
+      "Nakatulong ang paggamit ng tumbler sa pagbawas ng boteng basura ng klase.",
+      "Lahat ng paaralan ay gumamit ng tumbler."
+    ],
+    "answer": 2,
+    "explanation": "Ang datos ay tungkol lamang sa klase at sa pagbawas ng boteng basura nito."
+  },
+  {
+    "id": "filipino-g5-10",
+    "subject": "filipino",
+    "grade": 5,
+    "topic": "Bahagi ng liham",
+    "prompt": "Sa liham, saan karaniwang inilalagay ang 'Mahal kong Lola'?",
+    "options": [
+      "lagda",
+      "katawan",
+      "bating pangwakas",
+      "bating panimula"
+    ],
+    "answer": 3,
+    "explanation": "Ang Mahal kong Lola ay pagbati sa taong sinusulatan bago ang katawan ng liham."
+  },
+  {
+    "id": "filipino-g6-01",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pangatnig",
+    "prompt": "Aling salita ang nagsasaad ng layunin sa 'Nag-ipon siya upang makabili ng aklat'?",
+    "options": [
+      "siya",
+      "nag-ipon",
+      "aklat",
+      "upang"
+    ],
+    "answer": 3,
+    "explanation": "Ipinakikilala ng upang ang layunin ng pag-iipon."
+  },
+  {
+    "id": "filipino-g6-02",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pokus sa tagaganap",
+    "prompt": "Sa 'Nagluto ng sopas si Ana,' sino ang tagaganap?",
+    "options": [
+      "si Ana",
+      "ang sopas",
+      "ang kusina",
+      "ang kalan"
+    ],
+    "answer": 0,
+    "explanation": "Si Ana ang gumagawa ng kilos na pagluluto."
+  },
+  {
+    "id": "filipino-g6-03",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Lantay na pang-uri",
+    "prompt": "Alin ang pang-uring lantay?",
+    "options": [
+      "mas matalino",
+      "matalino",
+      "pinakamatalino",
+      "kasingtalino"
+    ],
+    "answer": 1,
+    "explanation": "Naglalarawan lamang ang matalino at hindi ito naghahambing."
+  },
+  {
+    "id": "filipino-g6-04",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pang-abay na panlunan",
+    "prompt": "Alin ang nagsasaad ng lugar sa 'Nagbasa kami sa silid-aklatan kahapon'?",
+    "options": [
+      "kahapon",
+      "kami",
+      "sa silid-aklatan",
+      "nagbasa"
+    ],
+    "answer": 2,
+    "explanation": "Tinutukoy ng sa silid-aklatan ang lugar ng pagbasa."
+  },
+  {
+    "id": "filipino-g6-05",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Personipikasyon",
+    "prompt": "Anong tayutay ang 'Sumasayaw ang mga dahon sa hangin'?",
+    "options": [
+      "pagtutulad",
+      "pag-uulit",
+      "pagtanggi",
+      "pagsasatao"
+    ],
+    "answer": 3,
+    "explanation": "Binibigyan ng kilos ng tao, ang pagsayaw, ang mga dahon."
+  },
+  {
+    "id": "filipino-g6-06",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pagpapahayag ng opinyon",
+    "prompt": "Aling pahayag ang malinaw na nagpapakilalang opinyon?",
+    "options": [
+      "Sa aking palagay, mas kaaya-aya ang parke sa umaga.",
+      "Apat ang upuan sa larawan.",
+      "Nakasaad sa paskil na alas-otso ang simula.",
+      "May sampung pahina ang sipi."
+    ],
+    "answer": 0,
+    "explanation": "Ang sa aking palagay ay tahasang nagsasaad ng sariling pananaw."
+  },
+  {
+    "id": "filipino-g6-07",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pag-uulat",
+    "prompt": "Ano ang dapat unahin bago ibahagi ang isang nakakagulat na balita?",
+    "options": [
+      "Paramihin agad ang nagbahagi.",
+      "Tiyakin ang pinagmulan at ebidensiya.",
+      "Palitan ang pamagat para mas nakagugulat.",
+      "Ipagpalagay na tama dahil sikat."
+    ],
+    "answer": 1,
+    "explanation": "Mahalagang suriin ang mapagkakatiwalaang pinagmulan at ebidensiya bago magbahagi."
+  },
+  {
+    "id": "filipino-g6-08",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Panuto",
+    "prompt": "Alin ang pinakamalinaw na panuto?",
+    "options": [
+      "Ayusin mo iyan doon.",
+      "Gawin mo ang bagay.",
+      "Ilagay ang tatlong lapis sa kahong asul.",
+      "Ilagay mo kung saan."
+    ],
+    "answer": 2,
+    "explanation": "May tiyak na bilang, bagay, at lugar ang unang panuto."
+  },
+  {
+    "id": "filipino-g6-09",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Pananaw ng tagapagsalaysay",
+    "prompt": "Aling pangungusap ang nasa unang panauhan?",
+    "options": [
+      "Binuksan niya ang pinto.",
+      "Binuksan nila ang pinto.",
+      "Binuksan ni Mara ang pinto.",
+      "Binuksan ko ang pinto."
+    ],
+    "answer": 3,
+    "explanation": "Ang ko ay tumutukoy sa tagapagsalaysay bilang kalahok sa kilos."
+  },
+  {
+    "id": "filipino-g6-10",
+    "subject": "filipino",
+    "grade": 6,
+    "topic": "Paggalang sa sanggunian",
+    "prompt": "Ano ang dapat gawin kapag eksaktong kinopya ang pangungusap mula sa aklat?",
+    "options": [
+      "Lagyan ng panipi at tukuyin ang sanggunian.",
+      "Angkining sariling pangungusap ito.",
+      "Palitan lamang ang isang titik.",
+      "Alisin ang pangalan ng may-akda."
+    ],
+    "answer": 0,
+    "explanation": "Ipinakikita ng panipi at pagkilala sa sanggunian kung kanino nagmula ang eksaktong salita."
+  },
+  {
+    "id": "filipino-g7-01",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Alamat",
+    "prompt": "Ano ang karaniwang ipinapaliwanag ng alamat?",
+    "options": [
+      "pinagmulan ng isang bagay, lugar, o kaugalian",
+      "resulta ng isang eksperimento lamang",
+      "araw-araw na tala ng gastos",
+      "mga hakbang sa pag-install ng app"
+    ],
+    "answer": 0,
+    "explanation": "Karaniwang salaysay tungkol sa pinagmulan ang alamat."
+  },
+  {
+    "id": "filipino-g7-02",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Pabula",
+    "prompt": "Ano ang karaniwang katangian ng pabula?",
+    "options": [
+      "Mga opisyal na tala ng panahon.",
+      "Mga hayop na kumikilos na parang tao at naghahatid ng aral.",
+      "Mga listahan ng batas na walang kuwento.",
+      "Mga panutong walang tauhan."
+    ],
+    "answer": 1,
+    "explanation": "Madalas gamitin ng pabula ang mga hayop upang maglahad ng aral tungkol sa asal."
+  },
+  {
+    "id": "filipino-g7-03",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Salawikain",
+    "prompt": "Anong diwa ang ipinapahayag ng 'Kung may tiyaga, may nilaga'?",
+    "options": [
+      "Laging kailangang magluto.",
+      "Walang halaga ang pagtitiyaga.",
+      "May mabuting bunga ang pagsisikap.",
+      "Dapat hintayin lamang ang suwerte."
+    ],
+    "answer": 2,
+    "explanation": "Hinihikayat ng salawikain ang pagsisikap upang makamit ang layunin."
+  },
+  {
+    "id": "filipino-g7-04",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Tauhan",
+    "prompt": "Ibinahagi ng tauhan ang huli niyang pagkain sa kaibigan. Anong katangian ang ipinapakita?",
+    "options": [
+      "pagkamakasarili",
+      "pagiging mapanlinlang",
+      "pagiging pabaya",
+      "pagkamapagbigay"
+    ],
+    "answer": 3,
+    "explanation": "Ang pagbabahagi kahit limitado ang sariling pagkain ay tanda ng pagkamapagbigay."
+  },
+  {
+    "id": "filipino-g7-05",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Tunggalian",
+    "prompt": "Nag-aalinlangan ang tauhan kung aaminin niya ang pagkakamali. Anong tunggalian ito?",
+    "options": [
+      "tao laban sa sarili",
+      "tao laban sa kalikasan",
+      "tao laban sa hayop",
+      "tao laban sa makina"
+    ],
+    "answer": 0,
+    "explanation": "Nasa isip at damdamin ng tauhan ang pagtutunggalian."
+  },
+  {
+    "id": "filipino-g7-06",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Denotasyon",
+    "prompt": "Alin ang denotatibong kahulugan ng 'ilaw'?",
+    "options": [
+      "taong gumagabay sa buhay",
+      "bagay na nagbibigay ng liwanag",
+      "sagisag ng pag-asa",
+      "inspirasyon ng pangkat"
+    ],
+    "answer": 1,
+    "explanation": "Ang denotasyon ay tuwiran o literal na kahulugan ng salita."
+  },
+  {
+    "id": "filipino-g7-07",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Konotasyon",
+    "prompt": "Sa 'Si Lola ang ilaw ng aming tahanan,' ano ang ipinahihiwatig ng ilaw?",
+    "options": [
+      "isang bombilya lamang",
+      "kuryenteng nababayaran",
+      "gabay at inspirasyon",
+      "aparatong nakasaksak"
+    ],
+    "answer": 2,
+    "explanation": "Ginagamit ang ilaw sa malalim na kahulugang gabay at inspirasyon."
+  },
+  {
+    "id": "filipino-g7-08",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Kohesyon",
+    "prompt": "Aling pang-ugnay ang nagpapakita ng pagsalungat?",
+    "options": [
+      "samakatuwid",
+      "bukod dito",
+      "halimbawa",
+      "gayunman"
+    ],
+    "answer": 3,
+    "explanation": "Ipinapakita ng gayunman na may kasunod na ideyang salungat sa nauna."
+  },
+  {
+    "id": "filipino-g7-09",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Pagpapatunay",
+    "prompt": "Alin ang pinakamahusay na suporta sa pagsusuri ng tauhan?",
+    "options": [
+      "Tiyak na kilos at pahayag mula sa kuwento.",
+      "Kulay lamang ng pabalat.",
+      "Hula tungkol sa buhay ng may-akda.",
+      "Bilang lamang ng pahina."
+    ],
+    "answer": 0,
+    "explanation": "Ang kilos at pahayag ng tauhan ang direktang ebidensiya para sa pagsusuri."
+  },
+  {
+    "id": "filipino-g7-10",
+    "subject": "filipino",
+    "grade": 7,
+    "topic": "Etika sa talakayan",
+    "prompt": "Paano maayos na tututol sa interpretasyon ng kaklase?",
+    "options": [
+      "Laitin ang kaklase.",
+      "Magbigay ng ibang pagbasa na may ebidensiya sa teksto.",
+      "Pigilang magsalita ang iba.",
+      "Sabihing walang dapat magtanong."
+    ],
+    "answer": 1,
+    "explanation": "Mas makabuluhan ang pagtutol kapag nakatuon sa ideya at ebidensiya, hindi sa tao."
+  },
+  {
+    "id": "filipino-g8-01",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Epiko",
+    "prompt": "Ano ang karaniwang paksa ng epiko?",
+    "options": [
+      "listahan ng pamimili",
+      "kabayanihan at pakikipagsapalaran ng pangunahing tauhan",
+      "ulat sa simpleng resibo",
+      "mga tuntunin sa bantas lamang"
+    ],
+    "answer": 1,
+    "explanation": "Karaniwang mahabang salaysay ang epiko tungkol sa kabayanihan at pambihirang pakikipagsapalaran."
+  },
+  {
+    "id": "filipino-g8-02",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Karunungang-bayan",
+    "prompt": "Ano ang layunin ng bugtong?",
+    "options": [
+      "Iulat ang lahat ng pangyayari nang literal.",
+      "Magbigay ng opisyal na diagnosis.",
+      "Pahulaan ang inilalarawan gamit ang talinghaga.",
+      "Maglista ng lahat ng tauhan."
+    ],
+    "answer": 2,
+    "explanation": "Gumagamit ng patalinghagang paglalarawan ang bugtong upang pahulaan ang sagot."
+  },
+  {
+    "id": "filipino-g8-03",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Tayutay",
+    "prompt": "Anong tayutay ang 'Umabot sa langit ang kaniyang tuwa'?",
+    "options": [
+      "pagtutulad",
+      "pagsasatao",
+      "pagtawag",
+      "pagmamalabis"
+    ],
+    "answer": 3,
+    "explanation": "Sadyang pinalalabis ang paglalarawan upang ipakita ang matinding tuwa."
+  },
+  {
+    "id": "filipino-g8-04",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Tono",
+    "prompt": "Anong tono ang nangingibabaw sa 'Kaya nating bumangon kung magtutulungan'?",
+    "options": [
+      "umaasa",
+      "mapanlibak",
+      "walang pakialam",
+      "mapaghiganti"
+    ],
+    "answer": 0,
+    "explanation": "Nagpapahayag ito ng pag-asa at paniniwala sa sama-samang pagkilos."
+  },
+  {
+    "id": "filipino-g8-05",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Simbolismo",
+    "prompt": "Sa kuwento, ang muling binuong tulay ay sumasagisag sa pagkakasundo. Ano ang ginagampanan ng tulay?",
+    "options": [
+      "Tiyak na patunay ng haba ng ilog.",
+      "Simbolo ng mas malawak na ideya.",
+      "Pangngalang walang kabuluhan.",
+      "Opisyal na tala ng kasaysayan."
+    ],
+    "answer": 1,
+    "explanation": "Ang isang konkretong bagay ay ginagamit upang kumatawan sa ideyang pagkakasundo."
+  },
+  {
+    "id": "filipino-g8-06",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Pangangatwiran",
+    "prompt": "Ano ang kontraargumento?",
+    "options": [
+      "pamagat ng bawat sanaysay",
+      "pag-uulit lamang ng kongklusyon",
+      "pangatwirang sumasalungat sa pangunahing paninindigan",
+      "listahan ng tauhang walang kaugnayan"
+    ],
+    "answer": 2,
+    "explanation": "Naghaharap ang kontraargumento ng salungat na posisyong kailangang suriin o sagutin."
+  },
+  {
+    "id": "filipino-g8-07",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Pagkilatis sa impormasyon",
+    "prompt": "Dalawang tao lamang ang nakapanayam ngunit sinabing 'Lahat ay tutol.' Ano ang kahinaan?",
+    "options": [
+      "Laging sapat ang dalawang tao.",
+      "Hindi kailangang suportahan ang pamagat.",
+      "Patunay ng katotohanan ang malakas na pananalita.",
+      "Hindi sapat ang ebidensiya para sa salitang lahat."
+    ],
+    "answer": 3,
+    "explanation": "Hindi maaaring katawanin ng dalawang opinyon ang pananaw ng lahat nang walang mas malawak na ebidensiya."
+  },
+  {
+    "id": "filipino-g8-08",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Pagbubuod",
+    "prompt": "Ano ang dapat panatilihin sa isang buod?",
+    "options": [
+      "pangunahing diwa at mahahalagang pangyayari",
+      "lahat ng salita ng orihinal",
+      "sariling dagdag na tauhan",
+      "mga detalyeng walang kaugnayan"
+    ],
+    "answer": 0,
+    "explanation": "Pinaiikli ng buod ang teksto habang pinananatili ang mahahalagang ideya nito."
+  },
+  {
+    "id": "filipino-g8-09",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Pormal na wika",
+    "prompt": "Alin ang angkop sa pormal na ulat?",
+    "options": [
+      "Grabe, ang lupet ng resulta!",
+      "Ipinakikita ng datos ang pagbaba ng basura.",
+      "Basta, okay na iyan.",
+      "OMG, sobrang astig!"
+    ],
+    "answer": 1,
+    "explanation": "Tiyak at neutral ang pananalita sa pormal na ulat."
+  },
+  {
+    "id": "filipino-g8-10",
+    "subject": "filipino",
+    "grade": 8,
+    "topic": "Paghahambing ng teksto",
+    "prompt": "Paano makatarungang ihahambing ang dalawang akda?",
+    "options": [
+      "Basahin lamang ang isang pamagat.",
+      "Piliin agad ang mas mahabang akda.",
+      "Gumamit ng iisang malinaw na batayan at ebidensiya mula sa bawat akda.",
+      "Ipagpalagay na magkapareho ang lahat."
+    ],
+    "answer": 2,
+    "explanation": "Nagiging makabuluhan ang paghahambing kung pareho ang batayan at may suporta mula sa dalawang teksto."
+  },
+  {
+    "id": "filipino-g9-01",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Maikling kuwento",
+    "prompt": "Ano ang kasukdulan ng isang kuwento?",
+    "options": [
+      "listahan ng lahat ng tauhan",
+      "pamagat sa unang pahina",
+      "bahagi kung saan pinakamatindi ang tunggalian",
+      "lagda ng may-akda"
+    ],
+    "answer": 2,
+    "explanation": "Sa kasukdulan tumitindi ang mahalagang tunggalian bago ito humantong sa kalutasan."
+  },
+  {
+    "id": "filipino-g9-02",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Dula",
+    "prompt": "Ano ang silbi ng panutong pantanghalan?",
+    "options": [
+      "Palitan ang lahat ng diyalogo.",
+      "Itago ang pagkakasunod-sunod ng eksena.",
+      "Magbigay lamang ng presyo ng tiket.",
+      "Gumabay sa kilos, tono, o ayos ng pagtatanghal."
+    ],
+    "answer": 3,
+    "explanation": "Tumutulong ang panutong pantanghalan sa pagsasakilos at pagtatanghal ng dula."
+  },
+  {
+    "id": "filipino-g9-03",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Sanaysay",
+    "prompt": "Ano ang tesis sa isang sanaysay na nangangatwiran?",
+    "options": [
+      "pangunahing posisyong ipinaliliwanag at sinusuportahan",
+      "listahan ng lahat ng bantas",
+      "pangalan ng tagapaglimbag lamang",
+      "anumang pangungusap na pinakamahaba"
+    ],
+    "answer": 0,
+    "explanation": "Ang tesis ang sentrong paninindigang pinatutunayan ng mga argumento at ebidensiya."
+  },
+  {
+    "id": "filipino-g9-04",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Pananaliksik",
+    "prompt": "Aling tanong ang tiyak at kayang saliksikin sa paaralan?",
+    "options": [
+      "Ano ang lahat ng kaalaman?",
+      "Ilang mag-aaral sa Baitang 9 ang gumagamit ng silid-aklatan bawat linggo?",
+      "Bakit nangyayari ang lahat?",
+      "Paano agad malulutas ang lahat ng suliranin?"
+    ],
+    "answer": 1,
+    "explanation": "May malinaw na pangkat, gawain, at takdang panahon ang unang tanong."
+  },
+  {
+    "id": "filipino-g9-05",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Ugnayan at sanhi",
+    "prompt": "Magkaugnay ang oras ng pagbasa at marka sa isang sarbey. Ano lamang ang tiyak na ipinakikita nito?",
+    "options": [
+      "Pagbasa lamang ang sanhi ng lahat ng mataas na marka.",
+      "Wala nang ibang salik.",
+      "May ugnayang nakita sa datos.",
+      "Perpekto ang marka ng lahat ng mambabasa."
+    ],
+    "answer": 2,
+    "explanation": "Ang ugnayan ay hindi sapat upang patunayang iisang salik ang sanhi ng resulta."
+  },
+  {
+    "id": "filipino-g9-06",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Maling pangangatwiran",
+    "prompt": "Ano ang mali sa 'Tama ito dahil marami ang naniniwala rito'?",
+    "options": [
+      "May malinaw na eksperimentong inilahad.",
+      "Sinuri ang lahat ng salungat na datos.",
+      "Naipakita ang sanhi at bunga.",
+      "Ginagawang patunay ng katotohanan ang kasikatan."
+    ],
+    "answer": 3,
+    "explanation": "Hindi awtomatikong nagiging totoo ang isang pahayag dahil marami ang naniniwala."
+  },
+  {
+    "id": "filipino-g9-07",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Paglalagom ng sanggunian",
+    "prompt": "Ano ang sintesis?",
+    "options": [
+      "pag-uugnay ng mahahalagang ideya mula sa mga sanggunian",
+      "pagkopya ng lahat ng pangungusap",
+      "pagpili lamang ng pinakamagandang pabalat",
+      "pag-alis sa lahat ng pagkakaiba"
+    ],
+    "answer": 0,
+    "explanation": "Pinagsasama at inuugnay ng sintesis ang mga ideya upang makabuo ng mas malawak na pag-unawa."
+  },
+  {
+    "id": "filipino-g9-08",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Pagsusuri ng argumento",
+    "prompt": "Aling pagtutol ang nakatuon sa ebidensiya?",
+    "options": [
+      "Masyado kang bata para maging tama.",
+      "Isang klase lamang ang saklaw ng datos, kaya maaaring masyadong malawak ang kongklusyon.",
+      "Pangit ang sulat-kamay mo.",
+      "Ayaw ko sa boses mo."
+    ],
+    "answer": 1,
+    "explanation": "Sinusuri ng unang pahayag ang saklaw ng ebidensiya, hindi ang katauhan ng nagsasalita."
+  },
+  {
+    "id": "filipino-g9-09",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Pagkilala sa pinagmulan",
+    "prompt": "Bakit mahalagang banggitin ang sanggunian sa pananaliksik?",
+    "options": [
+      "Upang maging katotohanan ang lahat ng opinyon.",
+      "Upang hindi na magpaliwanag.",
+      "Upang kilalanin ang may-akda at masuri ng mambabasa ang ebidensiya.",
+      "Upang humaba lamang ang papel."
+    ],
+    "answer": 2,
+    "explanation": "Nagbibigay ng pagkilala at paraan ng pagberipika ang wastong pagsipi."
+  },
+  {
+    "id": "filipino-g9-10",
+    "subject": "filipino",
+    "grade": 9,
+    "topic": "Pagbabago ng pananaw",
+    "prompt": "Ano ang makatuwirang gawin kapag may matibay na ebidensiyang salungat sa sariling pananaw?",
+    "options": [
+      "Itago agad ang ebidensiya.",
+      "Atakihin ang nagpakita nito.",
+      "Ulitin lamang ang dating pahayag.",
+      "Suriin ito at baguhin ang pananaw kung kinakailangan."
+    ],
+    "answer": 3,
+    "explanation": "Kasama sa mapanuring pag-iisip ang pagiging bukas sa pagwawasto batay sa ebidensiya."
+  },
+  {
+    "id": "filipino-g10-01",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Pananagutang pampanitikan",
+    "prompt": "Aling interpretasyon ng akda ang pinakamatibay?",
+    "options": [
+      "Interpretasyong batay lamang sa kulay ng pabalat.",
+      "Interpretasyong sadyang hindi pinapansin ang mahahalagang tagpo.",
+      "Interpretasyong batay lamang sa hula tungkol sa may-akda.",
+      "Interpretasyong may tiyak na patunay mula sa ilang bahagi ng teksto."
+    ],
+    "answer": 3,
+    "explanation": "Napatitibay ng tiyak at kaugnay na patunay sa teksto ang isang interpretasyon."
+  },
+  {
+    "id": "filipino-g10-02",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Mabisang tesis",
+    "prompt": "Alin ang malinaw na tesis na maaaring pangatwiranan?",
+    "options": [
+      "Dapat magkaroon ng refill station sa paaralan upang mabawasan ang basurang bote.",
+      "May tubig sa mundo.",
+      "May limang talata ang papel na ito.",
+      "Maraming bagay sa paaralan."
+    ],
+    "answer": 0,
+    "explanation": "May tiyak na paninindigan at dahilang maaaring suportahan ng ebidensiya ang unang pahayag."
+  },
+  {
+    "id": "filipino-g10-03",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Paglilimita ng pahayag",
+    "prompt": "Alin ang maingat na kongklusyon?",
+    "options": [
+      "Lahat ng tao sa mundo ay ayaw ng digital na tala.",
+      "Sa sarbey na ito, karamihan sa sumagot ay mas gusto ang nakalimbag na tala.",
+      "Laging perpekto ang marka kapag nakalimbag ang tala.",
+      "Walang mag-aaral na gumagamit ng digital na tala."
+    ],
+    "answer": 1,
+    "explanation": "Nililimitahan ng unang pahayag ang kongklusyon sa aktuwal na saklaw ng sarbey."
+  },
+  {
+    "id": "filipino-g10-04",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Etika sa pananaliksik",
+    "prompt": "Ano ang wastong gawin sa personal na datos ng kalahok sa sarbey?",
+    "options": [
+      "Ilathala agad ang lahat ng pangalan at sagot.",
+      "Ibahagi ang mga password.",
+      "Kolektahin lamang ang kailangan at protektahan ang pagkakakilanlan.",
+      "Gamitin ang datos sa kahit anong layunin nang walang paliwanag."
+    ],
+    "answer": 2,
+    "explanation": "Dapat malinaw ang layunin, limitado ang datos, at protektado ang pagkakakilanlan ng kalahok."
+  },
+  {
+    "id": "filipino-g10-05",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Panghihikayat",
+    "prompt": "Gumagamit ang tagapagsalita ng datos at lohikal na paliwanag. Anong apela ang binibigyang-diin?",
+    "options": [
+      "pananakot lamang",
+      "pag-uulit ng tunog",
+      "pagtutulad lamang",
+      "logos o pangangatwiran"
+    ],
+    "answer": 3,
+    "explanation": "Umaasa ang logos sa lohika at ebidensiya upang manghikayat."
+  },
+  {
+    "id": "filipino-g10-06",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Maling pagpipilian",
+    "prompt": "Ano ang mali sa 'Bilhin ang app na ito o wala kang matututuhan kailanman'?",
+    "options": [
+      "Ipinapakitang dalawa lamang ang pagpipilian kahit marami pang paraan ng pagkatuto.",
+      "Nagbibigay ito ng balanseng pagsusuri.",
+      "May sapat na patunay na sanhi at bunga.",
+      "Neutral itong paglalarawan."
+    ],
+    "answer": 0,
+    "explanation": "Maling pagpipilian ang paglilimita sa dalawang opsiyon at pagbalewala sa iba."
+  },
+  {
+    "id": "filipino-g10-07",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Pagsusuri ng sanggunian",
+    "prompt": "Alin ang nagpapalinaw sa kredibilidad ng isang ulat-pananaliksik?",
+    "options": [
+      "Itinago ang paraan ng pagkuha ng datos.",
+      "Ipinaliwanag ang pamamaraan at mga limitasyon.",
+      "Maraming tandang padamdam.",
+      "Sinabing hindi maaaring kuwestiyunin ang resulta."
+    ],
+    "answer": 1,
+    "explanation": "Masusuri ng mambabasa ang resulta kapag malinaw ang pamamaraan at limitasyon."
+  },
+  {
+    "id": "filipino-g10-08",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Rebisyon",
+    "prompt": "Paulit-ulit ang isang talata at wala itong halimbawa. Ano ang pinakamabisang rebisyon?",
+    "options": [
+      "Dagdagan pa ang parehong pangungusap.",
+      "Palitan lahat ng salita ng mas mahahaba.",
+      "Bawasan ang pag-uulit at magdagdag ng kaugnay na halimbawa.",
+      "Alisin ang pangunahing diwa."
+    ],
+    "answer": 2,
+    "explanation": "Nagiging mas malinaw at matibay ang paliwanag kapag maigsi at may angkop na halimbawa."
+  },
+  {
+    "id": "filipino-g10-09",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Pagberipika",
+    "prompt": "May ibinigay na sipi ang isang AI tool ngunit walang malinaw na pinagmulan. Ano ang dapat gawin?",
+    "options": [
+      "Gumawa ng sariling pahina ng sanggunian.",
+      "Ipagpalagay na laging eksakto ang sipi.",
+      "Angkining personal na alaala ito.",
+      "Hanapin at beripikahin ang orihinal na sanggunian bago gamitin."
+    ],
+    "answer": 3,
+    "explanation": "Maaaring mali ang nabuong sipi, kaya kailangang tingnan ang tunay na pinagmulan."
+  },
+  {
+    "id": "filipino-g10-10",
+    "subject": "filipino",
+    "grade": 10,
+    "topic": "Pagsulat para sa mambabasa",
+    "prompt": "Alin ang pinakamainam sa panutong para sa batang baguhan?",
+    "options": [
+      "Maikling pangungusap, pamilyar na salita, at malinaw na hakbang.",
+      "Mahabang talata na puro teknikal na salita.",
+      "Panuto na walang pagkakasunod-sunod.",
+      "Mga daglat na walang paliwanag."
+    ],
+    "answer": 0,
+    "explanation": "Mas madaling sundan ng baguhan ang payak na wika at malinaw na sunod-sunod na hakbang."
+  }
+]

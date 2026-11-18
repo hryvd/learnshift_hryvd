@@ -16,6 +16,8 @@ export type NativeDay = {
 type UsageMonitorNative = {
   hasUsageAccess(): boolean;
   openUsageAccessSettings(): void;
+  hasScrollAccess?(): boolean;
+  openScrollSettings?(): void;
   canDrawOverlays(): boolean;
   openOverlaySettings(): void;
   isIgnoringBatteryOptimizations(): boolean;
@@ -37,6 +39,8 @@ type UsageMonitorNative = {
     lastNudge: number;
     lastNotifyFailed: number;
     notifications: boolean;
+    scrollAccess?: boolean;
+    awaitingSwipe?: boolean;
   };
   testNudge(level: 'checkin' | 'break' | 'winddown' | 'lock'): boolean;
   showOverlayNow?(appLabel: string, mode: 'pill' | 'quiz', delayMs: number): boolean;

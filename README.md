@@ -1,6 +1,6 @@
 # LearnShift
 
-**Same phone, better minutes.**
+**Scrolling better minutes.**
 LearnShift notices when screen time turns into doomscrolling and turns that moment into a short lesson on the exact skill the student is missing.
 
 Built for the AIdeathon: Tech Connect SYNC. One app for three roles: students, guardians and teachers.
@@ -62,6 +62,10 @@ npx eas-cli@latest update --channel preview             # ship JS fixes over the
 - Schema: `supabase/migrations/`
 - Functions: `supabase/functions/`
 - Apply: `npx supabase db push` and `npx supabase functions deploy`
+
+## Local learning feed
+
+The full-screen feed includes 500 bundled practice questions across five subjects and grades 1–10. Grade, subject, break interval, and the swipe demo live in Settings. The timer readies a break; a subsequent upward scroll opens it. See [content notes](docs/CONTENT.md) and [release validation and remaining requirements](docs/RELEASE.md).
 
 ## Testing
 

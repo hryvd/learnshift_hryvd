@@ -18,7 +18,7 @@ enum class Cat(val js: String) {
   val distracting get() = this == VIDEO || this == SOCIAL || this == GAMES
 }
 
-/** App → category. Android's own category first, then a curated list. Names never leave the phone. */
+/** App → category. Android's own category first, then a curated list. Names are shared only through the configured guardian reporting path. */
 object Categories {
   private val VIDEO = setOf(
     "com.google.android.youtube", "com.google.android.apps.youtube.kids", "com.google.android.apps.youtube.music",
