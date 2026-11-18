@@ -10,7 +10,6 @@ import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import org.json.JSONObject
-import java.util.Calendar
 
 class UsageMonitorModule : Module() {
   private val ctx: Context
@@ -144,22 +143,52 @@ class UsageMonitorModule : Module() {
       )
     }
 
-    /** Fires a sample nudge so a tester can see what it looks like. */
-    Function("testNudge") { level: String ->
+    /** Shows a real learning-card overlay if overlay permission is enabled (no nudges). */
+    Function("testNudge") { _: String ->
+      if (!OverlayController.canOverlay(ctx)) return@Function false
       val cfg = Store.config(ctx)
-      val c = Calendar.getInstance()
-      val clock = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)
-      Notifier.channels(ctx)
-      Notifier.nudge(ctx, cfg, level, "test-${System.currentTimeMillis().toString(36)}", Cat.VIDEO, 45, clock, 20)
+      val label = Store.getString(ctx, "lastUsedLabel")?.takeIf { it.isNotBlank() } ?: "App"
+      val pkg = Store.getString(ctx, "lastUsedPkg")?.takeIf { it.isNotBlank() }
+      OverlayController.scheduleOverlay(ctx, cfg, label, pkg, 1, "quiz", 500L)
+      true
     }
 
-    /** Schedules a real WindowManager overlay pill or white swipe-up feed overlay over any active app. */
+    /** Schedules a real white swipe-up feed card overlay over any active app. */
     Function("showOverlayNow") { appLabel: String, mode: String, delayMs: Int ->
       if (!OverlayController.canOverlay(ctx)) return@Function false
       MonitorService.start(ctx)
       val cfg = Store.config(ctx)
-      OverlayController.scheduleOverlay(ctx, cfg, appLabel, null, 1, mode, delayMs.toLong())
+      val pkg = Store.getString(ctx, "lastUsedPkg")?.takeIf { it.isNotBlank() }
+      OverlayController.scheduleOverlay(ctx, cfg, appLabel, pkg, 1, mode, delayMs.toLong())
       true
+    }
+
+    /** Returns directly to the last external app the student was using, or moves LearnShift to the background. */
+    Function("returnToLastApp") {
+      val targetPkg = Store.getString(ctx, "lastUsedPkg")?.takeIf { it.isNotBlank() }
+        ?: Store.getString(ctx, "watchedPkg")?.takeIf { it.isNotBlank() }
+        ?: runCatching { Tracker(ctx).update(System.currentTimeMillis()).pkg }.getOrNull()
+      if (!targetPkg.isNullOrBlank() && targetPkg != ctx.packageName) {
+        val intent = ctx.packageManager.getLaunchIntentForPackage(targetPkg)
+        if (intent != null) {
+          val started = runCatching {
+            launch(intent)
+            true
+          }.getOrDefault(false)
+          if (started) return@Function true
+        }
+      }
+      val activity = appContext.currentActivity
+      if (activity != null) {
+        activity.moveTaskToBack(true)
+        return@Function true
+      }
+      false
+    }
+
+    /** Label of the most recent external app being used (e.g. "TikTok", "YouTube"). */
+    Function("lastUsedApp") {
+      Store.getString(ctx, "lastUsedLabel") ?: ""
     }
 
     /** Launches a real installed app (or mobile web fallback) and arms a floating LearnShift overlay over it. */
@@ -200,7 +229,10 @@ class UsageMonitorModule : Module() {
       }.getOrDefault(false)
       if (!started) return@Function false
 
-      Store.putString(ctx, "watchedPkg", resolvedPkg ?: pkg)
+      val finalPkg = resolvedPkg ?: pkg
+      Store.putString(ctx, "watchedPkg", finalPkg)
+      Store.putString(ctx, "lastUsedPkg", finalPkg)
+      Store.putString(ctx, "lastUsedLabel", appLabel)
       Store.putLong(ctx, "watchedAt", System.currentTimeMillis())
       MonitorService.start(ctx)
 

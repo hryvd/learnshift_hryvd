@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  BackHandler,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -10,14 +11,13 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X } from 'phosphor-react-native';
 
 import { Diagram } from '@/components/learn/Diagram';
 import { CoinFly, SparkBurst } from '@/components/learn/Effects';
 import { MasteryRow } from '@/components/learn/MasteryRow';
 import { QuizOption, type OptionState } from '@/components/learn/QuizOption';
 import { Paty } from '@/components/mascot/Paty';
-import { Card, CoinCounter, IconButton, PillButton, Ring, Text } from '@/components/ui';
+import { Card, CoinCounter, PillButton, Ring, Text } from '@/components/ui';
 import { lessonFor } from '@/data/lessons';
 import { QUESTION_BY_ID } from '@/data/questions';
 import { SHORT, type SkillId } from '@/data/skills';
@@ -29,6 +29,7 @@ import { useNightGuard } from '@/hooks/useNightGuard';
 import { useLive } from '@/hooks/useLive';
 import { useL, useT } from '@/i18n/useT';
 import { respondToNudge } from '@/services/backend/api';
+import { lastUsedApp, returnToLastApp } from '@/services/monitor';
 import { useAppStore } from '@/store/useAppStore';
 
 const SECONDS = 45;
@@ -59,6 +60,20 @@ export default function BreakPlayer() {
     return () => clearInterval(tm);
   }, [phase.kind]);
 
+  const resultReadyRef = useRef(false);
+  useEffect(() => {
+    resultReadyRef.current = phase.kind === 'result';
+  }, [phase.kind]);
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (resultReadyRef.current) {
+        if (!returnToLastApp()) router.back();
+      }
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
   const steps = lesson.concepts.length + lesson.questions.length;
   const stepIndex = phase.kind === 'concept' ? phase.i : phase.kind === 'q' ? lesson.concepts.length + phase.i : steps;
 
@@ -75,12 +90,7 @@ export default function BreakPlayer() {
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 16) }]}>
       <View style={styles.top}>
-        <IconButton
-          tone="inset"
-          icon={<X size={18} weight="bold" color={c.text} />}
-          accessibilityLabel={t.common.close}
-          onPress={() => router.back()}
-        />
+        <View style={styles.ringSpace} />
         <View style={styles.segments} accessibilityLabel={`${stepIndex} / ${steps}`}>
           {Array.from({ length: steps }, (_, k) => (
             <Segment
@@ -338,6 +348,7 @@ function QuestionStep({ qid, label, last, onNext }: { qid: string; label: string
 function Result({ skillLabel, from, to }: { skillLabel: string; from: number; to: number }) {
   const t = useT();
   const { c } = useTheme();
+  const [appName] = useState(() => lastUsedApp());
   const [start] = useState(() => useAppStore.getState().coins);
   const [shown, setShown] = useState(start);
   const [box, setBox] = useState<{ w: number; label: LayoutRectangle | null }>({ w: 0, label: null });
@@ -388,7 +399,14 @@ function Result({ skillLabel, from, to }: { skillLabel: string; from: number; to
         <CoinFly play={play} from={fromPt} to={toPt} onArrive={arrive} />
       </View>
       <View style={styles.footer}>
-        <PillButton label={t.brk.backToFree} size="lg" block onPress={() => router.back()} />
+        <PillButton
+          label={appName ? `${t.brk.backToFree} · ${appName}` : t.brk.backToFree}
+          size="lg"
+          block
+          onPress={() => {
+            if (!returnToLastApp()) router.back();
+          }}
+        />
       </View>
     </View>
   );

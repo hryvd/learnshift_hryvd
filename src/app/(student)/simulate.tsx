@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { AppState, Image, Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,8 +10,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowUp, CheckCircle, Heart, Pause, Play, Timer, X } from 'phosphor-react-native';
+import { Heart, Pause, Play, Timer, X } from 'phosphor-react-native';
 
 import { FullQuizOverlay } from '@/components/student/FullQuizOverlay';
 import { VerticalPager } from '@/components/student/VerticalPager';
@@ -29,10 +30,12 @@ export default function Simulate() {
   const { app: appParam, start } = useLocalSearchParams<{ app?: string; start?: string }>();
   const [app] = useState(() => mirroredAppByIdOrPkg(appParam));
   const interval = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
+  const startOverlay = start === 'quiz' || start === 'nudge';
   const [{ remaining, stage }, dispatch] = useReducer(breakTransition, {
-    stage: start === 'quiz' ? 'overlay' : start === 'nudge' ? 'ready' : 'feed',
-    remaining: start === 'nudge' ? 0 : interval,
+    stage: startOverlay ? 'overlay' : 'feed',
+    remaining: startOverlay ? 0 : interval,
   } as BreakState);
+  const [closing, setClosing] = useState(false);
   const [page, setPage] = useState(0);
   const [active, setActive] = useState(AppState.currentState === 'active');
 
@@ -48,13 +51,21 @@ export default function Simulate() {
     }, 1000);
     return () => clearInterval(timer);
   }, [stage, active]);
-  const dismiss = () => dispatch({ type: 'dismiss', interval });
+  useEffect(() => {
+    if (stage === 'ready') dispatch({ type: 'start' });
+  }, [stage]);
+
+  const requestDismiss = useCallback(() => {
+    setClosing(true);
+  }, []);
+
+  const finishDismiss = useCallback(() => {
+    setClosing(false);
+    dispatch({ type: 'dismiss', interval });
+  }, [interval]);
+
   const onSwipe = (direction: 'up' | 'down') => {
     useAppStore.getState().recordSwipe(1);
-    if (direction === 'up' && stage === 'ready') {
-      dispatch({ type: 'swipe', direction });
-      return true;
-    }
     if (direction === 'up' && page === app.clips.length - 1) {
       setPage(0);
       return true;
@@ -62,12 +73,15 @@ export default function Simulate() {
     return false;
   };
 
+  const overlayActive = stage === 'overlay';
+  const mediaPaused = !active || (overlayActive && !closing);
+
   return (
     <View style={styles.root}>
       <View
         style={styles.fill}
-        accessibilityElementsHidden={stage === 'overlay'}
-        importantForAccessibility={stage === 'overlay' ? 'no-hide-descendants' : 'auto'}
+        accessibilityElementsHidden={overlayActive}
+        importantForAccessibility={overlayActive ? 'no-hide-descendants' : 'auto'}
       >
         <VerticalPager
           pageHeight={height}
@@ -75,8 +89,8 @@ export default function Simulate() {
           index={page}
           onIndexChange={setPage}
           onBeforeSwipe={onSwipe}
-          enabled={stage === 'feed' || stage === 'ready'}
-          bottomOffset={insets.bottom + 190}
+          enabled={stage === 'feed'}
+          bottomOffset={insets.bottom + 150}
         >
           {app.clips.map((clip, index) => (
             <PreviewClip
@@ -84,7 +98,7 @@ export default function Simulate() {
               clip={clip}
               height={height}
               width={width}
-              paused={!active || stage === 'overlay' || index !== page}
+              paused={mediaPaused || index !== page}
             />
           ))}
         </VerticalPager>
@@ -108,35 +122,25 @@ export default function Simulate() {
           <Image source={app.icon} style={styles.appIcon} />
         </View>
         <View style={[styles.indicator, { top: insets.top + 88 }]} accessibilityLiveRegion="polite">
-          {stage === 'ready' ? <CheckCircle size={18} color="#B9F1D1" /> : <Timer size={18} color="#FFFFFF" />}
-          <Text variant="subhead" color={stage === 'ready' ? '#B9F1D1' : '#FFFFFF'}>
-            {stage === 'ready'
-              ? 'Break ready. Your next swipe starts it.'
+          <Timer size={18} color="#FFFFFF" />
+          <Text variant="subhead" color="#FFFFFF">
+            {overlayActive
+              ? 'Media paused · Complete break to resume'
               : `Next break · ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`}
           </Text>
         </View>
         <View style={[styles.bottom, { bottom: insets.bottom + 20 }]}>
           <Text variant="headline" color="#FFFFFF">
-            @learnshift · a practice feed
+            @learnshift · {app.shortName} preview feed
           </Text>
           <Text color="#FFFFFF">
-            {stage === 'ready'
-              ? 'Swipe up when you’re ready to learn something new.'
-              : 'Keep scrolling. The timer is just an indicator.'}
+            Keep scrolling. A learning break slides up automatically when the timer hits zero.
           </Text>
-          {stage === 'ready' ? (
-            <Pressable onPress={() => dispatch({ type: 'start' })} accessibilityRole="button" style={styles.start}>
-              <ArrowUp size={20} color="#163C2C" weight="bold" />
-              <Text variant="headline" color="#163C2C">
-                Start learning break
-              </Text>
-            </Pressable>
-          ) : null}
         </View>
       </View>
-      {stage === 'overlay' ? (
-        <Takeover height={height}>
-          <FullQuizOverlay appName={app.name} onUnlock={dismiss} onDismiss={dismiss} />
+      {overlayActive ? (
+        <Takeover height={height} closing={closing} onClosed={finishDismiss}>
+          <FullQuizOverlay appName={app.name} onUnlock={requestDismiss} onDismiss={requestDismiss} />
         </Takeover>
       ) : null}
     </View>
@@ -156,7 +160,13 @@ function PreviewClip({
 }) {
   const reduced = useReducedMotion();
   const drift = useSharedValue(0);
+  const settle = useSharedValue(paused ? 1 : 0);
   const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    settle.set(withTiming(paused ? 1 : 0, { duration: reduced ? 0 : 420, easing: ease.out }));
+  }, [paused, reduced, settle]);
+
   useEffect(() => {
     if (paused || reduced) {
       cancelAnimation(drift);
@@ -165,20 +175,29 @@ function PreviewClip({
     drift.set(withRepeat(withSequence(withTiming(1, { duration: 3200 }), withTiming(0, { duration: 3200 })), -1));
     return () => cancelAnimation(drift);
   }, [paused, reduced, drift]);
+
+  const clipReaction = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - settle.get() * 0.06 }],
+    opacity: 1 - settle.get() * 0.35,
+  }));
+
   const motion = useAnimatedStyle(() => ({
     transform: [{ translateY: drift.get() * -25 }, { scale: 1 + drift.get() * 0.08 }],
   }));
+
   return (
-    <View style={{ width, height }}>
+    <Animated.View style={[{ width, height }, clipReaction]}>
       <LinearGradient colors={clip.colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fill} />
       <Animated.View style={[styles.art, motion]}>
         <Text color="#FFFFFF" style={styles.artText}>
           Make room{'\n'}for a new idea.
         </Text>
       </Animated.View>
-      <View style={styles.playState}>
-        {paused ? <Pause size={24} color="#FFFFFF" /> : <Play size={24} color="#FFFFFF" />}
-        <Text color="#FFFFFF">{paused ? 'Preview paused' : 'Practice scrolling'}</Text>
+      <View style={[styles.playPill, paused ? styles.playPillPaused : null]}>
+        {paused ? <Pause size={18} weight="fill" color="#FFFFFF" /> : <Play size={18} weight="fill" color="#FFFFFF" />}
+        <Text variant="subhead" color="#FFFFFF">
+          {paused ? 'Media paused · Learning break active' : 'Playing preview feed'}
+        </Text>
       </View>
       <Pressable
         onPress={() => setLiked((value) => !value)}
@@ -192,21 +211,74 @@ function PreviewClip({
           Like
         </Text>
       </Pressable>
+    </Animated.View>
+  );
+}
+
+function Takeover({
+  height,
+  closing,
+  onClosed,
+  children,
+}: {
+  height: number;
+  closing: boolean;
+  onClosed: () => void;
+  children: React.ReactNode;
+}) {
+  const reduced = useReducedMotion();
+  const y = useSharedValue(reduced ? 0 : height);
+  const scrim = useSharedValue(reduced ? 1 : 0);
+
+  useEffect(() => {
+    if (!closing) {
+      y.set(withTiming(0, { duration: reduced ? 0 : 480, easing: ease.out }));
+      scrim.set(withTiming(1, { duration: reduced ? 0 : 360, easing: ease.out }));
+      return;
+    }
+    if (reduced) {
+      onClosed();
+      return;
+    }
+    scrim.set(withTiming(0, { duration: 280, easing: ease.inOut }));
+    y.set(
+      withTiming(height, { duration: 360, easing: ease.inOut }, (finished) => {
+        if (finished) scheduleOnRN(onClosed);
+      }),
+    );
+  }, [closing, reduced, height, y, scrim, onClosed]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: scrim.get(),
+  }));
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: y.get() }],
+  }));
+
+  return (
+    <View style={styles.fill}>
+      <Animated.View pointerEvents="none" style={[styles.backdrop, backdropStyle]} />
+      <Animated.View style={[styles.sheet, sheetStyle]}>{children}</Animated.View>
     </View>
   );
 }
-function Takeover({ height, children }: { height: number; children: React.ReactNode }) {
-  const reduced = useReducedMotion();
-  const y = useSharedValue(reduced ? 0 : height);
-  useEffect(() => {
-    y.set(withTiming(0, { duration: reduced ? 0 : 280, easing: ease.out }));
-  }, [reduced, y]);
-  const motion = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }] }));
-  return <Animated.View style={[styles.fill, { backgroundColor: '#F3F8F3' }, motion]}>{children}</Animated.View>;
-}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#122C25' },
   fill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(6, 18, 15, 0.55)' },
+  sheet: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: '#F3F8F3',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
+  },
   header: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerText: { flex: 1, gap: 4 },
   iconButton: {
@@ -238,16 +310,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: '#102D26EE',
   },
-  start: {
-    minHeight: 52,
-    borderRadius: 16,
-    backgroundColor: '#D0F1DC',
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 12,
-  },
   art: {
     position: 'absolute',
     top: '30%',
@@ -258,7 +320,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF15',
   },
   artText: { fontSize: 38, lineHeight: 48, fontWeight: '700' },
-  playState: { position: 'absolute', top: '58%', left: 40, flexDirection: 'row', gap: 10, alignItems: 'center' },
+  playPill: {
+    position: 'absolute',
+    top: '57%',
+    left: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 99,
+    backgroundColor: '#102D26CC',
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  playPillPaused: { backgroundColor: '#102D26F0' },
   like: {
     position: 'absolute',
     top: '44%',

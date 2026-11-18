@@ -147,6 +147,21 @@ export function launchProtectedApp(pkg: string, appLabel: string, delaySeconds =
   return false;
 }
 
+export function returnToLastApp(): boolean {
+  if (platform === 'android' && UsageMonitor?.returnToLastApp) {
+    return UsageMonitor.returnToLastApp();
+  }
+  return false;
+}
+
+export function lastUsedApp(): string | null {
+  if (platform === 'android' && UsageMonitor?.lastUsedApp) {
+    const label = UsageMonitor.lastUsedApp().trim();
+    return label.length > 0 ? label : null;
+  }
+  return null;
+}
+
 export function openHomeSettings() {
   if (platform === 'android') UsageMonitor?.openHomeSettings?.();
 }

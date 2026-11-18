@@ -40,6 +40,8 @@ class MonitorService : Service() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val cfg = Store.config(this)
     Notifier.channels(this)
+    Notifier.cancelCountdown(this)
+    Notifier.cancelNudge(this)
     try {
       ServiceCompat.startForeground(
         this,
@@ -90,16 +92,14 @@ class MonitorService : Service() {
   }
 
   private var launchers: Set<String>? = null
-  private var countdownShowing = false
-  private var countdownThisTick = false
   private var activeAccumMs = 0L
   private var lastTickAt = 0L
   private var lastTargetPkg: String? = null
+  private var lastRecordedUsedPkg: String? = null
   private var lastIndicator: String? = null
 
   /** One detection pass. Returns the delay until the next pass, or -1 to stop. */
   private fun step(): Long {
-    countdownThisTick = false
     val next = decide()
     if (next >= 0) {
       val cfg = Store.config(this)
@@ -107,8 +107,7 @@ class MonitorService : Service() {
       val indicator = when {
         cfg.paused -> if (cfg.fil) "Naka-pause ang learning breaks" else "Learning breaks paused"
         OverlayController.isShowing() -> if (cfg.fil) "Kasalukuyang learning break" else "Learning break in progress"
-        ScrollGate.isArmed() -> if (cfg.fil) "Handa na. Mag-swipe pataas kapag gusto mo." else "Break ready. Waiting for your next upward scroll."
-        lastTargetPkg != null -> if (cfg.fil) "Susunod na pahinga: ${seconds}s · maghihintay sa pag-swipe" else "Next break: ${seconds}s · then wait for your swipe"
+        lastTargetPkg != null -> if (cfg.fil) "Susunod na learning break: ${seconds}s" else "Next learning break: ${seconds}s"
         else -> if (cfg.fil) "Maghihintay sa suportadong app" else "Waiting for a supported app"
       }
       if (indicator != lastIndicator) {
@@ -118,11 +117,6 @@ class MonitorService : Service() {
           manager.notify(Notifier.MONITOR_ID, Notifier.monitor(this, cfg, indicator))
         }
       }
-    }
-    // Leaving the app (or a snooze, bedtime, the lock) ends the countdown.
-    if (!countdownThisTick && countdownShowing) {
-      Notifier.cancelCountdown(this)
-      countdownShowing = false
     }
     return next
   }
@@ -136,11 +130,19 @@ class MonitorService : Service() {
     val cal = Calendar.getInstance()
     val clock = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
     val schoolDay = Schedule.schoolDay(cal)
-    val inBed = Schedule.bedtimeApplies(cfg, clock) && Schedule.inWindow(clock, cfg.bedtimeStart, cfg.bedtimeEnd)
     val lockWindow = cfg.lockEnabled && Schedule.inWindow(clock, cfg.lockStart, cfg.lockEnd)
     val locked = lockWindow && now > cfg.unlockUntil
     val activePkg = live.pkg
     val mine = activePkg == packageName
+    val home = launchers ?: Categories.launchers(this).also { launchers = it }
+
+    if (activePkg != null && !mine && activePkg !in home && activePkg != lastRecordedUsedPkg) {
+      if (runCatching { packageManager.getLaunchIntentForPackage(activePkg) != null }.getOrDefault(false)) {
+        lastRecordedUsedPkg = activePkg
+        Store.putString(this, "lastUsedPkg", activePkg)
+        Store.putString(this, "lastUsedLabel", Categories.label(this, activePkg))
+      }
+    }
 
     maybeReport(cfg, now)
     if (hasUsage) updateLive(cfg, now, live)
@@ -195,28 +197,7 @@ class MonitorService : Service() {
         lastTickAt = now
         return idle
       }
-      val cat = Categories.of(this, activePkg)
       val label = Categories.label(this, activePkg)
-
-      val limit = when (cat) {
-        Cat.VIDEO, Cat.SOCIAL -> cfg.scrollLimit
-        Cat.GAMES -> cfg.gamesLimit
-        else -> 0
-      }
-      if (limit > 0 && hasUsage) {
-        val sessionStart = now - (live.sessionMin * 60_000).toLong()
-        val last = Store.getLong(this, "lastLimitNudge")
-        val deadline = (if (last >= sessionStart) last else sessionStart) + limit * 60_000L
-        if (now < deadline) {
-          Notifier.countdown(this, cfg, label, limit, deadline, now)
-          countdownShowing = true
-          countdownThisTick = true
-        } else {
-          Notifier.cancelCountdown(this)
-          countdownShowing = false
-          Store.putLong(this, "lastLimitNudge", now)
-        }
-      }
 
       val dt = if (lastTickAt > 0L) (now - lastTickAt).coerceIn(500L, 5_000L) else 2_000L
       lastTickAt = now
@@ -231,16 +212,10 @@ class MonitorService : Service() {
       val intervalMs = cfg.overlayIntervalSec.coerceIn(10, 3600) * 1000L
       if (activeAccumMs >= intervalMs) {
         activeAccumMs = 0L
-        if (canOverlay() && ScrollService.isEnabled(this)) {
-          // Deadline is an indicator. Only a later forward scroll may show the lesson.
-          ScrollGate.arm(activePkg, android.os.SystemClock.uptimeMillis())
-        } else if (now - Store.getLong(this, "lastNudge") > 60_000L) {
-          // Without opt-in scroll events, offer a notification the student can open.
+        if (canOverlay()) {
+          ScrollGate.clear()
           val mins = maxOf(1, live.sessionMin.roundToInt())
-          val reasons = Risk.reasons(clock, maxOf(1.0, live.sessionMin), cat, live.unlocksLastHour, schoolDay, inBed)
-          val level = if (inBed) "winddown" else "break"
-          val id = record(cfg, level, reasons, "quiet", clock, 0)
-          Notifier.nudge(this, cfg, level, id, cat, mins, clock, 0)
+          OverlayController.showQuizOverlay(this, cfg, label, activePkg, mins)
           Store.putLong(this, "lastNudge", now)
           countNudge(now)
           reportSoon(cfg)

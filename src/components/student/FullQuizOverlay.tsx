@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, BackHandler, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, BackHandler, Dimensions, Easing, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowUp, Check, CheckCircle, Lightbulb, ShieldCheck, X } from 'phosphor-react-native';
+import { ArrowUp, Check, CheckCircle, Lightbulb, Pause, ShieldCheck } from 'phosphor-react-native';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Text } from '@/components/ui';
@@ -24,27 +24,35 @@ export function FullQuizOverlay({
   appName,
   onUnlock,
   onDismiss,
+  animateIn = false,
 }: {
   skillId?: SkillId;
   appName: string;
   onUnlock: () => void;
+  /** Only used when there is nothing to answer; there is no close control. */
   onDismiss: () => void;
+  /** Glide the sheet up from the bottom when it first appears. */
+  animateIn?: boolean;
 }) {
   return (
     <ThemeProvider mode="day">
-      <LearningFeed appName={appName} onUnlock={onUnlock} onDismiss={onDismiss} />
+      <LearningFeed appName={appName} onUnlock={onUnlock} onDismiss={onDismiss} animateIn={animateIn} />
     </ThemeProvider>
   );
 }
+
+const GLIDE = Easing.bezier(0.16, 1, 0.3, 1);
 
 function LearningFeed({
   appName,
   onUnlock,
   onDismiss,
+  animateIn,
 }: {
   appName: string;
   onUnlock: () => void;
   onDismiss: () => void;
+  animateIn: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -73,11 +81,13 @@ function LearningFeed({
   const [score, setScore] = useState(0);
   const [explain, setExplain] = useState(false);
   const [notice, setNotice] = useState('');
-  const [height, setHeight] = useState(800);
   const moving = useRef(false);
   const answered = useRef(false);
   const completed = useRef(false);
   const [translateY] = useState(() => new Animated.Value(0));
+  const [fade] = useState(() => new Animated.Value(1));
+  const [enter] = useState(() => new Animated.Value(animateIn ? Dimensions.get('window').height : 0));
+  const [offset] = useState(() => Animated.add(translateY, enter));
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const q = questions[index];
   const done = index >= questions.length;
@@ -85,16 +95,31 @@ function LearningFeed({
   useEffect(
     () => () => {
       translateY.stopAnimation();
+      fade.stopAnimation();
+      enter.stopAnimation();
     },
-    [translateY],
+    [translateY, fade, enter],
   );
+  // The sheet glides up over whatever is behind it.
+  useEffect(() => {
+    if (!animateIn || reduced) {
+      enter.setValue(0);
+      return;
+    }
+    Animated.timing(enter, { toValue: 0, duration: 520, easing: GLIDE, useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [animateIn, reduced, enter]);
+  // There is no way out except answering: Back is ignored until the break is complete.
+  const doneRef = useRef(false);
+  useEffect(() => {
+    doneRef.current = done;
+  }, [done]);
   useEffect(() => {
     const back = BackHandler.addEventListener('hardwareBackPress', () => {
-      onDismiss();
+      if (doneRef.current) onUnlock();
       return true;
     });
     return () => back.remove();
-  }, [onDismiss]);
+  }, [onUnlock]);
   useEffect(() => {
     if (reduced) moving.current = false;
   }, [index, reduced]);
@@ -136,14 +161,22 @@ function LearningFeed({
       update();
       return;
     }
-    Animated.timing(translateY, { toValue: -height, duration: 170, useNativeDriver: Platform.OS !== 'web' }).start(({ finished }) => {
+    const native = Platform.OS !== 'web';
+    // The answered card lifts away, the next one rises in with a soft landing.
+    Animated.parallel([
+      Animated.timing(translateY, { toValue: -120, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
+      Animated.timing(fade, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
+    ]).start(({ finished }) => {
       if (!finished) {
         moving.current = false;
         return;
       }
-      translateY.setValue(height);
+      translateY.setValue(140);
       update();
-      Animated.timing(translateY, { toValue: 0, duration: 240, useNativeDriver: Platform.OS !== 'web' }).start(() => {
+      Animated.parallel([
+        Animated.timing(translateY, { toValue: 0, duration: 420, easing: GLIDE, useNativeDriver: native }),
+        Animated.timing(fade, { toValue: 1, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: native }),
+      ]).start(() => {
         moving.current = false;
       });
     });
@@ -170,9 +203,12 @@ function LearningFeed({
   }
 
   return (
-    <View style={styles.root} onLayout={(event) => setHeight(event.nativeEvent.layout.height)} accessibilityViewIsModal>
-      <Animated.View style={[styles.fill, { transform: [{ translateY }] }]}>
-        <View style={[styles.header, { paddingTop: Math.max(12, insets.top) }]}>
+    <View style={styles.root} accessibilityViewIsModal>
+      <Animated.View style={[styles.fill, { opacity: fade, transform: [{ translateY: offset }] }]}>
+        <View style={[styles.handleWrap, { paddingTop: Math.max(10, insets.top) }]}>
+          <View style={styles.sheetHandle} />
+        </View>
+        <View style={styles.header}>
           <View style={styles.headerText}>
             <Text variant="overline" color={GREEN}>
               {done
@@ -185,15 +221,17 @@ function LearningFeed({
               {done ? (fil ? 'Bawat pag-aaral ay mahalaga' : 'A little learning goes a long way') : q.topic}
             </Text>
           </View>
-          <Pressable
-            onPress={onDismiss}
-            accessibilityRole="button"
-            accessibilityLabel={fil ? 'Isara ang learning break' : 'Close learning break'}
-            style={styles.close}
-          >
-            <X size={23} color={INK} />
-          </Pressable>
         </View>
+        {!done && appName !== 'LearnShift' ? (
+          <View style={styles.mediaPill}>
+            <Pause size={14} weight="fill" color={GREEN} />
+            <Text variant="caption" color={GREEN}>
+              {fil
+                ? `Naka-pause ang media sa ${appName} · magpapatuloy pagkatapos`
+                : `Media paused in ${appName} · resumes after break`}
+            </Text>
+          </View>
+        ) : null}
         <View
           style={styles.progress}
           accessibilityLabel={`${Math.min(index + 1, questions.length)} of ${questions.length} questions`}
@@ -219,7 +257,15 @@ function LearningFeed({
               <Text color={GREEN}>{fil ? 'Tapos na ang iyong pahinga' : 'Your break is complete'}</Text>
             </View>
             <Action
-              label={fil ? 'Bumalik' : appName === 'LearnShift' ? 'Back to learning' : `Back to ${appName}`}
+              label={
+                fil
+                  ? appName !== 'LearnShift'
+                    ? `Balik sa free time · ${appName}`
+                    : 'Balik sa free time'
+                  : appName !== 'LearnShift'
+                    ? `Back to free time · ${appName}`
+                    : 'Back to your free time'
+              }
               onPress={onUnlock}
             />
           </ScrollView>
@@ -398,15 +444,21 @@ function RailButton({ label, icon, onPress }: { label: string; icon: React.React
 const styles = StyleSheet.create({
   root: { flex: 1, overflow: 'hidden', backgroundColor: '#F3F8F3' },
   fill: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  handleWrap: { alignItems: 'center', paddingBottom: 6 },
+  sheetHandle: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#C8D8CC' },
+  header: { paddingHorizontal: 20, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerText: { flex: 1, gap: 4 },
-  close: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  mediaPill: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: '#E1EEDF',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E4EDE5',
+    gap: 8,
+    alignSelf: 'flex-start',
   },
   progress: { flexDirection: 'row', gap: 5, paddingHorizontal: 20 },
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: '#D6E3D8' },

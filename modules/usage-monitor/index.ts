@@ -45,6 +45,8 @@ type UsageMonitorNative = {
   testNudge(level: 'checkin' | 'break' | 'winddown' | 'lock'): boolean;
   showOverlayNow?(appLabel: string, mode: 'pill' | 'quiz', delayMs: number): boolean;
   launchProtectedApp?(pkg: string, appLabel: string, delaySeconds: number): boolean;
+  returnToLastApp?(): boolean;
+  lastUsedApp?(): string;
   openHomeSettings?(): void;
   lastConfig(): string;
 };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Clock, FileText, HouseLine, Info, Lifebuoy, ListChecks, ShieldCheck, UserCircle } from 'phosphor-react-native';
+import { Clock, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from 'phosphor-react-native';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
@@ -38,7 +38,6 @@ export default function Profile() {
   const guardian = useAppStore((s) => s.guardian);
   const offline = useAppStore((s) => s.offline);
   const themePref = useAppStore((s) => s.themePref);
-  const nudges = useAppStore((s) => s.nudges.length);
   const [confirm, setConfirm] = useState(false);
   const [cleared, setCleared] = useState(false);
   const name = useAppStore((s) => s.studentName);
@@ -236,12 +235,6 @@ export default function Profile() {
             title={t.profile.privacy}
             icon={<ShieldCheck size={20} weight="fill" color={c.success} />}
             onPress={() => router.push('/privacy')}
-          />
-          <ListRow
-            title={t.profile.nudges}
-            value={String(nudges)}
-            icon={<ListChecks size={20} weight="fill" color={c.accent} />}
-            onPress={() => router.push('/nudges')}
           />
           <ListRow
             title={t.profile.help}

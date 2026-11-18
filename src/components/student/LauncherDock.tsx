@@ -60,11 +60,11 @@ export function LauncherDock({
       if (ok) {
         report('Overlay armed (3s) — open TikTok, YouTube, or any app to see the white swipe-up feed.');
       } else {
-        router.push({ pathname: '/simulate', params: { app: 'tiktok', start: 'nudge' } });
+        router.push({ pathname: '/simulate', params: { app: 'tiktok', start: 'quiz' } });
       }
       return;
     }
-    router.push({ pathname: '/simulate', params: { app: 'tiktok', start: 'nudge' } });
+    router.push({ pathname: '/simulate', params: { app: 'tiktok', start: 'quiz' } });
   };
 
   return (

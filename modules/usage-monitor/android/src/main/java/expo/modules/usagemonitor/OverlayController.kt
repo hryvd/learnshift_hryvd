@@ -3,7 +3,6 @@ package expo.modules.usagemonitor
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
@@ -11,10 +10,10 @@ import android.graphics.drawable.GradientDrawable
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
@@ -24,18 +23,22 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
-import android.view.animation.DecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.ScrollView
+import android.widget.TextView
 import org.json.JSONArray
 import kotlin.math.abs
 
 /**
  * Draws an opaque full-screen learning feed over a supported foreground app.
- * Media focus is held only for the visible feed, and released on every exit.
- * Fail-open: any exception removes the overlay rather than trapping the student.
+ * The sheet has no close control: the student answers the questions, then swipes
+ * up to return. Playing media is paused when the sheet appears and resumed only
+ * when the break is completed. Fail-open: any exception removes the overlay
+ * rather than trapping the student, and leaving the app (Home, app switch,
+ * screen lock) always removes it.
  */
 object OverlayController {
   private const val TAG = "LearnShiftOverlay"
@@ -44,8 +47,12 @@ object OverlayController {
   private var activePackage: String? = null
   private var audioManager: AudioManager? = null
   private var focusRequest: AudioFocusRequest? = null
+  private var pausedByUs = false
   private val focusListener = AudioManager.OnAudioFocusChangeListener { }
   private var pendingRunnable: Runnable? = null
+
+  /** Fast start, long soft landing: the sheet glides in like it has weight. */
+  private val glide = PathInterpolator(0.16f, 1f, 0.3f, 1f)
 
   private data class NativeQuizItem(
     val tip: String,
@@ -80,26 +87,39 @@ object OverlayController {
     if (strokeDp > 0) setStroke(dp(ctx, strokeDp), strokeColor)
   }
 
-  private fun openLearnShift(ctx: Context, url: String) {
-    runCatching {
-      ctx.startActivity(
-        Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-          setPackage(ctx.packageName)
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        },
-      )
-    }.onFailure { Log.w(TAG, "could not open LearnShift: ${it.message}") }
+  /** A sheet with rounded top corners, used while it slides over the app. */
+  private fun sheetBox(fillColor: Int, ctx: Context): GradientDrawable = GradientDrawable().apply {
+    setColor(fillColor)
+    val r = dp(ctx, 28).toFloat()
+    cornerRadii = floatArrayOf(r, r, r, r, 0f, 0f, 0f, 0f)
   }
 
-  /** A temporary focus loss asks cooperating players to pause, never just duck. */
+  private fun sendMediaKey(manager: AudioManager, key: Int) {
+    val now = SystemClock.uptimeMillis()
+    runCatching {
+      manager.dispatchMediaKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, key, 0))
+      manager.dispatchMediaKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, key, 0))
+    }
+  }
+
+  /**
+   * Pauses whatever is playing: a standard media Pause key for the active
+   * session, plus a transient audio-focus request so cooperating players stay
+   * quiet. Returns true when media was playing and a pause was sent.
+   */
   @Suppress("DEPRECATION")
   private fun pauseMedia(ctx: Context): Boolean {
-    // Apps targeting Android 15+ need foreground eligibility to request focus.
-    if (Build.VERSION.SDK_INT >= 35 && !MonitorService.running) return false
     val manager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     audioManager = manager
-    return runCatching {
-      val result = if (Build.VERSION.SDK_INT >= 26) {
+    val wasPlaying = runCatching { manager.isMusicActive }.getOrDefault(false)
+    if (wasPlaying) {
+      sendMediaKey(manager, KeyEvent.KEYCODE_MEDIA_PAUSE)
+      pausedByUs = true
+    }
+    // Apps targeting Android 15+ need foreground eligibility to request focus.
+    if (Build.VERSION.SDK_INT >= 35 && !MonitorService.running) return wasPlaying
+    runCatching {
+      if (Build.VERSION.SDK_INT >= 26) {
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
           .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
@@ -108,24 +128,40 @@ object OverlayController {
         focusRequest = request
         manager.requestAudioFocus(request)
       } else manager.requestAudioFocus(focusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-      result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-    }.getOrDefault(false)
+    }
+    return wasPlaying
   }
 
+  /** Releases focus; resumes playback only if we paused it and the break was completed. */
   @Suppress("DEPRECATION")
-  private fun releaseMedia() {
+  private fun releaseMedia(resume: Boolean = false) {
     val manager = audioManager
     val request = focusRequest
+    val resumeNow = resume && pausedByUs
     audioManager = null
     focusRequest = null
+    pausedByUs = false
     runCatching {
       if (Build.VERSION.SDK_INT >= 26 && request != null) manager?.abandonAudioFocusRequest(request)
       else manager?.abandonAudioFocus(focusListener)
     }
+    if (resumeNow && manager != null) {
+      mainHandler.postDelayed({ if (activeView == null) sendMediaKey(manager, KeyEvent.KEYCODE_MEDIA_PLAY) }, 320L)
+    }
   }
 
-  private fun removeActive(ctx: Context) {
-    releaseMedia()
+  private fun returnToExternalApp(ctx: Context, pkg: String?) {
+    if (pkg.isNullOrBlank() || pkg == ctx.packageName) return
+    val current = runCatching { Tracker(ctx).update(System.currentTimeMillis()).pkg }.getOrNull()
+    if (current == pkg) return
+    val intent = ctx.packageManager.getLaunchIntentForPackage(pkg) ?: return
+    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching { ctx.startActivity(intent) }
+  }
+
+  private fun removeActive(ctx: Context, completed: Boolean = false) {
+    val overlayPkg = activePackage
+    releaseMedia(completed)
     val v = activeView ?: return
     activeView = null
     activePackage = null
@@ -133,6 +169,10 @@ object OverlayController {
     val wm = ctx.applicationContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
     runCatching { wm.removeViewImmediate(v) }
     Store.putLong(ctx, "snoozeUntil", System.currentTimeMillis() + Store.config(ctx).overlayIntervalSec * 1000L)
+    if (completed) {
+      val targetPkg = overlayPkg ?: Store.getString(ctx, "lastUsedPkg")
+      returnToExternalApp(ctx, targetPkg)
+    }
   }
 
   fun dismiss(ctx: Context) {
@@ -156,150 +196,16 @@ object OverlayController {
     appLabel: String,
     pkg: String?,
     minutes: Int,
-    mode: String,
+    @Suppress("UNUSED_PARAMETER") mode: String,
     delayMs: Long,
   ) {
     val appCtx = ctx.applicationContext
     pendingRunnable?.let { mainHandler.removeCallbacks(it) }
     val task = Runnable {
-      if (mode == "pill") showNudgePill(appCtx, cfg, appLabel, pkg, minutes)
-      else showQuizOverlay(appCtx, cfg, appLabel, pkg, minutes)
+      showQuizOverlay(appCtx, cfg, appLabel, pkg, minutes)
     }
     pendingRunnable = task
     mainHandler.postDelayed(task, delayMs.coerceAtLeast(0L))
-  }
-
-  /** Clean white floating check-in card over the opened app. */
-  fun showNudgePill(ctx: Context, cfg: Config, appLabel: String, pkg: String?, minutes: Int) {
-    val appCtx = ctx.applicationContext
-    mainHandler.post {
-      if (!canOverlay(appCtx)) return@post
-      runCatching {
-        removeActive(appCtx)
-        val wm = appCtx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        val container = FrameLayout(appCtx).apply {
-          setPadding(dp(appCtx, 14), 0, dp(appCtx, 14), 0)
-        }
-
-        val card = LinearLayout(appCtx).apply {
-          orientation = LinearLayout.VERTICAL
-          background = roundedBox(
-            Color.parseColor("#FFFFFF"),
-            22,
-            Color.parseColor("#E5E0D8"),
-            1,
-            appCtx,
-          )
-          elevation = dp(appCtx, 10).toFloat()
-          setPadding(dp(appCtx, 16), dp(appCtx, 14), dp(appCtx, 16), dp(appCtx, 14))
-        }
-
-        val header = LinearLayout(appCtx).apply {
-          orientation = LinearLayout.HORIZONTAL
-          gravity = Gravity.CENTER_VERTICAL
-        }
-
-        val badge = TextView(appCtx).apply {
-          text = "Paty · LearnShift"
-          setTextColor(Color.parseColor("#C8400F"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
-          setTypeface(typeface, Typeface.BOLD)
-          background = roundedBox(Color.parseColor("#FFF0E6"), 99, ctx = appCtx)
-          setPadding(dp(appCtx, 9), dp(appCtx, 4), dp(appCtx, 9), dp(appCtx, 4))
-        }
-
-        val title = TextView(appCtx).apply {
-          text = "  $appLabel · ${minutes}m active"
-          setTextColor(Color.parseColor("#111111"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-          setTypeface(typeface, Typeface.BOLD)
-          layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-
-        val closeBtn = TextView(appCtx).apply {
-          text = "×"
-          setTextColor(Color.parseColor("#111111"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-          setTypeface(typeface, Typeface.BOLD)
-          gravity = Gravity.CENTER
-          background = roundedBox(Color.parseColor("#F4F4F6"), 99, ctx = appCtx)
-          setPadding(dp(appCtx, 10), dp(appCtx, 2), dp(appCtx, 10), dp(appCtx, 2))
-          setOnClickListener { removeActive(appCtx) }
-        }
-
-        header.addView(badge)
-        header.addView(title)
-        header.addView(closeBtn)
-
-        val subtitle = TextView(appCtx).apply {
-          text = if (cfg.fil) {
-            "May mabilis na 3-card feed si Paty sa ibabaw ng $appLabel. I-swipe pataas pagkatapos."
-          } else {
-            "Quick 3-card ${cfg.rootSkillName} reset over $appLabel — swipe up when done."
-          }
-          setTextColor(Color.parseColor("#5C5C62"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-          setPadding(0, dp(appCtx, 8), 0, dp(appCtx, 12))
-        }
-
-        val actions = LinearLayout(appCtx).apply {
-          orientation = LinearLayout.HORIZONTAL
-        }
-
-        val startQuizBtn = TextView(appCtx).apply {
-          text = if (cfg.fil) "Buksan ang Feed" else "Open White Feed"
-          setTextColor(Color.parseColor("#FFFFFF"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-          setTypeface(typeface, Typeface.BOLD)
-          gravity = Gravity.CENTER
-          background = roundedBox(Color.parseColor("#C8400F"), 99, ctx = appCtx)
-          setPadding(dp(appCtx, 14), dp(appCtx, 10), dp(appCtx, 14), dp(appCtx, 10))
-          layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-            rightMargin = dp(appCtx, 8)
-          }
-          setOnClickListener { showQuizOverlay(appCtx, cfg, appLabel, pkg, minutes) }
-        }
-
-        val openAppBtn = TextView(appCtx).apply {
-          text = if (cfg.fil) "Buong App" else "LearnShift App"
-          setTextColor(Color.parseColor("#111111"))
-          setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-          setTypeface(typeface, Typeface.BOLD)
-          gravity = Gravity.CENTER
-          background = roundedBox(Color.parseColor("#F4F4F6"), 99, Color.parseColor("#E2E2E8"), 1, appCtx)
-          setPadding(dp(appCtx, 12), dp(appCtx, 10), dp(appCtx, 12), dp(appCtx, 10))
-          setOnClickListener {
-            removeActive(appCtx)
-            val encodedPkg = Uri.encode(pkg ?: "")
-            openLearnShift(appCtx, "learnshift://feed?app=$encodedPkg")
-          }
-        }
-
-        actions.addView(startQuizBtn)
-        actions.addView(openAppBtn)
-        card.addView(header)
-        card.addView(subtitle)
-        card.addView(actions)
-        container.addView(card)
-
-        val params = WindowManager.LayoutParams(
-          WindowManager.LayoutParams.MATCH_PARENT,
-          WindowManager.LayoutParams.WRAP_CONTENT,
-          overlayWindowType(),
-          WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-          PixelFormat.TRANSLUCENT,
-        ).apply {
-          gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-          y = dp(appCtx, 42)
-        }
-        wm.addView(container, params)
-        activeView = container
-      }.onFailure {
-        Log.w(TAG, "showNudgePill failed: ${it.message}")
-        removeActive(appCtx)
-      }
-    }
   }
 
   private fun localBank(ctx: Context, cfg: Config): List<NativeQuizItem> = runCatching {
@@ -328,6 +234,10 @@ object OverlayController {
     private var dragging = false
     private val minSwipePx = dp(ctx, 42).toFloat()
 
+    private fun settle() {
+      animate().translationY(0f).alpha(1f).setDuration(320).setInterpolator(glide).start()
+    }
+
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
       when (ev.actionMasked) {
         MotionEvent.ACTION_DOWN -> {
@@ -339,6 +249,7 @@ object OverlayController {
           val dy = ev.rawY - downY
           if (dy < -touchSlop && abs(dy) > abs(ev.rawX - downX) && canSwipeNow()) {
             dragging = true
+            animate().cancel()
             return true
           }
         }
@@ -349,9 +260,10 @@ object OverlayController {
     override fun onTouchEvent(event: MotionEvent): Boolean {
       when (event.actionMasked) {
         MotionEvent.ACTION_MOVE -> {
+          // The sheet follows the finger with a little resistance, like a real page.
           val dy = (event.rawY - downY).coerceAtMost(0f)
-          translationY = dy * 0.65f
-          alpha = (1f + dy / (dp(context, 420).toFloat())).coerceIn(0.6f, 1f)
+          translationY = dy * 0.7f
+          alpha = (1f + dy / (dp(context, 520).toFloat())).coerceIn(0.7f, 1f)
           return true
         }
         MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -360,11 +272,11 @@ object OverlayController {
             if (canSwipeNow()) {
               onSwipeCommit()
             } else {
-              animate().translationY(0f).alpha(1f).setDuration(180).start()
+              settle()
               onSwipeBlocked()
             }
           } else {
-            animate().translationY(0f).alpha(1f).setDuration(180).start()
+            settle()
           }
           dragging = false
           return true
@@ -374,7 +286,12 @@ object OverlayController {
     }
   }
 
-  /** Full-screen learning feed; an explicit swipe or accessible Next action advances. */
+  /**
+   * Full-screen learning sheet. It glides up over the app, the questions rise in
+   * one by one, and it can only be finished by answering: there is no close
+   * control and Back is ignored. Swiping up (or Next) after an answer moves on;
+   * on the last question the sheet slides away and playback resumes.
+   */
   fun showQuizOverlay(ctx: Context, cfg: Config, appLabel: String, pkg: String?, minutes: Int) {
     val appCtx = ctx.applicationContext
     mainHandler.post {
@@ -387,10 +304,11 @@ object OverlayController {
         if (questions.isEmpty()) return@post
         var qIndex = 0
         var answered = false
-        var transitioning = false
+        var transitioning = true // locked until the entrance finishes
         val ink = Color.parseColor("#172B31")
         val accent = Color.parseColor("#A83D16")
         val paper = Color.parseColor("#FFF9F1")
+        val screenH = appCtx.resources.displayMetrics.heightPixels.toFloat()
         fun label(value: String, size: Float = 16f) = TextView(appCtx).apply {
           text = value
           setTextColor(ink)
@@ -405,23 +323,21 @@ object OverlayController {
           background = roundedBox(Color.WHITE, 16, Color.parseColor("#DED9CF"), 1, appCtx)
           setOnClickListener { onClick() }
         }
+        lateinit var card: SwipeCardContainer
+        lateinit var render: () -> Unit
         val root = FrameLayout(appCtx).apply {
-          setBackgroundColor(paper)
           isFocusableInTouchMode = true
-          setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-              removeActive(appCtx); true
-            } else false
-          }
-          setOnApplyWindowInsetsListener { view, insets ->
+          // The break is finished by answering, so Back is swallowed.
+          setOnKeyListener { _, keyCode, _ -> keyCode == KeyEvent.KEYCODE_BACK }
+          setOnApplyWindowInsetsListener { _, insets ->
             @Suppress("DEPRECATION")
-            view.setPadding(insets.systemWindowInsetLeft, insets.systemWindowInsetTop,
-              insets.systemWindowInsetRight, insets.systemWindowInsetBottom)
+            card.setPadding(dp(appCtx, 20) + insets.systemWindowInsetLeft, dp(appCtx, 16) + insets.systemWindowInsetTop,
+              dp(appCtx, 20) + insets.systemWindowInsetRight, dp(appCtx, 16) + insets.systemWindowInsetBottom)
             insets
           }
         }
-        lateinit var card: SwipeCardContainer
-        lateinit var render: () -> Unit
+        val scrim = View(appCtx).apply { setBackgroundColor(Color.BLACK); alpha = 0f }
+        root.addView(scrim, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         val scroll = ScrollView(appCtx).apply { isFillViewport = true }
         val topic = label("", 18f).apply { setTypeface(typeface, Typeface.BOLD) }
         val progress = label("", 13f)
@@ -440,35 +356,75 @@ object OverlayController {
           setTextColor(Color.WHITE)
           background = roundedBox(accent, 18, ctx = appCtx)
         }
+
+        /** Question text and choices rise in one after another. */
+        fun reveal(baseDelay: Long) {
+          val items = mutableListOf<View>(prompt)
+          for (i in 0 until choices.childCount) items.add(choices.getChildAt(i))
+          items.forEachIndexed { i, v ->
+            v.animate().cancel()
+            v.alpha = 0f
+            v.translationY = dp(appCtx, 22).toFloat()
+            v.animate().alpha(1f).translationY(0f).setDuration(360)
+              .setStartDelay(baseDelay + 60L * i).setInterpolator(glide).start()
+          }
+        }
+
         fun advance() {
           if (!answered || transitioning) return
           transitioning = true
-          card.animate().translationY(-root.height.toFloat()).setDuration(220)
+          card.animate().cancel()
+          if (qIndex == questions.lastIndex) {
+            // Finished: the sheet lifts away and the app is revealed underneath.
+            card.background = sheetBox(paper, appCtx)
+            root.setBackgroundColor(Color.TRANSPARENT)
+            scrim.visibility = View.VISIBLE
+            scrim.alpha = 0.45f
+            scrim.animate().alpha(0f).setDuration(420).start()
+            card.animate().translationY(-screenH).setDuration(440).setInterpolator(AccelerateInterpolator(1.5f))
+              .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                  if (activeView === root) removeActive(appCtx, completed = true)
+                }
+              }).start()
+            return
+          }
+          card.animate().translationY(-dp(appCtx, 120).toFloat()).alpha(0f).setDuration(190)
+            .setInterpolator(AccelerateInterpolator(1.3f))
             .setListener(object : AnimatorListenerAdapter() {
               override fun onAnimationEnd(animation: Animator) {
                 if (activeView !== root) return
-                if (qIndex == questions.lastIndex) { removeActive(appCtx); return }
                 qIndex++
                 render()
                 card.animate().setListener(null)
-                card.alpha = 1f
-                card.translationY = root.height.toFloat()
-                card.animate().translationY(0f).setDuration(240).setInterpolator(DecelerateInterpolator())
+                card.translationY = dp(appCtx, 140).toFloat()
+                card.alpha = 0f
+                card.animate().translationY(0f).alpha(1f).setDuration(400).setInterpolator(glide)
                   .withEndAction { transitioning = false }.start()
+                reveal(70L)
               }
             }).start()
         }
         card = SwipeCardContainer(appCtx, ViewConfiguration.get(appCtx).scaledTouchSlop,
           { advance() }, { answered && !transitioning && !scroll.canScrollVertically(1) }, { }).apply {
           orientation = LinearLayout.VERTICAL
-          setBackgroundColor(paper)
-          setPadding(dp(appCtx, 20), dp(appCtx, 16), dp(appCtx, 20), dp(appCtx, 16))
+          background = sheetBox(paper, appCtx)
+          setPadding(dp(appCtx, 20), dp(appCtx, 12), dp(appCtx, 20), dp(appCtx, 16))
           layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
         }
+        val handleWrap = LinearLayout(appCtx).apply {
+          orientation = LinearLayout.VERTICAL
+          gravity = Gravity.CENTER_HORIZONTAL
+          setPadding(0, 0, 0, dp(appCtx, 10))
+        }
+        val handle = View(appCtx).apply {
+          background = roundedBox(Color.parseColor("#D5CFC4"), 99, ctx = appCtx)
+        }
+        handleWrap.addView(handle, LinearLayout.LayoutParams(dp(appCtx, 36), dp(appCtx, 5)))
+        card.addView(handleWrap)
         val heading = LinearLayout(appCtx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val titles = LinearLayout(appCtx).apply { orientation = LinearLayout.VERTICAL; addView(label("LEARN SHIFT · GRADE ${cfg.grade}", 11f)); addView(topic); addView(progress) }
         heading.addView(titles, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        heading.addView(action("✕", "Close learning break") { removeActive(appCtx) })
         card.addView(heading)
         val body = LinearLayout(appCtx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val content = LinearLayout(appCtx).apply {
@@ -491,9 +447,14 @@ object OverlayController {
           LinearLayout.LayoutParams(dp(appCtx, 56), dp(appCtx, 60)).apply { topMargin = dp(appCtx, 12) })
         body.addView(rail, LinearLayout.LayoutParams(dp(appCtx, 56), LinearLayout.LayoutParams.WRAP_CONTENT))
         card.addView(body, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
-        val mediaStatus = label("", 12f).apply { setPadding(0, dp(appCtx, 8), 0, dp(appCtx, 8)) }
-        card.addView(mediaStatus)
-        card.addView(label(if (cfg.fil) "Kaunting aral. Walang pagmamadali." else "A little learning. Take your time.", 15f))
+        val mediaStatus = label("", 12f).apply {
+          setTextColor(Color.parseColor("#4E5D58"))
+          setTypeface(typeface, Typeface.BOLD)
+          background = roundedBox(Color.parseColor("#EFEAE1"), 12, ctx = appCtx)
+          setPadding(dp(appCtx, 12), dp(appCtx, 7), dp(appCtx, 12), dp(appCtx, 7))
+        }
+        card.addView(mediaStatus, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(appCtx, 8) })
+        card.addView(label(if (cfg.fil) "Sagutan ang mga tanong para makabalik. Walang pagmamadali." else "Answer the questions to continue. Take your time.", 15f))
         next.setOnClickListener { advance() }
         card.addView(next, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(appCtx, 12) })
         render = {
@@ -524,9 +485,15 @@ object OverlayController {
                 }
                 explanation.text = (if (index == q.answer) "✓ " else "Let's learn: ") + q.explanation
                 explanation.visibility = View.VISIBLE
-                next.text = if (qIndex == questions.lastIndex) "↑  Return to $appLabel" else "↑  Swipe up or tap Next"
+                explanation.alpha = 0f
+                explanation.animate().alpha(1f).setDuration(260).start()
+                next.text = if (qIndex == questions.lastIndex) {
+                  if (cfg.fil) "↑  Balik sa free time · $appLabel" else "↑  Back to free time · $appLabel"
+                } else {
+                  if (cfg.fil) "↑  Mag-swipe pataas o i-tap ang Susunod" else "↑  Swipe up or tap Next"
+                }
                 next.isEnabled = true
-                next.alpha = 1f
+                next.animate().alpha(1f).setDuration(220).start()
               }
             }.apply { gravity = Gravity.CENTER_VERTICAL; setPadding(dp(appCtx, 14), dp(appCtx, 12), dp(appCtx, 14), dp(appCtx, 12)) }
             buttons.add(button)
@@ -537,16 +504,42 @@ object OverlayController {
         root.addView(card)
         val params = WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
           overlayWindowType(), WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_SECURE,
-          PixelFormat.OPAQUE)
+          PixelFormat.TRANSLUCENT)
+        // Pause playback first so the sound stops as the sheet starts to move.
+        val paused = pauseMedia(appCtx)
         wm.addView(root, params)
         activeView = root
         activePackage = pkg
         root.requestFocus()
         root.requestApplyInsets()
-        val paused = pauseMedia(appCtx)
-        mediaStatus.text = if (paused) "Media pause requested · resumes when supported" else "Pause your video if it is still playing"
-        card.translationY = appCtx.resources.displayMetrics.heightPixels.toFloat()
-        card.animate().translationY(0f).setDuration(280).setInterpolator(DecelerateInterpolator()).start()
+        mediaStatus.text = when {
+          paused && cfg.fil -> "⏸  Naka-pause ang video sa $appLabel · magpapatuloy pagkatapos"
+          paused -> "⏸  Video paused in $appLabel · resumes when you finish"
+          cfg.fil -> "Walang tumutugtog na media"
+          else -> "No video playing"
+        }
+        // Some players ignore the pause key; say so honestly instead of claiming success.
+        if (paused) {
+          mainHandler.postDelayed({
+            if (activeView === root && runCatching { audioManager?.isMusicActive }.getOrNull() == true) {
+              mediaStatus.text = if (cfg.fil) "Pakipause ang video kung tumutugtog pa" else "Pause your video if it is still playing"
+            }
+          }, 900L)
+        }
+        // Entrance: the sheet glides up over the app while the app dims behind it.
+        card.translationY = screenH
+        reveal(180L)
+        scrim.animate().alpha(0.5f).setDuration(380).start()
+        card.animate().translationY(0f).setDuration(520).setInterpolator(glide).withEndAction {
+          if (activeView === root) {
+            // Fully covering the screen now: switch to a flat sheet and drop the dim layer.
+            card.background = null
+            card.setBackgroundColor(paper)
+            root.setBackgroundColor(paper)
+            scrim.visibility = View.GONE
+            transitioning = false
+          }
+        }.start()
       }.onFailure {
         Log.w(TAG, "Could not display learning break")
         removeActive(appCtx)

@@ -10,8 +10,6 @@ import {
   Chip,
   Heatmap,
   LargeTitleHeader,
-  ListGroup,
-  ListRow,
   Ring,
   Stagger,
   StatTile,
@@ -36,7 +34,6 @@ export default function Insights() {
   const week = useWeek();
   const mastery = useAppStore((s) => s.mastery);
   const feed = useAppStore((s) => s.feed);
-  const nudges = useAppStore((s) => s.nudges);
   const learnDays = useAppStore((s) => s.learnDays);
   const history = useAppStore((s) => s.history);
   const heat = useMemo(() => (IS_PITCH ? seedHeatmap(WEEKS) : learnHeatmap(learnDays, WEEKS)), [learnDays]);
@@ -156,16 +153,6 @@ export default function Insights() {
             <Text variant="subhead">{t.insights.reportSub(calmNights)}</Text>
           </View>
         </Card>
-      </Stagger>
-
-      <Stagger index={i++}>
-        <ListGroup>
-          <ListRow
-            title={t.insights.nudgeHistory}
-            value={String(nudges.length)}
-            onPress={() => router.push('/nudges')}
-          />
-        </ListGroup>
       </Stagger>
     </Screen>
   );
