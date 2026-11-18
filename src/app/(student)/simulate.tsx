@@ -30,10 +30,9 @@ export default function Simulate() {
   const { app: appParam, start } = useLocalSearchParams<{ app?: string; start?: string }>();
   const [app] = useState(() => mirroredAppByIdOrPkg(appParam));
   const interval = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
-  const startOverlay = start === 'quiz' || start === 'nudge';
   const [{ remaining, stage }, dispatch] = useReducer(breakTransition, {
-    stage: startOverlay ? 'overlay' : 'feed',
-    remaining: startOverlay ? 0 : interval,
+    stage: start === 'quiz' ? 'overlay' : start === 'nudge' ? 'ready' : 'feed',
+    remaining: start === 'quiz' || start === 'nudge' ? 0 : interval,
   } as BreakState);
   const [closing, setClosing] = useState(false);
   const [page, setPage] = useState(0);
@@ -51,9 +50,6 @@ export default function Simulate() {
     }, 1000);
     return () => clearInterval(timer);
   }, [stage, active]);
-  useEffect(() => {
-    if (stage === 'ready') dispatch({ type: 'start' });
-  }, [stage]);
 
   const requestDismiss = useCallback(() => {
     setClosing(true);
@@ -66,6 +62,10 @@ export default function Simulate() {
 
   const onSwipe = (direction: 'up' | 'down') => {
     useAppStore.getState().recordSwipe(1);
+    if (direction === 'up' && stage === 'ready') {
+      dispatch({ type: 'swipe', direction: 'up' });
+      return true;
+    }
     if (direction === 'up' && page === app.clips.length - 1) {
       setPage(0);
       return true;
@@ -89,7 +89,7 @@ export default function Simulate() {
           index={page}
           onIndexChange={setPage}
           onBeforeSwipe={onSwipe}
-          enabled={stage === 'feed'}
+          enabled={stage === 'feed' || stage === 'ready'}
           bottomOffset={insets.bottom + 150}
         >
           {app.clips.map((clip, index) => (
@@ -122,11 +122,13 @@ export default function Simulate() {
           <Image source={app.icon} style={styles.appIcon} />
         </View>
         <View style={[styles.indicator, { top: insets.top + 88 }]} accessibilityLiveRegion="polite">
-          <Timer size={18} color="#FFFFFF" />
-          <Text variant="subhead" color="#FFFFFF">
+          <Timer size={18} color={stage === 'ready' ? '#B9F1D1' : '#FFFFFF'} />
+          <Text variant="subhead" color={stage === 'ready' ? '#B9F1D1' : '#FFFFFF'}>
             {overlayActive
               ? 'Media paused · Complete break to resume'
-              : `Next break · ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`}
+              : stage === 'ready'
+                ? 'Timer done · Swipe up for learning break'
+                : `Next break · ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`}
           </Text>
         </View>
         <View style={[styles.bottom, { bottom: insets.bottom + 20 }]}>
@@ -134,7 +136,9 @@ export default function Simulate() {
             @learnshift · {app.shortName} preview feed
           </Text>
           <Text color="#FFFFFF">
-            Keep scrolling. A learning break slides up automatically when the timer hits zero.
+            {stage === 'ready'
+              ? 'Timer finished — your next swipe up slides in the learning card.'
+              : 'Keep scrolling. When the timer ends, your next swipe up starts the break.'}
           </Text>
         </View>
       </View>

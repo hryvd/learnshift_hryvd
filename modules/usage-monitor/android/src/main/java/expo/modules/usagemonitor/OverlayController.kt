@@ -44,6 +44,8 @@ object OverlayController {
   private const val TAG = "LearnShiftOverlay"
   private val mainHandler = Handler(Looper.getMainLooper())
   @Volatile private var activeView: View? = null
+  @Volatile private var quizShowing = false
+  @Volatile private var statusHintView: TextView? = null
   private var activePackage: String? = null
   private var audioManager: AudioManager? = null
   private var focusRequest: AudioFocusRequest? = null
@@ -65,7 +67,9 @@ object OverlayController {
 
   fun canOverlay(ctx: Context): Boolean = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(ctx)
 
-  fun isShowing(): Boolean = activeView != null
+  fun isShowing(): Boolean = quizShowing
+
+  fun isGateShowing(): Boolean = activeView != null && !quizShowing
 
   private fun dp(ctx: Context, v: Int): Int =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), ctx.resources.displayMetrics).toInt()
@@ -152,23 +156,42 @@ object OverlayController {
 
   private fun returnToExternalApp(ctx: Context, pkg: String?) {
     if (pkg.isNullOrBlank() || pkg == ctx.packageName) return
-    val current = runCatching { Tracker(ctx).update(System.currentTimeMillis()).pkg }.getOrNull()
-    if (current == pkg) return
     val intent = ctx.packageManager.getLaunchIntentForPackage(pkg) ?: return
     intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { ctx.startActivity(intent) }
   }
 
+  private fun lockNavNotice(ctx: Context): String =
+    if (Store.config(ctx).fil) "🔒 Tapusin muna ang mga tanong — naka-lock ang Home at Recent Apps."
+    else "🔒 Answer the questions first — Home and Recent Apps are locked."
+
+  @Suppress("DEPRECATION")
+  private fun hideSystemBars(view: View) {
+    view.systemUiVisibility = (
+      View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        or View.SYSTEM_UI_FLAG_FULLSCREEN
+        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    )
+  }
+
   private fun removeActive(ctx: Context, completed: Boolean = false) {
     val overlayPkg = activePackage
+    val wasQuiz = quizShowing
     releaseMedia(completed)
+    quizShowing = false
+    statusHintView = null
     val v = activeView ?: return
     activeView = null
     activePackage = null
     v.animate().cancel()
     val wm = ctx.applicationContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
     runCatching { wm.removeViewImmediate(v) }
-    Store.putLong(ctx, "snoozeUntil", System.currentTimeMillis() + Store.config(ctx).overlayIntervalSec * 1000L)
+    if (completed || wasQuiz) {
+      Store.putLong(ctx, "snoozeUntil", System.currentTimeMillis() + Store.config(ctx).overlayIntervalSec * 1000L)
+    }
     if (completed) {
       val targetPkg = overlayPkg ?: Store.getString(ctx, "lastUsedPkg")
       returnToExternalApp(ctx, targetPkg)
@@ -185,8 +208,78 @@ object OverlayController {
   }
 
   fun onWindowChanged(ctx: Context, pkg: String) {
+    val appCtx = ctx.applicationContext
     mainHandler.post {
-      if (activeView != null && pkg != ctx.packageName && pkg != activePackage) removeActive(ctx)
+      val root = activeView ?: return@post
+      if (quizShowing) {
+        if (pkg != appCtx.packageName && pkg != activePackage) {
+          root.requestFocus()
+          hideSystemBars(root)
+          statusHintView?.text = lockNavNotice(appCtx)
+        }
+        return@post
+      }
+      if (pkg != appCtx.packageName && pkg != activePackage) removeActive(appCtx)
+    }
+  }
+
+  /**
+   * Arms an invisible swipe gate over the active app after the timer ends.
+   * Nothing appears automatically: the learning sheet slides up only when the
+   * user performs their next upward swipe.
+   */
+  fun armSwipeTrigger(ctx: Context, cfg: Config, appLabel: String, pkg: String?, minutes: Int) {
+    val appCtx = ctx.applicationContext
+    mainHandler.post {
+      if (!canOverlay(appCtx) || quizShowing || activeView != null) return@post
+      runCatching {
+        val wm = appCtx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val touchSlop = ViewConfiguration.get(appCtx).scaledTouchSlop
+        var downX = 0f
+        var downY = 0f
+        var triggered = false
+
+        val gateView = FrameLayout(appCtx).apply {
+          setBackgroundColor(Color.TRANSPARENT)
+          setOnTouchListener { _, event ->
+            if (triggered) return@setOnTouchListener true
+            when (event.actionMasked) {
+              MotionEvent.ACTION_DOWN -> {
+                downX = event.rawX
+                downY = event.rawY
+                true
+              }
+              MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
+                val dy = event.rawY - downY
+                val dx = event.rawX - downX
+                if (dy < -touchSlop && abs(dy) > abs(dx)) {
+                  triggered = true
+                  ScrollGate.clear()
+                  showQuizOverlay(appCtx, cfg, appLabel, pkg, minutes)
+                  return@setOnTouchListener true
+                }
+                false
+              }
+              else -> false
+            }
+          }
+        }
+
+        val params = WindowManager.LayoutParams(
+          WindowManager.LayoutParams.MATCH_PARENT,
+          WindowManager.LayoutParams.MATCH_PARENT,
+          overlayWindowType(),
+          WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+          PixelFormat.TRANSLUCENT,
+        )
+        wm.addView(gateView, params)
+        activeView = gateView
+        quizShowing = false
+        activePackage = pkg
+      }.onFailure {
+        Log.w(TAG, "Could not arm swipe trigger")
+        removeActive(appCtx)
+      }
     }
   }
 
@@ -325,10 +418,24 @@ object OverlayController {
         }
         lateinit var card: SwipeCardContainer
         lateinit var render: () -> Unit
+        val footerHint = label(
+          if (cfg.fil) "Sagutan ang mga tanong para makabalik. Walang pagmamadali."
+          else "Answer the questions to continue. Take your time.",
+          15f,
+        )
         val root = FrameLayout(appCtx).apply {
           isFocusableInTouchMode = true
-          // The break is finished by answering, so Back is swallowed.
-          setOnKeyListener { _, keyCode, _ -> keyCode == KeyEvent.KEYCODE_BACK }
+          hideSystemBars(this)
+          // The break is finished only by answering, so Back, Home, and Recent Apps are locked.
+          setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_HOME ||
+              keyCode == KeyEvent.KEYCODE_APP_SWITCH || keyCode == KeyEvent.KEYCODE_MENU) {
+              if (event.action == KeyEvent.ACTION_DOWN) footerHint.text = lockNavNotice(appCtx)
+              true
+            } else {
+              false
+            }
+          }
           setOnApplyWindowInsetsListener { _, insets ->
             @Suppress("DEPRECATION")
             card.setPadding(dp(appCtx, 20) + insets.systemWindowInsetLeft, dp(appCtx, 16) + insets.systemWindowInsetTop,
@@ -454,7 +561,7 @@ object OverlayController {
           setPadding(dp(appCtx, 12), dp(appCtx, 7), dp(appCtx, 12), dp(appCtx, 7))
         }
         card.addView(mediaStatus, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(appCtx, 8) })
-        card.addView(label(if (cfg.fil) "Sagutan ang mga tanong para makabalik. Walang pagmamadali." else "Answer the questions to continue. Take your time.", 15f))
+        card.addView(footerHint)
         next.setOnClickListener { advance() }
         card.addView(next, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(appCtx, 12) })
         render = {
@@ -509,7 +616,11 @@ object OverlayController {
         val paused = pauseMedia(appCtx)
         wm.addView(root, params)
         activeView = root
+        quizShowing = true
+        statusHintView = footerHint
         activePackage = pkg
+        Store.putLong(appCtx, "lastNudge", System.currentTimeMillis())
+        hideSystemBars(root)
         root.requestFocus()
         root.requestApplyInsets()
         mediaStatus.text = when {

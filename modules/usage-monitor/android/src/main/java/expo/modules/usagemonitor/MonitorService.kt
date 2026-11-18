@@ -107,6 +107,7 @@ class MonitorService : Service() {
       val indicator = when {
         cfg.paused -> if (cfg.fil) "Naka-pause ang learning breaks" else "Learning breaks paused"
         OverlayController.isShowing() -> if (cfg.fil) "Kasalukuyang learning break" else "Learning break in progress"
+        ScrollGate.isArmed() || OverlayController.isGateShowing() -> if (cfg.fil) "Tapos na ang timer · Mag-swipe pataas para sa break" else "Timer done · Waiting for your next upward swipe"
         lastTargetPkg != null -> if (cfg.fil) "Susunod na learning break: ${seconds}s" else "Next learning break: ${seconds}s"
         else -> if (cfg.fil) "Maghihintay sa suportadong app" else "Waiting for a supported app"
       }
@@ -185,15 +186,21 @@ class MonitorService : Service() {
     if (cfg.paused || now < cfg.focusUntil || mine) {
       activeAccumMs = 0L
       ScrollGate.clear()
+      if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
       lastTickAt = now
       return idle
     }
 
     // 3. Active external target app monitoring using configured overlayIntervalSec.
     if (activePkg != null && Categories.isTargetApp(this, activePkg, cfg.monitorAllApps)) {
+      if (OverlayController.isGateShowing() && activePkg == lastTargetPkg) {
+        lastTickAt = now
+        return idle
+      }
       if (now < Store.getLong(this, "snoozeUntil")) {
         activeAccumMs = 0L
         ScrollGate.clear()
+        if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
         lastTickAt = now
         return idle
       }
@@ -203,6 +210,7 @@ class MonitorService : Service() {
       lastTickAt = now
       if (activePkg != lastTargetPkg) {
         ScrollGate.clear()
+        if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
         lastTargetPkg = activePkg
         activeAccumMs = dt
       } else {
@@ -212,17 +220,15 @@ class MonitorService : Service() {
       val intervalMs = cfg.overlayIntervalSec.coerceIn(10, 3600) * 1000L
       if (activeAccumMs >= intervalMs) {
         activeAccumMs = 0L
+        ScrollGate.arm(activePkg, android.os.SystemClock.uptimeMillis())
         if (canOverlay()) {
-          ScrollGate.clear()
           val mins = maxOf(1, live.sessionMin.roundToInt())
-          OverlayController.showQuizOverlay(this, cfg, label, activePkg, mins)
-          Store.putLong(this, "lastNudge", now)
-          countNudge(now)
-          reportSoon(cfg)
+          OverlayController.armSwipeTrigger(this, cfg, label, activePkg, mins)
         }
       }
     } else {
       ScrollGate.clear()
+      if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
       activeAccumMs = 0L
       lastTargetPkg = null
       lastTickAt = now
