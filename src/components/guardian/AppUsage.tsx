@@ -82,8 +82,8 @@ export function NowCard({
       </View>
       {fresh ? (
         <View style={styles.nowRow}>
-          {appIcon(live!.package, live!.label) ? (
-            <Image source={appIcon(live!.package, live!.label)!} style={styles.appIcon} accessibilityIgnoresInvertColors />
+          {appIcon(live!.package, live!.label, live!.category) ? (
+            <Image source={appIcon(live!.package, live!.label, live!.category)!} style={styles.appIcon} accessibilityIgnoresInvertColors />
           ) : (
             <View style={[styles.appIcon, { backgroundColor: color(live!.category) }]}>
               <CatIcon cat={live!.category} size={24} color="#FFFFFF" />
@@ -194,8 +194,8 @@ export function AppsCard({ apps, childName }: { apps: AppDay[]; childName: strin
               accessible
               accessibilityLabel={`${r.label}, ${formatDuration(r.minutes)}`}
             >
-              {appIcon(r.key, r.label) ? (
-                <Image source={appIcon(r.key, r.label)!} style={styles.smallIcon} accessibilityIgnoresInvertColors />
+              {appIcon(r.key, r.label, r.category) ? (
+                <Image source={appIcon(r.key, r.label, r.category)!} style={styles.smallIcon} accessibilityIgnoresInvertColors />
               ) : (
                 <View style={[styles.smallIcon, { backgroundColor: color(r.category) }]}>
                   <CatIcon cat={r.category} size={14} color="#FFFFFF" />
