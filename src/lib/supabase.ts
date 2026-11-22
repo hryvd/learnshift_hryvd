@@ -34,6 +34,9 @@ export function errorText(e: unknown, fallback = 'Something went wrong. Try agai
   if (/Password should be/i.test(msg)) return 'Use at least 6 characters for the password.';
   if (/valid email|invalid format/i.test(msg)) return 'Check the email address.';
   if (/rate limit|Too many/i.test(msg)) return msg.includes('Too many') ? msg : 'Too many tries. Wait a minute.';
+  if (/grade_check/i.test(msg)) return 'That grade is not supported yet. Choose a grade from 1 to 10.';
+  // Raw database errors are not for people: never show SQL wording.
+  if (/violates|constraint|relation "|duplicate key|syntax error|permission denied/i.test(msg)) return fallback;
   return msg && msg.length < 140 ? msg : fallback;
 }
 

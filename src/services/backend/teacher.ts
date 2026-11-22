@@ -4,10 +4,12 @@
  */
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+
 import { create } from 'zustand';
 
 import type { Section, Student } from '@/data/class';
 import { SKILLS, type SkillId } from '@/data/skills';
+import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
 import { supabase } from '@/lib/supabase';
 import { PRIOR_MASTERY, todayKey } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
@@ -182,10 +184,23 @@ export function asSection(c: TeacherClass, students: LiveStudent[]): Section {
   return { id: c.id, name: c.name, grade: c.grade, students };
 }
 
+/** Reloads classes, the review queue and the open roster now (pull-to-refresh, polling). */
+export async function refreshTeacher() {
+  await Promise.all([loadClasses(), loadReview()]);
+  const id = useTeacher.getState().selected;
+  if (id) await loadRoster(id);
+}
+
 /** Loads and keeps the teacher view live. Mount once on the teacher screens. */
 export function useTeacherLive() {
   const me = useAuth((s) => s.profile?.id);
   const selected = useTeacher((s) => s.selected);
+  // Rebuild realtime channels after a long sleep; poll as a safety net while open.
+  const resume = useResumeKey();
+  useInterval(() => {
+    if (!me) return;
+    refreshTeacher().catch(() => {});
+  }, AUTO_REFRESH_MS, !!me);
 
   useEffect(() => {
     if (!me) return;
@@ -205,7 +220,7 @@ export function useTeacherLive() {
       supabase.removeChannel(ch);
       app.remove();
     };
-  }, [me]);
+  }, [me, resume]);
 
   useEffect(() => {
     if (!selected) return;
@@ -225,5 +240,5 @@ export function useTeacherLive() {
       if (t) clearTimeout(t);
       supabase.removeChannel(ch);
     };
-  }, [selected]);
+  }, [selected, resume]);
 }

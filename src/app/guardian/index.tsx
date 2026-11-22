@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Clock, EyeSlash, Moon, Sparkle } from 'phosphor-react-native';
@@ -27,6 +27,7 @@ import {
 import type { NudgeEntry } from '@/data/seed';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
+import { usePullRefresh } from '@/hooks/useAutoRefresh';
 import { useNow } from '@/hooks/useNow';
 import { habitGrade, realWeek, useWeek } from '@/hooks/useWeek';
 import { useGuardianT } from '@/i18n/staff';
@@ -38,6 +39,7 @@ import {
   loadChild,
   patchChild,
   useGuardian,
+  refreshGuardian,
   useGuardianLive,
   type AppDay,
   type LiveNow,
@@ -45,7 +47,8 @@ import {
 import { todayKey, useAppStore, type TimeRequest } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
-const BEDTIMES = [21 * 60, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60];
+// Bedtime may start 6:00 PM to 12:00 AM (see src/lib/bedtime.ts).
+const BEDTIMES = [18 * 60, 20 * 60, 21 * 60, 22 * 60, 23 * 60, 0];
 const LIMITS = [0, 10, 15, 20, 30, 45, 60];
 
 /** Sample per-app day for the pitch build. */
@@ -240,6 +243,7 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
   const g = useGuardianT();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const pull = usePullRefresh(refreshGuardian);
   const { width } = useWindowDimensions();
   const wide = width >= 900;
   const children = useGuardian((s) => s.children);
@@ -272,6 +276,11 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
       <ScrollView
         contentContainerStyle={[styles.body, { maxWidth: wide ? 1100 : 560, paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          IS_PITCH ? undefined : (
+            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
+          )
+        }
       >
         {header}
         {!IS_PITCH && children.length > 1 ? (

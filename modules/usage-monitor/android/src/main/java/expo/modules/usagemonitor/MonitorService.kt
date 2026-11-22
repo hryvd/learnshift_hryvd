@@ -137,7 +137,8 @@ class MonitorService : Service() {
     val mine = activePkg == packageName
     val home = launchers ?: Categories.launchers(this).also { launchers = it }
 
-    if (activePkg != null && !mine && activePkg !in home && activePkg != lastRecordedUsedPkg) {
+    // Only real "free time" apps: never the store, settings or system screens.
+    if (activePkg != null && !mine && activePkg !in home && activePkg !in NOT_FREE_TIME && activePkg != lastRecordedUsedPkg) {
       if (runCatching { packageManager.getLaunchIntentForPackage(activePkg) != null }.getOrDefault(false)) {
         lastRecordedUsedPkg = activePkg
         Store.putString(this, "lastUsedPkg", activePkg)
@@ -145,7 +146,7 @@ class MonitorService : Service() {
       }
     }
 
-    maybeReport(cfg, now)
+    maybeReport(cfg, now, activePkg?.takeIf { !mine && it !in home })
     if (hasUsage) updateLive(cfg, now, live)
 
     // A sleeping or locked device must not accumulate time or hold audio focus.
@@ -272,10 +273,17 @@ class MonitorService : Service() {
     return id
   }
 
-  private fun maybeReport(cfg: Config, now: Long) {
+  /** Foreground app at the last usage report; a switch sends fresh per-app minutes. */
+  private var reportedPkg: String? = null
+
+  private fun maybeReport(cfg: Config, now: Long, activePkg: String? = null) {
     val last = Store.getLong(this, "lastReport")
     val pending = Store.queue(this).length() > 0
-    if (now - last > 15 * 60_000L || (pending && now - last > 60_000L)) {
+    // Keep guardian minutes and the app list fresh while LearnShift itself is closed:
+    // every 5 minutes, and within a minute of switching apps.
+    val switched = activePkg != null && activePkg != reportedPkg
+    if (now - last > 5 * 60_000L || ((pending || switched) && now - last > 60_000L)) {
+      if (activePkg != null) reportedPkg = activePkg
       Store.putLong(this, "lastReport", now) // avoid hammering while offline
       Thread { Reporter.report(this, cfg, true) }.start()
     }
@@ -360,3 +368,14 @@ class NudgeActionReceiver : BroadcastReceiver() {
     Notifier.cancelNudge(ctx)
   }
 }
+
+/** Apps a finished break must never "return" the student to. */
+internal val NOT_FREE_TIME = setOf(
+  "com.android.vending",
+  "com.android.settings",
+  "com.android.systemui",
+  "com.google.android.packageinstaller",
+  "com.android.packageinstaller",
+  "com.android.permissioncontroller",
+  "com.google.android.permissioncontroller",
+)

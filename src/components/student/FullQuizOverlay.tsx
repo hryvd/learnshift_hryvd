@@ -3,7 +3,7 @@ import { Animated, BackHandler, Dimensions, Easing, Platform, Pressable, ScrollV
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowUp, Check, CheckCircle, Lightbulb, Pause, ShieldCheck } from 'phosphor-react-native';
+import { ArrowUp, Check, CheckCircle, House, Lightbulb, Pause, ShieldCheck } from 'phosphor-react-native';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Text } from '@/components/ui';
@@ -23,12 +23,15 @@ const COUNT = 5;
 export function FullQuizOverlay({
   appName,
   onUnlock,
+  onHome,
   onDismiss,
   animateIn = false,
 }: {
   skillId?: SkillId;
   appName: string;
   onUnlock: () => void;
+  /** When set, the finish screen offers "Back to Home" as the main way out. */
+  onHome?: () => void;
   /** Only used when there is nothing to answer; there is no close control. */
   onDismiss: () => void;
   /** Glide the sheet up from the bottom when it first appears. */
@@ -36,7 +39,7 @@ export function FullQuizOverlay({
 }) {
   return (
     <ThemeProvider mode="day">
-      <LearningFeed appName={appName} onUnlock={onUnlock} onDismiss={onDismiss} animateIn={animateIn} />
+      <LearningFeed appName={appName} onUnlock={onUnlock} onHome={onHome} onDismiss={onDismiss} animateIn={animateIn} />
     </ThemeProvider>
   );
 }
@@ -46,11 +49,13 @@ const GLIDE = Easing.bezier(0.16, 1, 0.3, 1);
 function LearningFeed({
   appName,
   onUnlock,
+  onHome,
   onDismiss,
   animateIn,
 }: {
   appName: string;
   onUnlock: () => void;
+  onHome?: () => void;
   onDismiss: () => void;
   animateIn: boolean;
 }) {
@@ -115,11 +120,11 @@ function LearningFeed({
   }, [done]);
   useEffect(() => {
     const back = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (doneRef.current) onUnlock();
+      if (doneRef.current) (onHome ?? onUnlock)();
       return true;
     });
     return () => back.remove();
-  }, [onUnlock]);
+  }, [onUnlock, onHome]);
   useEffect(() => {
     if (reduced) moving.current = false;
   }, [index, reduced]);
@@ -256,18 +261,30 @@ function LearningFeed({
               <CheckCircle size={22} color={GREEN} />
               <Text color={GREEN}>{fil ? 'Tapos na ang iyong pahinga' : 'Your break is complete'}</Text>
             </View>
-            <Action
-              label={
-                fil
-                  ? appName !== 'LearnShift'
-                    ? `Balik sa free time · ${appName}`
-                    : 'Balik sa free time'
-                  : appName !== 'LearnShift'
-                    ? `Back to free time · ${appName}`
-                    : 'Back to your free time'
-              }
-              onPress={onUnlock}
-            />
+            {onHome ? (
+              <>
+                <Action label={fil ? 'Balik sa Home ng LearnShift' : 'Back to LearnShift Home'} icon="home" onPress={onHome} />
+                {appName !== 'LearnShift' ? (
+                  <SecondaryAction
+                    label={fil ? `Buksan ang ${appName}` : `Open ${appName}`}
+                    onPress={onUnlock}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <Action
+                label={
+                  fil
+                    ? appName !== 'LearnShift'
+                      ? `Balik sa free time · ${appName}`
+                      : 'Balik sa free time'
+                    : appName !== 'LearnShift'
+                      ? `Back to free time · ${appName}`
+                      : 'Back to your free time'
+                }
+                onPress={onUnlock}
+              />
+            )}
           </ScrollView>
         ) : (
           <>
@@ -415,7 +432,17 @@ function LearningFeed({
   );
 }
 
-function Action({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+function Action({
+  label,
+  onPress,
+  disabled = false,
+  icon = 'up',
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  icon?: 'up' | 'home';
+}) {
   return (
     <Pressable
       onPress={onPress}
@@ -427,7 +454,20 @@ function Action({ label, onPress, disabled = false }: { label: string; onPress: 
       <Text variant="headline" color="#FFFFFF">
         {label}
       </Text>
-      <ArrowUp size={19} color="#FFFFFF" weight="bold" />
+      {icon === 'home' ? (
+        <House size={19} color="#FFFFFF" weight="bold" />
+      ) : (
+        <ArrowUp size={19} color="#FFFFFF" weight="bold" />
+      )}
+    </Pressable>
+  );
+}
+function SecondaryAction({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={styles.secondary}>
+      <Text variant="headline" color={GREEN}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -523,6 +563,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
+  },
+  secondary: {
+    minHeight: 52,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: GREEN,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   disabled: { opacity: 0.5 },
   results: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 20 },

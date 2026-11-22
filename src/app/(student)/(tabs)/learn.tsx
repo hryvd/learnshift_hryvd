@@ -27,6 +27,7 @@ type Seg = 'you' | 'skills';
 
 export default function Learn() {
   const t = useT();
+  const grade = useAppStore((s) => s.learningGrade);
   const { seg } = useLocalSearchParams<{ seg?: string }>();
   const [tab, setTab] = useState<Seg>(seg === 'skills' ? 'skills' : 'you');
   const [lastSeg, setLastSeg] = useState(seg);
@@ -40,13 +41,13 @@ export default function Learn() {
       <SegmentedControl<Seg>
         options={[
           { value: 'you', label: t.learn.forYou },
-          { value: 'skills', label: 'Extra math practice' },
+          { value: 'skills', label: t.learn.mathTab(grade) },
         ]}
         value={tab}
         onChange={setTab}
         style={styles.seg}
       />
-      {tab === 'you' ? <ForYou /> : <Skills />}
+      {tab === 'you' ? <ForYou /> : grade >= 7 ? <Skills /> : <EarlyMath grade={grade} />}
     </Screen>
   );
 }
@@ -74,12 +75,38 @@ function ForYou() {
   );
 }
 
+/** Grades 1–6: the skill map is Grade 7 algebra-track math, so offer grade-level practice instead. */
+function EarlyMath({ grade }: { grade: number }) {
+  const { c } = useTheme();
+  const t = useT();
+  const start = () => {
+    useAppStore.getState().setLearningSubject('math');
+    router.push('/feed');
+  };
+  return (
+    <Stagger index={0}>
+      <Card style={styles.gap} onPress={start} accessibilityLabel={t.learn.earlyMathStart}>
+        <View style={styles.continue}>
+          <View style={[styles.play, { backgroundColor: c.accentTint }]}>
+            <Play size={22} color={c.accent} weight="fill" />
+          </View>
+          <View style={styles.flexGap}>
+            <Text variant="title">{t.learn.earlyMathTitle(grade)}</Text>
+            <Text variant="subhead">{t.learn.earlyMathSub}</Text>
+          </View>
+        </View>
+      </Card>
+    </Stagger>
+  );
+}
+
 function Skills() {
   const { c } = useTheme();
   const t = useT();
   const L = useL();
   const live = useLive();
   const mastery = useAppStore((s) => s.mastery);
+  const grade = useAppStore((s) => s.learningGrade);
   const { width } = useWindowDimensions();
   const graphW = Math.min(width, 560) - space.screen * 2 - space.card * 2;
   const sorted = [...SKILLS].sort((a, b) => mastery[a.id] - mastery[b.id]);
@@ -92,7 +119,7 @@ function Skills() {
           <View style={styles.rowBetween}>
             <View>
               <Text variant="title">{t.learn.mapTitle}</Text>
-              <Text variant="subhead">{t.learn.mapSub}</Text>
+              <Text variant="subhead">{t.learn.mapSub(grade)}</Text>
             </View>
             <Chip label={`${t.learn.rootGap}: ${L(SKILL_BY_ID[live.root].name)}`} kind="accent" />
           </View>

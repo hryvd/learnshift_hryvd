@@ -29,7 +29,8 @@ import { useNightGuard } from '@/hooks/useNightGuard';
 import { useLive } from '@/hooks/useLive';
 import { useL, useT } from '@/i18n/useT';
 import { respondToNudge } from '@/services/backend/api';
-import { lastUsedApp, returnToLastApp } from '@/services/monitor';
+import { exitToHome, exitToLastApp } from '@/services/exitBreak';
+import { lastUsedApp } from '@/services/monitor';
 import { useAppStore } from '@/store/useAppStore';
 
 const SECONDS = 45;
@@ -66,9 +67,7 @@ export default function BreakPlayer() {
   }, [phase.kind]);
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (resultReadyRef.current) {
-        if (!returnToLastApp()) router.back();
-      }
+      if (resultReadyRef.current) exitToHome();
       return true;
     });
     return () => sub.remove();
@@ -399,14 +398,10 @@ function Result({ skillLabel, from, to }: { skillLabel: string; from: number; to
         <CoinFly play={play} from={fromPt} to={toPt} onArrive={arrive} />
       </View>
       <View style={styles.footer}>
-        <PillButton
-          label={appName ? `${t.brk.backToFree} · ${appName}` : t.brk.backToFree}
-          size="lg"
-          block
-          onPress={() => {
-            if (!returnToLastApp()) router.back();
-          }}
-        />
+        <PillButton label={t.brk.backHome} size="lg" block onPress={exitToHome} />
+        {appName ? (
+          <PillButton label={t.brk.openApp(appName)} kind="secondary" size="lg" block onPress={exitToLastApp} />
+        ) : null}
       </View>
     </View>
   );

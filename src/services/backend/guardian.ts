@@ -4,9 +4,11 @@
  */
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+
 import { create } from 'zustand';
 
 import type { NudgeEntry } from '@/data/seed';
+import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
 import { supabase } from '@/lib/supabase';
 import { todayKey, type BedtimeDays, type TimeRequest, type UsageDay } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
@@ -166,10 +168,23 @@ export function patchChild(id: string, fn: (d: ChildData) => ChildData) {
   useGuardian.setState((s) => (s.data[id] ? { data: { ...s.data, [id]: fn(s.data[id]) } } : s));
 }
 
+/** Reloads the child list and the selected child now (pull-to-refresh, polling). */
+export async function refreshGuardian() {
+  await loadChildren();
+  const id = useGuardian.getState().selected;
+  if (id) await loadChild(id);
+}
+
 /** Loads and keeps the guardian view live. Mount once on the guardian screen. */
 export function useGuardianLive() {
   const me = useAuth((s) => s.profile?.id);
   const selected = useGuardian((s) => s.selected);
+  // Rebuild realtime channels after a long sleep; poll as a safety net while open.
+  const resume = useResumeKey();
+  useInterval(() => {
+    if (!me) return;
+    refreshGuardian().catch(() => {});
+  }, AUTO_REFRESH_MS, !!me);
 
   useEffect(() => {
     if (!me) return;
@@ -183,7 +198,7 @@ export function useGuardianLive() {
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [me]);
+  }, [me, resume]);
 
   useEffect(() => {
     if (!selected) return;
@@ -216,5 +231,5 @@ export function useGuardianLive() {
       supabase.removeChannel(ch);
       app.remove();
     };
-  }, [selected]);
+  }, [selected, resume]);
 }

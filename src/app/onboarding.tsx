@@ -44,7 +44,8 @@ import { haptic } from '@/design/haptics';
 import { pressScale, spring, useReducedMotion } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
-import { useL, useT } from '@/i18n/useT';
+import { formatClock, useL, useT } from '@/i18n/useT';
+import { BEDTIME_STARTS, bedtimeStartIndex } from '@/lib/bedtime';
 import { IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 import { mulberry32 } from '@/services/ai/interventionPolicy';
@@ -832,16 +833,15 @@ function NotifyStep({ next, role }: { next: () => void; role: Role }) {
   );
 }
 
+const BEDTIME_LABELS = BEDTIME_STARTS.map(formatClock);
+
 function BedtimeStep({ next }: { next: () => void }) {
   const t = useT();
   const bedtime = useAppStore((s) => s.bedtime);
-  const h24 = Math.floor(bedtime.start / 60);
-  const [h, setH] = useState((h24 % 12 || 12) - 1);
-  const [m, setM] = useState(Math.round((bedtime.start % 60) / 15));
-  const [pm, setPm] = useState(h24 >= 12 ? 1 : 0);
+  // Bedtime starts 6:00 PM to 12:00 AM: one wheel of real times, so no invalid pick exists.
+  const [i, setI] = useState(() => bedtimeStartIndex(bedtime.start));
   const save = () => {
-    const start = (((h + 1) % 12) + pm * 12) * 60 + m * 15;
-    useAppStore.getState().setBedtime({ ...bedtime, start });
+    useAppStore.getState().setBedtime({ ...bedtime, start: BEDTIME_STARTS[i] });
     next();
   };
   return (
@@ -856,13 +856,12 @@ function BedtimeStep({ next }: { next: () => void }) {
       <Card>
         <WheelGroup>
           <WheelPicker
-            items={Array.from({ length: 12 }, (_, k) => String(k + 1))}
-            index={h}
-            onChange={setH}
-            accessibilityLabel="Hour"
+            items={BEDTIME_LABELS}
+            index={i}
+            onChange={setI}
+            width={160}
+            accessibilityLabel={t.onb.bedtime}
           />
-          <WheelPicker items={['00', '15', '30', '45']} index={m} onChange={setM} accessibilityLabel="Minute" />
-          <WheelPicker items={['AM', 'PM']} index={pm} onChange={setPm} accessibilityLabel="AM or PM" />
         </WheelGroup>
       </Card>
     </Shell>
