@@ -154,10 +154,13 @@ export function returnToLastApp(): boolean {
   return false;
 }
 
+/** Store, launcher and system screens are never the "free time" a student goes back to. */
+const NOT_FREE_TIME = /^(learnshift|google play( store)?|play store|settings|system ui|android system|launcher|home|one ui home|pixel launcher|miui home|quickstep|package installer|permission controller)$/i;
+
 export function lastUsedApp(): string | null {
   if (platform === 'android' && UsageMonitor?.lastUsedApp) {
     const label = UsageMonitor.lastUsedApp().trim();
-    return label.length > 0 ? label : null;
+    return label.length > 0 && !NOT_FREE_TIME.test(label) ? label : null;
   }
   return null;
 }

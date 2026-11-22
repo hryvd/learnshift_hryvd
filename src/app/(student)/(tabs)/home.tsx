@@ -23,9 +23,21 @@ import { fontFor } from '@/design/typography';
 import { useLive } from '@/hooks/useLive';
 import { splitDuration } from '@/hooks/useWeek';
 import { formatDuration } from '@/i18n/useT';
-import { platform } from '@/services/monitor';
+import { IS_PITCH } from '@/lib/config';
+import { pullStudent } from '@/services/backend/sync';
+import { platform, reportNow } from '@/services/monitor';
 import { useDevice } from '@/services/monitor/bridge';
 import { todayKey, useAppStore } from '@/store/useAppStore';
+import { useAuth } from '@/store/useAuth';
+
+/** Pull-to-refresh: fresh on-device minutes, a usage report, then the latest server state. */
+async function refreshHome() {
+  await useDevice.getState().refresh();
+  const id = useAuth.getState().profile?.id;
+  if (IS_PITCH || !id) return;
+  await reportNow().catch(() => {});
+  await pullStudent(id);
+}
 
 export default function Home() {
   const { c } = useTheme();
@@ -81,7 +93,7 @@ export default function Home() {
   const entText = formatDuration(summary.entertainmentMinutes);
 
   return (
-    <Screen tabs>
+    <Screen tabs onRefresh={refreshHome}>
       <View style={styles.header}>
         <View style={styles.flex}>
           <Text variant="overline">LEARN SHIFT</Text>

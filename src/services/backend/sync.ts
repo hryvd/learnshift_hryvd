@@ -11,6 +11,7 @@ import { AppState } from 'react-native';
 import type { NudgeEntry } from '@/data/seed';
 import { SKILLS, type SkillId } from '@/data/skills';
 import { supabase } from '@/lib/supabase';
+import { clampBedtimeStart } from '@/lib/bedtime';
 import type { ArmStats } from '@/services/types';
 import {
   PRIOR_MASTERY,
@@ -112,7 +113,7 @@ export async function pullStudent(userId: string) {
 
   if (settings.data && !dirty.settings) {
     const st = settings.data;
-    patch.bedtime = { start: st.bedtime_start, end: st.bedtime_end };
+    patch.bedtime = { start: clampBedtimeStart(st.bedtime_start), end: st.bedtime_end };
     patch.bedtimeDays = st.bedtime_days as BedtimeDays;
     patch.paused = st.paused;
     patch.guardian = { ...(patch.guardian ?? s.guardian), limitStyle: st.limit_style };
@@ -160,9 +161,12 @@ export async function pullStudent(userId: string) {
   }
 
   if (requests.data)
-    patch.requests = requests.data.map(
-      (r): TimeRequest => ({ id: r.id, at: r.created_at, minutes: r.minutes, status: r.status }),
-    );
+    patch.requests = requests.data.map((r): TimeRequest => ({
+      id: r.id,
+      at: r.created_at,
+      minutes: r.minutes,
+      status: r.status,
+    }));
 
   if (usage.data) {
     const server: UsageDay[] = usage.data.map((u) => ({
@@ -291,10 +295,12 @@ export async function flushStudent(userId: string) {
     if (dirty.usageToday) {
       const today = s.usage.find((u) => u.day === todayKey());
       if (today) {
-        const { error } = await supabase.from('usage_daily').upsert(
-          { student_id: userId, day: today.day, breaks: today.breaks, learning_min: today.learning, updated_at: now },
-          { onConflict: 'student_id,day' },
-        );
+        const { error } = await supabase
+          .from('usage_daily')
+          .upsert(
+            { student_id: userId, day: today.day, breaks: today.breaks, learning_min: today.learning, updated_at: now },
+            { onConflict: 'student_id,day' },
+          );
         if (error) throw error;
       }
       useAppStore.getState().clean({ usageToday: false });
@@ -368,23 +374,68 @@ export function startStudentSync(userId: string): () => void {
     if (state.dirty !== prev.dirty || state.outbox !== prev.outbox) pushSoon();
   });
 
+  // Push pending writes every 30 s; pull guardian/teacher changes every 60 s in
+  // case a realtime event was missed (phones often drop the socket).
+  let ticks = 0;
   const interval = setInterval(() => {
+    if (AppState.currentState !== 'active') return;
+    ticks += 1;
     if (hasPending()) flushStudent(userId).catch(() => {});
+    else if (ticks % 2 === 0) pull();
   }, 30_000);
 
+  let hiddenAt: number | null = null;
   const appState = AppState.addEventListener('change', (st) => {
-    if (st === 'active') flushStudent(userId).catch(() => {}).finally(pull);
+    if (st !== 'active') {
+      hiddenAt ??= Date.now();
+      return;
+    }
+    // A long sleep usually kills the realtime socket: rebuild the channel.
+    if (hiddenAt != null && Date.now() - hiddenAt > 30_000) {
+      supabase.removeChannel(channel);
+      channel = subscribe();
+    }
+    hiddenAt = null;
+    flushStudent(userId)
+      .catch(() => {})
+      .finally(pull);
   });
 
-  const channel = supabase
-    .channel(`student-${userId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'guardian_controls', filter: `student_id=eq.${userId}` }, pull)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'student_settings', filter: `student_id=eq.${userId}` }, pull)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'time_requests', filter: `student_id=eq.${userId}` }, pull)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'guardian_links', filter: `student_id=eq.${userId}` }, pull)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'class_members', filter: `student_id=eq.${userId}` }, pull)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'usage_daily', filter: `student_id=eq.${userId}` }, pull)
-    .subscribe();
+  const subscribe = () =>
+    supabase
+      .channel(`student-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'guardian_controls', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student_settings', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'time_requests', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'guardian_links', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'class_members', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'usage_daily', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .subscribe();
+  let channel = subscribe();
 
   return () => {
     stopped = true;

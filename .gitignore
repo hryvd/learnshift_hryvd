@@ -52,3 +52,4 @@ dist-pitch/
 modules/**/build/
 modules/**/.gradle/
 .env
+dist-app/

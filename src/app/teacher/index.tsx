@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import { SKILL_BY_ID, SKILLS, type SkillId } from '@/data/skills';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
+import { usePullRefresh } from '@/hooks/useAutoRefresh';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
@@ -37,6 +38,7 @@ import {
   loadClasses,
   reviewAnswer,
   useTeacher,
+  refreshTeacher,
   useTeacherLive,
   type ReviewRow,
 } from '@/services/backend/teacher';
@@ -234,6 +236,7 @@ function Dashboard({
 }) {
   const { c, isNight } = useTheme();
   const insets = useSafeAreaInsets();
+  const pull = usePullRefresh(refreshTeacher);
   const { width } = useWindowDimensions();
   const wide = width >= 900;
   const [cell, setCell] = useState<{ s: Student; skill: SkillId } | null>(null);
@@ -341,7 +344,14 @@ function Dashboard({
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-      <ScrollView contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 40 }]}>
+      <ScrollView
+        contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 40 }]}
+        refreshControl={
+          IS_PITCH ? undefined : (
+            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
+          )
+        }
+      >
         <Stagger index={0} style={styles.header}>
           <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
             <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />

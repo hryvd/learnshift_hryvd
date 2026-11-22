@@ -8,11 +8,13 @@ import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { formatClock, useT } from '@/i18n/useT';
+import { BEDTIME_STARTS, bedtimeStartIndex, clampBedtimeStart } from '@/lib/bedtime';
 import { useAppStore, type BedtimeDays } from '@/store/useAppStore';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 const AMPM = ['AM', 'PM'];
+const START_LABELS = BEDTIME_STARTS.map(formatClock);
 
 /** Nights the window applies to, Sun → Sat. School nights are the nights before school days. */
 const NIGHTS: Record<BedtimeDays, boolean[]> = {
@@ -34,7 +36,7 @@ export default function BedtimeEditor() {
   const saved = useAppStore((s) => s.bedtime);
   const savedDays = useAppStore((s) => s.bedtimeDays);
   const [which, setWhich] = useState<'start' | 'end'>('start');
-  const [times, setTimes] = useState(saved);
+  const [times, setTimes] = useState(() => ({ ...saved, start: clampBedtimeStart(saved.start) }));
   const [days, setDays] = useState<BedtimeDays>(savedDays);
   const parts = toParts(times[which]);
   const set = (p: Partial<typeof parts>) => {
@@ -68,16 +70,29 @@ export default function BedtimeEditor() {
             value={which}
             onChange={setWhich}
           />
-          <WheelGroup key={which}>
-            <WheelPicker items={HOURS} index={parts.h} onChange={(h) => set({ h })} accessibilityLabel="Hour" />
-            <WheelPicker
-              items={MINUTES}
-              index={parts.min}
-              onChange={(min) => set({ min })}
-              accessibilityLabel="Minute"
-            />
-            <WheelPicker items={AMPM} index={parts.pm} onChange={(pm) => set({ pm })} accessibilityLabel="AM or PM" />
-          </WheelGroup>
+          {which === 'start' ? (
+            // Bedtime can start only from 6:00 PM to 12:00 AM.
+            <WheelGroup key="start">
+              <WheelPicker
+                items={START_LABELS}
+                index={bedtimeStartIndex(times.start)}
+                onChange={(i) => setTimes((tm) => ({ ...tm, start: BEDTIME_STARTS[i] }))}
+                width={160}
+                accessibilityLabel={t.bedtime.starts}
+              />
+            </WheelGroup>
+          ) : (
+            <WheelGroup key="end">
+              <WheelPicker items={HOURS} index={parts.h} onChange={(h) => set({ h })} accessibilityLabel="Hour" />
+              <WheelPicker
+                items={MINUTES}
+                index={parts.min}
+                onChange={(min) => set({ min })}
+                accessibilityLabel="Minute"
+              />
+              <WheelPicker items={AMPM} index={parts.pm} onChange={(pm) => set({ pm })} accessibilityLabel="AM or PM" />
+            </WheelGroup>
+          )}
         </Card>
 
         <Card style={styles.gap}>

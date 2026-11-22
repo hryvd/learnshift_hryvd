@@ -78,6 +78,12 @@ try {
   console.log('Class joining');
   const { data: cls, error: clsErr } = await teacher.c.from('classes').insert({ name: 'Sampaguita', grade: 8 }).select().single();
   ok(!clsErr && /^[A-Z0-9]{6}$/.test(cls.join_code), 'teacher creates class with join code', clsErr);
+  // Grade-school classes (grades 1-6) must be allowed: this failed before migration 20261117090000.
+  const { data: g1, error: g1Err } = await teacher.c.from('classes').insert({ name: 'Grade 1 test', grade: 1 }).select().single();
+  ok(!g1Err && g1?.grade === 1, 'teacher can create a Grade 1 class', g1Err);
+  if (g1) await teacher.c.from('classes').delete().eq('id', g1.id);
+  const { error: badGrade } = await teacher.c.from('classes').insert({ name: 'Bad grade', grade: 13 });
+  ok(!!badGrade, 'grade 13 class is rejected');
   const { error: guardClass } = await guardian.c.from('classes').insert({ name: 'Nope' });
   ok(!!guardClass, 'guardian cannot create a class');
   const { data: joined, error: joinErr } = await student.c.rpc('join_class', { p_code: cls.join_code.toLowerCase() });

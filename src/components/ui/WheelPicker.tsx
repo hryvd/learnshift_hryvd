@@ -78,6 +78,12 @@ export function WheelPicker({ items, index, onChange, width = 64, accessibilityL
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM}
         decelerationRate="fast"
+        // Start on the saved value even if the wheel mounts off-screen (paged onboarding):
+        // scrollTo before layout is ignored on Android, which showed the first item instead.
+        contentOffset={{ x: 0, y: index * ITEM }}
+        onLayout={() => {
+          if (y.get() === 0 && index > 0) ref.current?.scrollTo({ y: index * ITEM, animated: false });
+        }}
         contentContainerStyle={{ paddingVertical: ITEM * ((VISIBLE - 1) / 2) }}
       >
         {items.map((label, i) => (

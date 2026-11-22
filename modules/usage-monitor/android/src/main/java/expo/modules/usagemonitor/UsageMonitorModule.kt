@@ -168,7 +168,7 @@ class UsageMonitorModule : Module() {
       val targetPkg = Store.getString(ctx, "lastUsedPkg")?.takeIf { it.isNotBlank() }
         ?: Store.getString(ctx, "watchedPkg")?.takeIf { it.isNotBlank() }
         ?: runCatching { Tracker(ctx).update(System.currentTimeMillis()).pkg }.getOrNull()
-      if (!targetPkg.isNullOrBlank() && targetPkg != ctx.packageName) {
+      if (!targetPkg.isNullOrBlank() && targetPkg != ctx.packageName && targetPkg !in NOT_FREE_TIME) {
         val intent = ctx.packageManager.getLaunchIntentForPackage(targetPkg)
         if (intent != null) {
           val started = runCatching {

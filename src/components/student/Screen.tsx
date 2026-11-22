@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/design/theme';
@@ -23,14 +23,24 @@ type Props = {
   scroll?: boolean;
   /** Overlays (sheets, toasts) rendered above the scroll view. */
   overlay?: ReactNode;
+  /** Enables pull-to-refresh; the spinner shows until the promise settles. */
+  onRefresh?: () => Promise<unknown>;
 };
 
 /** Canvas + safe areas + a centered, max-width column. */
-export function Screen({ children, header, tabs, sheet, contentStyle, scroll = true, overlay }: Props) {
+export function Screen({ children, header, tabs, sheet, contentStyle, scroll = true, overlay, onRefresh }: Props) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const tabInset = useTabInset();
   const bottom = tabs ? tabInset : Math.max(insets.bottom, 16) + 24;
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    onRefresh()
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
+  };
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: sheet ? 0 : insets.top }]}>
       {header}
@@ -39,6 +49,11 @@ export function Screen({ children, header, tabs, sheet, contentStyle, scroll = t
           style={styles.root}
           contentContainerStyle={[styles.content, { paddingBottom: bottom }, contentStyle]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.accent} colors={[c.accent]} />
+            ) : undefined
+          }
         >
           {children}
         </ScrollView>

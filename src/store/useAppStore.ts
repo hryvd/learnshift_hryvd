@@ -7,6 +7,7 @@ import type { DeckLang } from '@/data/decks';
 import { SEED_REVIEW, type ReviewItem } from '@/data/class';
 import { SEED_BUILT, seedNudges, type BuildingId, type NudgeEntry, type NudgeResponse } from '@/data/seed';
 import { MIKA_HISTORY, MIKA_MASTERY, SKILLS, type SkillId } from '@/data/skills';
+import { clampBedtimeStart } from '@/lib/bedtime';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
 import type { AnswerEvidence, ArmStats, Mastery, NudgeAction } from '@/services/types';
@@ -340,7 +341,11 @@ export const useAppStore = create<State & Actions>()(
         if (subject === 'mixed' || SUBJECTS.some((s) => s.id === subject)) set({ learningSubject: subject });
       },
       setBedtime: (bedtime, days) =>
-        set((s) => ({ bedtime, bedtimeDays: days ?? s.bedtimeDays, dirty: { ...s.dirty, settings: true } })),
+        set((s) => ({
+          bedtime: { ...bedtime, start: clampBedtimeStart(bedtime.start) },
+          bedtimeDays: days ?? s.bedtimeDays,
+          dirty: { ...s.dirty, settings: true },
+        })),
       setDemo: (patch) => set((s) => ({ demo: { ...s.demo, ...patch } })),
       setOnboarded: (onboarded) => set((s) => ({ onboarded, dirty: { ...s.dirty, progress: true } })),
       addCoins: (n) => set((s) => ({ coins: s.coins + n, dirty: { ...s.dirty, progress: true } })),
@@ -586,6 +591,9 @@ export const useAppStore = create<State & Actions>()(
         if (!s) return;
         const today = todayKey();
         if (s.breaksDay !== today) s.hydrate({ breaksToday: 0, breaksDay: today });
+        // Bedtime may only start 6:00 PM to 12:00 AM; fix older saved values.
+        const start = clampBedtimeStart(s.bedtime.start);
+        if (start !== s.bedtime.start) s.setBedtime({ ...s.bedtime, start });
         if (!s.sentinel) {
           s.hydrate({ sentinel: { ...DEFAULT_SENTINEL, day: today } });
         } else {
