@@ -151,6 +151,8 @@ type State = {
   stats: ArmStats;
   review: ReviewItem[];
   reviewed: Record<string, 'approved' | 'edited'>;
+  /** Practice question ids already shown, per "grade:subject" pool, so sessions cycle before repeating. */
+  seenQuestions: Record<string, string[]>;
   paused: boolean;
   lastMiss: { q: string; a: number } | null;
   sentinel: SentinelSlice;
@@ -177,6 +179,7 @@ type Actions = {
   setThemePref: (pref: ThemePref) => void;
   setLearningGrade: (grade: number) => void;
   setLearningSubject: (subject: SubjectId | 'mixed') => void;
+  setSeenQuestions: (pool: string, ids: string[]) => void;
   setBedtime: (bedtime: Bedtime, days?: BedtimeDays) => void;
   setDemo: (patch: Partial<DemoOverrides>) => void;
   setOnboarded: (v: boolean) => void;
@@ -269,6 +272,7 @@ const shared = () => ({
   lock: { start: 22 * 60, end: 6 * 60, unlockUntil: null },
   limits: { scroll: null, games: null, breakIntervalSec: null } as Limits,
   reviewed: {},
+  seenQuestions: {} as Record<string, string[]>,
   paused: false,
   lastMiss: null,
   sentinel: { ...DEFAULT_SENTINEL, day: todayKey() },
@@ -359,6 +363,7 @@ export const useAppStore = create<State & Actions>()(
       setLearningSubject: (subject) => {
         if (subject === 'mixed' || SUBJECTS.some((s) => s.id === subject)) set({ learningSubject: subject });
       },
+      setSeenQuestions: (pool, ids) => set((s) => ({ seenQuestions: { ...s.seenQuestions, [pool]: ids } })),
       setBedtime: (bedtime, days) =>
         set((s) => ({
           bedtime: { ...bedtime, start: clampBedtimeStart(bedtime.start) },

@@ -8,7 +8,8 @@ import { ArrowUp, Check, CheckCircle, House, Lightbulb } from 'phosphor-react-na
 import { Paty } from '@/components/mascot/Paty';
 import { QuestionVisual } from '@/components/student/QuestionVisual';
 import { Text } from '@/components/ui';
-import { LOCAL_QUESTIONS, SUBJECTS, type LocalQuestion } from '@/data/localQuestions';
+import { SUBJECTS, type LocalQuestion } from '@/data/localQuestions';
+import { pickSession } from '@/data/pickQuestions';
 import type { SkillId } from '@/data/skills';
 import { haptic } from '@/design/haptics';
 import { useReducedMotion } from '@/design/motion';
@@ -63,25 +64,16 @@ function LearningFeed({
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const fil = useAppStore((s) => s.lang === 'fil');
-  const [questions] = useState<LocalQuestion[]>(() => {
-    const { learningGrade, learningSubject } = useAppStore.getState();
-    const pool = LOCAL_QUESTIONS.filter(
-      (q) => q.grade === learningGrade && (learningSubject === 'mixed' || q.subject === learningSubject),
-    );
-    // Mixed practice covers each subject once; a subject session samples without replacement.
-    if (learningSubject === 'mixed') {
-      return SUBJECTS.flatMap((subject) => {
-        const choices = pool.filter((q) => q.subject === subject.id);
-        return choices.length ? [choices[Math.floor(Math.random() * choices.length)]] : [];
-      });
-    }
-    const shuffled = [...pool];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled.slice(0, COUNT);
+  // Unseen questions come first; the session's picks are recorded once it mounts.
+  const [session] = useState(() => {
+    const { learningGrade, learningSubject, seenQuestions } = useAppStore.getState();
+    return pickSession(learningGrade, learningSubject, seenQuestions ?? {}, COUNT);
   });
+  const questions: LocalQuestion[] = session.questions;
+  useEffect(() => {
+    const { setSeenQuestions } = useAppStore.getState();
+    for (const [pool, ids] of Object.entries(session.seen)) setSeenQuestions(pool, ids);
+  }, [session]);
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
