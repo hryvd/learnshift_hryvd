@@ -4,7 +4,7 @@
     "subject": "math",
     "grade": 1,
     "topic": "Counting",
-    "prompt": "Count the stars. What number comes after 8?",
+    "prompt": "What number comes after 8?",
     "options": [
       "6",
       "10",
@@ -12,8 +12,7 @@
       "7"
     ],
     "answer": 2,
-    "explanation": "Count forward: 7, 8, 9. Nine comes after eight.",
-    "visual": { "kind": "count", "item": "star", "count": 8, "askNext": true }
+    "explanation": "Count forward: 7, 8, 9. Nine comes after eight."
   },
   {
     "id": "math-g1-02",
@@ -29,7 +28,12 @@
     ],
     "answer": 3,
     "explanation": "Start at 3 and count 2 more: 4, 5.",
-    "visual": { "kind": "count", "item": "pencil", "count": 3, "addCount": 2 }
+    "visual": {
+      "kind": "count",
+      "item": "pencil",
+      "count": 3,
+      "addCount": 2
+    }
   },
   {
     "id": "math-g1-03",
@@ -45,7 +49,12 @@
     ],
     "answer": 0,
     "explanation": "Taking 2 away from 7 leaves 5.",
-    "visual": { "kind": "count", "item": "banana", "count": 7, "crossOut": 2 }
+    "visual": {
+      "kind": "count",
+      "item": "banana",
+      "count": 7,
+      "crossOut": 2
+    }
   },
   {
     "id": "math-g1-04",
@@ -67,7 +76,7 @@
     "subject": "math",
     "grade": 1,
     "topic": "Shapes",
-    "prompt": "Look at the shape in the picture. What is it called?",
+    "prompt": "Which shape has 3 straight sides?",
     "options": [
       "Square",
       "Rectangle",
@@ -75,8 +84,7 @@
       "Circle"
     ],
     "answer": 2,
-    "explanation": "A triangle has three sides and three corners.",
-    "visual": { "kind": "shape", "shape": "triangle" }
+    "explanation": "A triangle has three sides and three corners."
   },
   {
     "id": "math-g1-06",
@@ -107,14 +115,19 @@
     ],
     "answer": 0,
     "explanation": "Fourteen is 1 ten and 4 ones.",
-    "visual": { "kind": "count", "item": "block", "count": 14, "groupSize": 10 }
+    "visual": {
+      "kind": "count",
+      "item": "block",
+      "count": 14,
+      "groupSize": 10
+    }
   },
   {
     "id": "math-g1-08",
     "subject": "math",
     "grade": 1,
     "topic": "Time",
-    "prompt": "Look at the clock. What time is it?",
+    "prompt": "A clock's short hand points to 3 and its long hand to 12. What time is it?",
     "options": [
       "9 o'clock",
       "3 o'clock",
@@ -122,15 +135,14 @@
       "6 o'clock"
     ],
     "answer": 1,
-    "explanation": "The short hand gives the hour. The long hand at 12 means exactly that hour.",
-    "visual": { "kind": "clock", "hour": 3, "minute": 0 }
+    "explanation": "The short hand gives the hour. The long hand at 12 means exactly that hour."
   },
   {
     "id": "math-g1-09",
     "subject": "math",
     "grade": 1,
     "topic": "Length",
-    "prompt": "Look at this tool. What is it called and used to measure length?",
+    "prompt": "Which tool helps you measure the length of a pencil?",
     "options": [
       "Clock",
       "Thermometer",
@@ -138,8 +150,7 @@
       "Cup"
     ],
     "answer": 2,
-    "explanation": "A ruler measures length using marks such as centimeters.",
-    "visual": { "kind": "scene", "id": "ruler" }
+    "explanation": "A ruler measures length using marks such as centimeters."
   },
   {
     "id": "math-g1-10",
@@ -155,7 +166,762 @@
     ],
     "answer": 3,
     "explanation": "Give each child one cookie twice. Each gets two.",
-    "visual": { "kind": "count", "item": "cookie", "count": 4, "groupSize": 2 }
+    "visual": {
+      "kind": "count",
+      "item": "cookie",
+      "count": 4,
+      "groupSize": 2
+    }
+  },
+  {
+    "id": "math-g1-11",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Counting",
+    "prompt": "What number comes before 20?",
+    "options": [
+      "21",
+      "19",
+      "18",
+      "10"
+    ],
+    "answer": 1,
+    "explanation": "Count back one from 20: 20, 19. So 19 comes before 20."
+  },
+  {
+    "id": "math-g1-12",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Counting",
+    "prompt": "Count by 10s: 10, 20, 30, __. What comes next?",
+    "options": [
+      "31",
+      "35",
+      "40",
+      "50"
+    ],
+    "answer": 2,
+    "explanation": "Counting by tens adds 10 each time. 30 + 10 = 40."
+  },
+  {
+    "id": "math-g1-13",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Counting",
+    "prompt": "Count by 5s: 5, 10, 15, __. What comes next?",
+    "options": [
+      "16",
+      "25",
+      "30",
+      "20"
+    ],
+    "answer": 3,
+    "explanation": "Counting by fives adds 5 each time. 15 + 5 = 20."
+  },
+  {
+    "id": "math-g1-14",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Counting",
+    "prompt": "Which number is between 46 and 48?",
+    "options": [
+      "47",
+      "45",
+      "49",
+      "57"
+    ],
+    "answer": 0,
+    "explanation": "46, 47, 48. The number 47 sits between them."
+  },
+  {
+    "id": "math-g1-15",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Counting",
+    "prompt": "How do you write \"sixty-two\" as a number?",
+    "options": [
+      "26",
+      "62",
+      "602",
+      "612"
+    ],
+    "answer": 1,
+    "explanation": "Sixty means 6 tens and two means 2 ones, so it is 62."
+  },
+  {
+    "id": "math-g1-16",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Place value",
+    "prompt": "How many tens and ones are in 38?",
+    "options": [
+      "8 tens and 3 ones",
+      "38 tens",
+      "3 tens and 8 ones",
+      "3 tens and 0 ones"
+    ],
+    "answer": 2,
+    "explanation": "In 38, the 3 is in the tens place and the 8 is in the ones place."
+  },
+  {
+    "id": "math-g1-17",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Place value",
+    "prompt": "What number has 5 tens and 2 ones?",
+    "options": [
+      "25",
+      "7",
+      "502",
+      "52"
+    ],
+    "answer": 3,
+    "explanation": "5 tens is 50. Add 2 ones to get 52."
+  },
+  {
+    "id": "math-g1-18",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Place value",
+    "prompt": "What is the value of the 7 in 74?",
+    "options": [
+      "70",
+      "7",
+      "4",
+      "11"
+    ],
+    "answer": 0,
+    "explanation": "The 7 is in the tens place, so it means 7 tens or 70."
+  },
+  {
+    "id": "math-g1-19",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Place value",
+    "prompt": "Which number is the same as 40 + 6?",
+    "options": [
+      "64",
+      "46",
+      "406",
+      "10"
+    ],
+    "answer": 1,
+    "explanation": "40 and 6 more make 46."
+  },
+  {
+    "id": "math-g1-20",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Comparing numbers",
+    "prompt": "Which number is greater than 59?",
+    "options": [
+      "58",
+      "49",
+      "61",
+      "9"
+    ],
+    "answer": 2,
+    "explanation": "61 has 6 tens, more than the 5 tens in 59."
+  },
+  {
+    "id": "math-g1-21",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Comparing numbers",
+    "prompt": "Which shows the numbers from least to greatest?",
+    "options": [
+      "71, 34, 17",
+      "34, 17, 71",
+      "17, 71, 34",
+      "17, 34, 71"
+    ],
+    "answer": 3,
+    "explanation": "Compare the tens: 1 ten, then 3 tens, then 7 tens."
+  },
+  {
+    "id": "math-g1-22",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Comparing numbers",
+    "prompt": "Which sign makes this true: 45 __ 54?",
+    "options": [
+      "<",
+      ">",
+      "=",
+      "+"
+    ],
+    "answer": 0,
+    "explanation": "45 has 4 tens and 54 has 5 tens, so 45 is less than 54."
+  },
+  {
+    "id": "math-g1-23",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Ordinal numbers",
+    "prompt": "Ana is fourth in line. How many children are in front of her?",
+    "options": [
+      "4",
+      "3",
+      "5",
+      "2"
+    ],
+    "answer": 1,
+    "explanation": "Fourth in line means three children stand before her."
+  },
+  {
+    "id": "math-g1-24",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Ordinal numbers",
+    "prompt": "Which day is the second day of the school week if school starts on Monday?",
+    "options": [
+      "Monday",
+      "Wednesday",
+      "Tuesday",
+      "Sunday"
+    ],
+    "answer": 2,
+    "explanation": "Monday is first and Tuesday is second."
+  },
+  {
+    "id": "math-g1-25",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "What is 6 + 7?",
+    "options": [
+      "12",
+      "14",
+      "1",
+      "13"
+    ],
+    "answer": 3,
+    "explanation": "Make a ten: 6 + 4 = 10, then add the other 3 to get 13."
+  },
+  {
+    "id": "math-g1-26",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "What is 9 + 5?",
+    "options": [
+      "14",
+      "13",
+      "15",
+      "4"
+    ],
+    "answer": 0,
+    "explanation": "9 + 1 = 10, then 4 more makes 14."
+  },
+  {
+    "id": "math-g1-27",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "What is 30 + 40?",
+    "options": [
+      "7",
+      "70",
+      "34",
+      "60"
+    ],
+    "answer": 1,
+    "explanation": "3 tens plus 4 tens is 7 tens, or 70."
+  },
+  {
+    "id": "math-g1-28",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "What is 23 + 5?",
+    "options": [
+      "73",
+      "27",
+      "28",
+      "25"
+    ],
+    "answer": 2,
+    "explanation": "Add the ones: 3 + 5 = 8. The 2 tens stay the same, so 28."
+  },
+  {
+    "id": "math-g1-29",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "Liza has 12 marbles. Her brother gives her 6 more. How many marbles does she have now?",
+    "options": [
+      "6",
+      "16",
+      "19",
+      "18"
+    ],
+    "answer": 3,
+    "explanation": "Join the groups: 12 + 6 = 18."
+  },
+  {
+    "id": "math-g1-30",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "What is 8 + 8?",
+    "options": [
+      "16",
+      "15",
+      "18",
+      "88"
+    ],
+    "answer": 0,
+    "explanation": "Doubles: 8 + 8 = 16."
+  },
+  {
+    "id": "math-g1-31",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition",
+    "prompt": "Which is the same as 5 + 3?",
+    "options": [
+      "5 − 3",
+      "3 + 5",
+      "5 + 5",
+      "3 + 3"
+    ],
+    "answer": 1,
+    "explanation": "Changing the order of addends does not change the sum: both make 8."
+  },
+  {
+    "id": "math-g1-32",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Subtraction",
+    "prompt": "What is 15 − 6?",
+    "options": [
+      "11",
+      "8",
+      "9",
+      "21"
+    ],
+    "answer": 2,
+    "explanation": "Take 5 to get to 10, then 1 more to get 9."
+  },
+  {
+    "id": "math-g1-33",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Subtraction",
+    "prompt": "What is 48 − 20?",
+    "options": [
+      "46",
+      "68",
+      "18",
+      "28"
+    ],
+    "answer": 3,
+    "explanation": "Take away 2 tens from 4 tens: 2 tens and 8 ones is 28."
+  },
+  {
+    "id": "math-g1-34",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Subtraction",
+    "prompt": "Jun has 17 stickers. He gives 7 to his friend. How many stickers are left?",
+    "options": [
+      "10",
+      "24",
+      "7",
+      "11"
+    ],
+    "answer": 0,
+    "explanation": "Take away: 17 − 7 = 10."
+  },
+  {
+    "id": "math-g1-35",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Subtraction",
+    "prompt": "There are 9 birds on a wire. 4 fly away. How many birds stay?",
+    "options": [
+      "13",
+      "5",
+      "4",
+      "6"
+    ],
+    "answer": 1,
+    "explanation": "Take away 4 from 9: 9 − 4 = 5."
+  },
+  {
+    "id": "math-g1-36",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Subtraction",
+    "prompt": "What number makes this true: 10 − __ = 3?",
+    "options": [
+      "13",
+      "3",
+      "7",
+      "6"
+    ],
+    "answer": 2,
+    "explanation": "10 − 7 = 3, because 3 + 7 = 10."
+  },
+  {
+    "id": "math-g1-37",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition and subtraction",
+    "prompt": "If 6 + 4 = 10, what is 10 − 4?",
+    "options": [
+      "4",
+      "14",
+      "10",
+      "6"
+    ],
+    "answer": 3,
+    "explanation": "Addition and subtraction are related. Taking back the 4 leaves 6."
+  },
+  {
+    "id": "math-g1-38",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Addition and subtraction",
+    "prompt": "Paolo had some pencils. He got 3 more and now has 8. How many did he have at first?",
+    "options": [
+      "5",
+      "11",
+      "3",
+      "8"
+    ],
+    "answer": 0,
+    "explanation": "Find the missing part: 8 − 3 = 5."
+  },
+  {
+    "id": "math-g1-39",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Money",
+    "prompt": "How much are two ₱5 coins?",
+    "options": [
+      "₱5",
+      "₱10",
+      "₱7",
+      "₱25"
+    ],
+    "answer": 1,
+    "explanation": "₱5 + ₱5 = ₱10."
+  },
+  {
+    "id": "math-g1-40",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Money",
+    "prompt": "You have a ₱20 bill and a ₱10 coin. How much money do you have?",
+    "options": [
+      "₱21",
+      "₱10",
+      "₱30",
+      "₱200"
+    ],
+    "answer": 2,
+    "explanation": "₱20 + ₱10 = ₱30."
+  },
+  {
+    "id": "math-g1-41",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Money",
+    "prompt": "A candy costs ₱3. You pay with a ₱10 coin. How much change do you get?",
+    "options": [
+      "₱13",
+      "₱3",
+      "₱6",
+      "₱7"
+    ],
+    "answer": 3,
+    "explanation": "Change is what is left: ₱10 − ₱3 = ₱7."
+  },
+  {
+    "id": "math-g1-42",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Money",
+    "prompt": "Which is worth the most?",
+    "options": [
+      "One ₱20 bill",
+      "Three ₱5 coins",
+      "Ten ₱1 coins",
+      "One ₱10 coin"
+    ],
+    "answer": 0,
+    "explanation": "₱20 is more than ₱15, ₱10, or ₱10."
+  },
+  {
+    "id": "math-g1-43",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Shapes",
+    "prompt": "How many corners does a square have?",
+    "options": [
+      "3",
+      "4",
+      "0",
+      "5"
+    ],
+    "answer": 1,
+    "explanation": "A square has 4 sides and 4 corners."
+  },
+  {
+    "id": "math-g1-44",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Shapes",
+    "prompt": "Which object is shaped like a ball, or sphere?",
+    "options": [
+      "A book",
+      "A can of sardines",
+      "An orange",
+      "A brick"
+    ],
+    "answer": 2,
+    "explanation": "An orange is round all over like a sphere."
+  },
+  {
+    "id": "math-g1-45",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Shapes",
+    "prompt": "Which shape has no corners and no straight sides?",
+    "options": [
+      "Triangle",
+      "Square",
+      "Rectangle",
+      "Circle"
+    ],
+    "answer": 3,
+    "explanation": "A circle is curved all around, so it has no corners."
+  },
+  {
+    "id": "math-g1-46",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Shapes",
+    "prompt": "A box of crayons has 6 flat faces. Which solid shape is it like?",
+    "options": [
+      "Rectangular prism",
+      "Sphere",
+      "Cone",
+      "Cylinder"
+    ],
+    "answer": 0,
+    "explanation": "A box has flat rectangle faces, like a rectangular prism."
+  },
+  {
+    "id": "math-g1-47",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Patterns",
+    "prompt": "What comes next: circle, square, circle, square, __?",
+    "options": [
+      "square",
+      "circle",
+      "triangle",
+      "star"
+    ],
+    "answer": 1,
+    "explanation": "The pattern repeats circle, square. After square comes circle."
+  },
+  {
+    "id": "math-g1-48",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Patterns",
+    "prompt": "What comes next: 20, 18, 16, 14, __?",
+    "options": [
+      "13",
+      "15",
+      "12",
+      "10"
+    ],
+    "answer": 2,
+    "explanation": "Each number is 2 less than the one before. 14 − 2 = 12."
+  },
+  {
+    "id": "math-g1-49",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Patterns",
+    "prompt": "What comes next: A, B, B, A, B, B, A, __?",
+    "options": [
+      "A",
+      "C",
+      "AB",
+      "B"
+    ],
+    "answer": 3,
+    "explanation": "The part that repeats is A, B, B. After A comes B."
+  },
+  {
+    "id": "math-g1-50",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Time",
+    "prompt": "The short hand points to 7 and the long hand points to 6. What time is it?",
+    "options": [
+      "Half past 7",
+      "7 o'clock",
+      "Half past 6",
+      "6 o'clock"
+    ],
+    "answer": 0,
+    "explanation": "The long hand on 6 means half past. The short hand is just past 7."
+  },
+  {
+    "id": "math-g1-51",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Time",
+    "prompt": "Which day comes after Friday?",
+    "options": [
+      "Thursday",
+      "Saturday",
+      "Sunday",
+      "Monday"
+    ],
+    "answer": 1,
+    "explanation": "The days go Thursday, Friday, Saturday."
+  },
+  {
+    "id": "math-g1-52",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Time",
+    "prompt": "How many days are in one week?",
+    "options": [
+      "5",
+      "12",
+      "7",
+      "30"
+    ],
+    "answer": 2,
+    "explanation": "A week has 7 days, from Sunday to Saturday."
+  },
+  {
+    "id": "math-g1-53",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Time",
+    "prompt": "Which month comes after June?",
+    "options": [
+      "May",
+      "August",
+      "January",
+      "July"
+    ],
+    "answer": 3,
+    "explanation": "The months go May, June, July."
+  },
+  {
+    "id": "math-g1-54",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Length",
+    "prompt": "A pencil is 6 paper clips long. A crayon is 4 paper clips long. Which is longer?",
+    "options": [
+      "The pencil",
+      "The crayon",
+      "They are the same",
+      "You cannot tell"
+    ],
+    "answer": 0,
+    "explanation": "Measured with the same paper clips, 6 is more than 4."
+  },
+  {
+    "id": "math-g1-55",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Length",
+    "prompt": "Which is the best unit to measure the length of a table using your hand?",
+    "options": [
+      "Cups",
+      "Hand spans",
+      "Kilograms",
+      "Hours"
+    ],
+    "answer": 1,
+    "explanation": "A hand span measures length; cups, kilograms and hours measure other things."
+  },
+  {
+    "id": "math-g1-56",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Mass",
+    "prompt": "Which is heavier?",
+    "options": [
+      "A leaf",
+      "A feather",
+      "A watermelon",
+      "A paper clip"
+    ],
+    "answer": 2,
+    "explanation": "A watermelon has much more mass than the other objects."
+  },
+  {
+    "id": "math-g1-57",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Fractions",
+    "prompt": "A pizza is cut into 2 equal parts. What is one part called?",
+    "options": [
+      "One fourth",
+      "One whole",
+      "One third",
+      "One half"
+    ],
+    "answer": 3,
+    "explanation": "Two equal parts are halves, so one part is one half."
+  },
+  {
+    "id": "math-g1-58",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Fractions",
+    "prompt": "A sandwich is cut into 4 equal parts. Ana eats 1 part. What fraction did she eat?",
+    "options": [
+      "One fourth",
+      "One half",
+      "Four wholes",
+      "One third"
+    ],
+    "answer": 0,
+    "explanation": "One of four equal parts is one fourth."
+  },
+  {
+    "id": "math-g1-59",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Data",
+    "prompt": "In a pictograph, each 🍎 means 1 apple. Mila has 🍎🍎🍎 and Ben has 🍎🍎🍎🍎🍎. How many more apples does Ben have?",
+    "options": [
+      "8",
+      "2",
+      "5",
+      "3"
+    ],
+    "answer": 1,
+    "explanation": "Ben has 5 and Mila has 3. 5 − 3 = 2 more."
+  },
+  {
+    "id": "math-g1-60",
+    "subject": "math",
+    "grade": 1,
+    "topic": "Sharing",
+    "prompt": "Six mangoes are shared equally among 3 children. How many does each child get?",
+    "options": [
+      "3",
+      "9",
+      "2",
+      "18"
+    ],
+    "answer": 2,
+    "explanation": "Give one at a time: each child ends up with 2 mangoes."
   },
   {
     "id": "math-g2-01",
@@ -216,7 +982,12 @@
     ],
     "answer": 2,
     "explanation": "Three equal groups of four are 4 + 4 + 4 = 12.",
-    "visual": { "kind": "count", "item": "marble", "count": 12, "groupSize": 4 }
+    "visual": {
+      "kind": "count",
+      "item": "marble",
+      "count": 12,
+      "groupSize": 4
+    }
   },
   {
     "id": "math-g2-05",
@@ -238,7 +1009,7 @@
     "subject": "math",
     "grade": 2,
     "topic": "Fractions",
-    "prompt": "Look at the shaded piece of the circle. What fraction is shown?",
+    "prompt": "A sandwich is cut into 2 equal pieces. What fraction is one piece?",
     "options": [
       "1/2",
       "1/3",
@@ -246,8 +1017,7 @@
       "2/1"
     ],
     "answer": 0,
-    "explanation": "One of two equal pieces is one-half.",
-    "visual": { "kind": "fraction", "parts": 2, "filled": 1, "style": "pie" }
+    "explanation": "One of two equal pieces is one-half."
   },
   {
     "id": "math-g2-07",
@@ -310,6 +1080,756 @@
     "explanation": "Eighteen is even: it splits into two groups of nine."
   },
   {
+    "id": "math-g2-11",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Place value",
+    "prompt": "How do you write \"four hundred six\" as a number?",
+    "options": [
+      "46",
+      "460",
+      "406",
+      "4,006"
+    ],
+    "answer": 2,
+    "explanation": "Four hundreds, zero tens and six ones make 406."
+  },
+  {
+    "id": "math-g2-12",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Place value",
+    "prompt": "What number is 3 hundreds, 7 tens and 2 ones?",
+    "options": [
+      "327",
+      "732",
+      "12",
+      "372"
+    ],
+    "answer": 3,
+    "explanation": "300 + 70 + 2 = 372."
+  },
+  {
+    "id": "math-g2-13",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Place value",
+    "prompt": "What is 800 + 50 + 9 in standard form?",
+    "options": [
+      "859",
+      "8509",
+      "895",
+      "958"
+    ],
+    "answer": 0,
+    "explanation": "Put each value in its place: 8 hundreds, 5 tens, 9 ones."
+  },
+  {
+    "id": "math-g2-14",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Place value",
+    "prompt": "Which digit is in the tens place of 615?",
+    "options": [
+      "6",
+      "1",
+      "5",
+      "10"
+    ],
+    "answer": 1,
+    "explanation": "In 615, 6 is hundreds, 1 is tens and 5 is ones."
+  },
+  {
+    "id": "math-g2-15",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Comparing numbers",
+    "prompt": "Which number is the greatest?",
+    "options": [
+      "503",
+      "355",
+      "530",
+      "499"
+    ],
+    "answer": 2,
+    "explanation": "All have hundreds; 530 and 503 have 5 hundreds, and 530 has more tens."
+  },
+  {
+    "id": "math-g2-16",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Comparing numbers",
+    "prompt": "Which sign makes this true: 708 __ 780?",
+    "options": [
+      ">",
+      "=",
+      "−",
+      "<"
+    ],
+    "answer": 3,
+    "explanation": "Same hundreds. 0 tens is less than 8 tens, so 708 < 780."
+  },
+  {
+    "id": "math-g2-17",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Counting",
+    "prompt": "Count by 100s: 250, 350, 450, __. What comes next?",
+    "options": [
+      "550",
+      "460",
+      "500",
+      "650"
+    ],
+    "answer": 0,
+    "explanation": "Each step adds 100. 450 + 100 = 550."
+  },
+  {
+    "id": "math-g2-18",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Rounding",
+    "prompt": "Is 68 closer to 60 or 70?",
+    "options": [
+      "60",
+      "70",
+      "It is exactly between",
+      "80"
+    ],
+    "answer": 1,
+    "explanation": "68 is 2 away from 70 and 8 away from 60."
+  },
+  {
+    "id": "math-g2-19",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Addition",
+    "prompt": "What is 36 + 47?",
+    "options": [
+      "73",
+      "713",
+      "83",
+      "84"
+    ],
+    "answer": 2,
+    "explanation": "6 + 7 = 13, write 3 and carry 1 ten. 3 + 4 + 1 = 8 tens. Answer: 83."
+  },
+  {
+    "id": "math-g2-20",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Addition",
+    "prompt": "What is 245 + 132?",
+    "options": [
+      "367",
+      "477",
+      "113",
+      "377"
+    ],
+    "answer": 3,
+    "explanation": "Add each place: 5 + 2 = 7, 4 + 3 = 7, 2 + 1 = 3."
+  },
+  {
+    "id": "math-g2-21",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Addition",
+    "prompt": "What is 158 + 26?",
+    "options": [
+      "184",
+      "174",
+      "418",
+      "1,726"
+    ],
+    "answer": 0,
+    "explanation": "8 + 6 = 14: write 4, carry 1. 5 + 2 + 1 = 8. So 184."
+  },
+  {
+    "id": "math-g2-22",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Addition",
+    "prompt": "A school has 128 boys and 135 girls in Grade 2. How many pupils is that?",
+    "options": [
+      "253",
+      "263",
+      "7",
+      "363"
+    ],
+    "answer": 1,
+    "explanation": "128 + 135: 8 + 5 = 13, carry 1; 2 + 3 + 1 = 6; 1 + 1 = 2. Total 263."
+  },
+  {
+    "id": "math-g2-23",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Subtraction",
+    "prompt": "What is 72 − 35?",
+    "options": [
+      "43",
+      "47",
+      "37",
+      "33"
+    ],
+    "answer": 2,
+    "explanation": "Regroup: 12 − 5 = 7, and 6 − 3 = 3 tens. Answer: 37."
+  },
+  {
+    "id": "math-g2-24",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Subtraction",
+    "prompt": "What is 500 − 200?",
+    "options": [
+      "700",
+      "30",
+      "302",
+      "300"
+    ],
+    "answer": 3,
+    "explanation": "5 hundreds take away 2 hundreds leaves 3 hundreds."
+  },
+  {
+    "id": "math-g2-25",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Subtraction",
+    "prompt": "What is 463 − 141?",
+    "options": [
+      "322",
+      "604",
+      "312",
+      "332"
+    ],
+    "answer": 0,
+    "explanation": "Subtract each place: 3 − 1 = 2, 6 − 4 = 2, 4 − 1 = 3."
+  },
+  {
+    "id": "math-g2-26",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Subtraction",
+    "prompt": "Aling Rosa baked 90 pandesal and sold 45. How many are left?",
+    "options": [
+      "135",
+      "45",
+      "55",
+      "35"
+    ],
+    "answer": 1,
+    "explanation": "90 − 45 = 45."
+  },
+  {
+    "id": "math-g2-27",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Subtraction",
+    "prompt": "Check 81 − 26 = 55 using addition. Which sum should you find?",
+    "options": [
+      "81 + 26",
+      "55 + 81",
+      "55 + 26",
+      "26 − 55"
+    ],
+    "answer": 2,
+    "explanation": "If 81 − 26 = 55, then 55 + 26 must equal 81."
+  },
+  {
+    "id": "math-g2-28",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Multiplication",
+    "prompt": "What is 4 × 5?",
+    "options": [
+      "9",
+      "45",
+      "25",
+      "20"
+    ],
+    "answer": 3,
+    "explanation": "4 groups of 5: 5, 10, 15, 20."
+  },
+  {
+    "id": "math-g2-29",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Multiplication",
+    "prompt": "What is 3 × 10?",
+    "options": [
+      "30",
+      "13",
+      "310",
+      "3"
+    ],
+    "answer": 0,
+    "explanation": "3 groups of 10 make 30."
+  },
+  {
+    "id": "math-g2-30",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Multiplication",
+    "prompt": "Which is the same as 2 + 2 + 2 + 2 + 2?",
+    "options": [
+      "2 × 2",
+      "5 × 2",
+      "5 + 2",
+      "10 × 2"
+    ],
+    "answer": 1,
+    "explanation": "Five equal groups of 2 is written 5 × 2."
+  },
+  {
+    "id": "math-g2-31",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Multiplication",
+    "prompt": "A tricycle has 3 wheels. How many wheels do 4 tricycles have?",
+    "options": [
+      "7",
+      "16",
+      "12",
+      "34"
+    ],
+    "answer": 2,
+    "explanation": "4 groups of 3: 3 + 3 + 3 + 3 = 12."
+  },
+  {
+    "id": "math-g2-32",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Multiplication",
+    "prompt": "Which is equal to 2 × 6?",
+    "options": [
+      "6 + 2",
+      "2 + 2",
+      "6 × 6",
+      "6 × 2"
+    ],
+    "answer": 3,
+    "explanation": "Changing the order of factors gives the same product, 12."
+  },
+  {
+    "id": "math-g2-33",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Division",
+    "prompt": "Twelve eggs are put equally into 3 nests. How many eggs are in each nest?",
+    "options": [
+      "4",
+      "9",
+      "15",
+      "36"
+    ],
+    "answer": 0,
+    "explanation": "12 ÷ 3 = 4, because 3 × 4 = 12."
+  },
+  {
+    "id": "math-g2-34",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Division",
+    "prompt": "What is 18 ÷ 2?",
+    "options": [
+      "16",
+      "9",
+      "20",
+      "8"
+    ],
+    "answer": 1,
+    "explanation": "Half of 18 is 9, since 2 × 9 = 18."
+  },
+  {
+    "id": "math-g2-35",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Division",
+    "prompt": "Ten pupils form groups of 5. How many groups are there?",
+    "options": [
+      "5",
+      "15",
+      "2",
+      "50"
+    ],
+    "answer": 2,
+    "explanation": "10 ÷ 5 = 2 groups."
+  },
+  {
+    "id": "math-g2-36",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Even and odd",
+    "prompt": "Which number is odd?",
+    "options": [
+      "30",
+      "14",
+      "52",
+      "27"
+    ],
+    "answer": 3,
+    "explanation": "Odd numbers end in 1, 3, 5, 7 or 9. 27 ends in 7."
+  },
+  {
+    "id": "math-g2-37",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Fractions",
+    "prompt": "A cake is cut into 3 equal slices. What is one slice?",
+    "options": [
+      "1/3",
+      "1/2",
+      "3/1",
+      "1/4"
+    ],
+    "answer": 0,
+    "explanation": "One of three equal parts is one third, written 1/3."
+  },
+  {
+    "id": "math-g2-38",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Fractions",
+    "prompt": "Which fraction is bigger: 1/2 or 1/4 of the same pizza?",
+    "options": [
+      "1/4",
+      "1/2",
+      "They are equal",
+      "You cannot compare them"
+    ],
+    "answer": 1,
+    "explanation": "Cutting the same pizza into fewer pieces makes each piece bigger."
+  },
+  {
+    "id": "math-g2-39",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Fractions",
+    "prompt": "What is 1/2 of 8 candies?",
+    "options": [
+      "2",
+      "6",
+      "4",
+      "16"
+    ],
+    "answer": 2,
+    "explanation": "Split 8 into 2 equal groups: 4 in each."
+  },
+  {
+    "id": "math-g2-40",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Money",
+    "prompt": "How much is one ₱50 bill and three ₱1 coins?",
+    "options": [
+      "₱51",
+      "₱150",
+      "₱80",
+      "₱53"
+    ],
+    "answer": 3,
+    "explanation": "₱50 + ₱3 = ₱53."
+  },
+  {
+    "id": "math-g2-41",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Money",
+    "prompt": "Liza buys a notebook for ₱25 and a pencil for ₱12. How much does she spend?",
+    "options": [
+      "₱37",
+      "₱13",
+      "₱27",
+      "₱47"
+    ],
+    "answer": 0,
+    "explanation": "₱25 + ₱12 = ₱37."
+  },
+  {
+    "id": "math-g2-42",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Money",
+    "prompt": "A ₱100 bill is the same as how many ₱20 bills?",
+    "options": [
+      "4",
+      "5",
+      "10",
+      "20"
+    ],
+    "answer": 1,
+    "explanation": "₱20 × 5 = ₱100."
+  },
+  {
+    "id": "math-g2-43",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Time",
+    "prompt": "The long hand points to 3. How many minutes past the hour is it?",
+    "options": [
+      "3",
+      "30",
+      "15",
+      "45"
+    ],
+    "answer": 2,
+    "explanation": "Each number on the clock face stands for 5 minutes: 3 × 5 = 15."
+  },
+  {
+    "id": "math-g2-44",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Time",
+    "prompt": "Class starts at 8:00 and ends at 11:00. How long is the class?",
+    "options": [
+      "11 hours",
+      "19 hours",
+      "2 hours",
+      "3 hours"
+    ],
+    "answer": 3,
+    "explanation": "Count the hours from 8 to 11: 9, 10, 11. That is 3 hours."
+  },
+  {
+    "id": "math-g2-45",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Time",
+    "prompt": "How many months are in one year?",
+    "options": [
+      "12",
+      "7",
+      "10",
+      "52"
+    ],
+    "answer": 0,
+    "explanation": "January to December is 12 months."
+  },
+  {
+    "id": "math-g2-46",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Time",
+    "prompt": "What time is a quarter past 4?",
+    "options": [
+      "4:45",
+      "4:15",
+      "4:25",
+      "3:45"
+    ],
+    "answer": 1,
+    "explanation": "A quarter past means 15 minutes after the hour."
+  },
+  {
+    "id": "math-g2-47",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Measurement",
+    "prompt": "Which unit is best for measuring the length of an eraser?",
+    "options": [
+      "Meters",
+      "Kilograms",
+      "Centimeters",
+      "Liters"
+    ],
+    "answer": 2,
+    "explanation": "An eraser is short, so centimeters fit best."
+  },
+  {
+    "id": "math-g2-48",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Measurement",
+    "prompt": "Which unit is best for measuring the length of a basketball court?",
+    "options": [
+      "Centimeters",
+      "Grams",
+      "Milliliters",
+      "Meters"
+    ],
+    "answer": 3,
+    "explanation": "Long distances like a court are measured in meters."
+  },
+  {
+    "id": "math-g2-49",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Mass",
+    "prompt": "Which unit is best for weighing a sack of rice?",
+    "options": [
+      "Kilograms",
+      "Grams",
+      "Meters",
+      "Liters"
+    ],
+    "answer": 0,
+    "explanation": "A sack of rice is heavy, so kilograms are used."
+  },
+  {
+    "id": "math-g2-50",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Capacity",
+    "prompt": "Which container holds about 1 liter?",
+    "options": [
+      "A teaspoon",
+      "A big water bottle",
+      "A bathtub",
+      "A drinking straw"
+    ],
+    "answer": 1,
+    "explanation": "A large water bottle holds about one liter."
+  },
+  {
+    "id": "math-g2-51",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Measurement",
+    "prompt": "A rope is 85 cm long. Ben cuts off 30 cm. How long is it now?",
+    "options": [
+      "115 cm",
+      "65 cm",
+      "55 cm",
+      "50 cm"
+    ],
+    "answer": 2,
+    "explanation": "85 − 30 = 55 cm."
+  },
+  {
+    "id": "math-g2-52",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Shapes",
+    "prompt": "How many sides does a hexagon have?",
+    "options": [
+      "5",
+      "8",
+      "4",
+      "6"
+    ],
+    "answer": 3,
+    "explanation": "Hexa- means six, so a hexagon has 6 sides."
+  },
+  {
+    "id": "math-g2-53",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Shapes",
+    "prompt": "Which solid shape looks like a can of milk?",
+    "options": [
+      "Cylinder",
+      "Cone",
+      "Cube",
+      "Sphere"
+    ],
+    "answer": 0,
+    "explanation": "A can has two flat circle ends and a curved side, like a cylinder."
+  },
+  {
+    "id": "math-g2-54",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Shapes",
+    "prompt": "How many faces does a cube have?",
+    "options": [
+      "4",
+      "6",
+      "8",
+      "12"
+    ],
+    "answer": 1,
+    "explanation": "A cube has 6 square faces, like a die."
+  },
+  {
+    "id": "math-g2-55",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Patterns",
+    "prompt": "What comes next: 5, 10, 20, 40, __?",
+    "options": [
+      "45",
+      "50",
+      "80",
+      "60"
+    ],
+    "answer": 2,
+    "explanation": "Each number is doubled: 40 × 2 = 80."
+  },
+  {
+    "id": "math-g2-56",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Patterns",
+    "prompt": "What is missing: 115, 120, __, 130?",
+    "options": [
+      "121",
+      "135",
+      "122",
+      "125"
+    ],
+    "answer": 3,
+    "explanation": "The numbers go up by 5."
+  },
+  {
+    "id": "math-g2-57",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Data",
+    "prompt": "A tally for mango shows one bundle of 5 marks and 3 single marks. How many votes is that?",
+    "options": [
+      "8",
+      "5",
+      "3",
+      "6"
+    ],
+    "answer": 0,
+    "explanation": "One bundle of tally marks is 5. Add 3 more to make 8."
+  },
+  {
+    "id": "math-g2-58",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Data",
+    "prompt": "Votes: Adobo 9, Sinigang 6, Tinola 4. How many more voted for adobo than tinola?",
+    "options": [
+      "13",
+      "5",
+      "3",
+      "19"
+    ],
+    "answer": 1,
+    "explanation": "9 − 4 = 5 more votes."
+  },
+  {
+    "id": "math-g2-59",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Problem solving",
+    "prompt": "A jeepney has 16 passengers. At a stop, 5 get off and 8 get on. How many passengers are there now?",
+    "options": [
+      "29",
+      "13",
+      "19",
+      "3"
+    ],
+    "answer": 2,
+    "explanation": "16 − 5 = 11, then 11 + 8 = 19."
+  },
+  {
+    "id": "math-g2-60",
+    "subject": "math",
+    "grade": 2,
+    "topic": "Problem solving",
+    "prompt": "Mila has 3 boxes of 5 crayons and 2 loose crayons. How many crayons does she have?",
+    "options": [
+      "10",
+      "15",
+      "30",
+      "17"
+    ],
+    "answer": 3,
+    "explanation": "3 × 5 = 15 crayons in boxes, plus 2 makes 17."
+  },
+  {
     "id": "math-g3-01",
     "subject": "math",
     "grade": 3,
@@ -368,7 +1888,14 @@
     ],
     "answer": 3,
     "explanation": "The pieces are the same size. Three fourths is more pieces than one fourth.",
-    "visual": { "kind": "fraction", "parts": 4, "filled": 3, "style": "bar", "compareParts": 4, "compareFilled": 1 }
+    "visual": {
+      "kind": "fraction",
+      "parts": 4,
+      "filled": 3,
+      "style": "bar",
+      "compareParts": 4,
+      "compareFilled": 1
+    }
   },
   {
     "id": "math-g3-05",
@@ -384,7 +1911,11 @@
     ],
     "answer": 0,
     "explanation": "Perimeter is the total side length: 5 + 5 + 5 + 5 = 20 cm.",
-    "visual": { "kind": "shape", "shape": "square", "sideLabel": "5 cm" }
+    "visual": {
+      "kind": "shape",
+      "shape": "square",
+      "sideLabel": "5 cm"
+    }
   },
   {
     "id": "math-g3-06",
@@ -400,7 +1931,13 @@
     ],
     "answer": 1,
     "explanation": "Area is length times width: 4 × 3 = 12 square centimeters.",
-    "visual": { "kind": "grid", "rows": 3, "cols": 4, "rowLabel": "3 cm", "colLabel": "4 cm" }
+    "visual": {
+      "kind": "grid",
+      "rows": 3,
+      "cols": 4,
+      "rowLabel": "3 cm",
+      "colLabel": "4 cm"
+    }
   },
   {
     "id": "math-g3-07",
@@ -446,7 +1983,23 @@
     ],
     "answer": 0,
     "explanation": "Nine is the largest count, and it belongs to dogs.",
-    "visual": { "kind": "bars", "items": [{ "label": "Cats", "value": 6 }, { "label": "Dogs", "value": 9 }, { "label": "Birds", "value": 4 }] }
+    "visual": {
+      "kind": "bars",
+      "items": [
+        {
+          "label": "Cats",
+          "value": 6
+        },
+        {
+          "label": "Dogs",
+          "value": 9
+        },
+        {
+          "label": "Birds",
+          "value": 4
+        }
+      ]
+    }
   },
   {
     "id": "math-g3-10",
@@ -462,6 +2015,756 @@
     ],
     "answer": 1,
     "explanation": "Multiply first: 3 × 2 = 6. Then add 6 + 6 = 12."
+  },
+  {
+    "id": "math-g3-11",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Place value",
+    "prompt": "What is the value of the 4 in 4,382?",
+    "options": [
+      "400",
+      "4",
+      "40",
+      "4,000"
+    ],
+    "answer": 3,
+    "explanation": "The 4 is in the thousands place, so it is worth 4,000."
+  },
+  {
+    "id": "math-g3-12",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Place value",
+    "prompt": "How do you write \"two thousand fifty\" as a number?",
+    "options": [
+      "2,050",
+      "2,500",
+      "250",
+      "20,050"
+    ],
+    "answer": 0,
+    "explanation": "2 thousands, 0 hundreds, 5 tens, 0 ones: 2,050."
+  },
+  {
+    "id": "math-g3-13",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Place value",
+    "prompt": "Which number is 1,000 more than 6,725?",
+    "options": [
+      "6,825",
+      "7,725",
+      "6,735",
+      "16,725"
+    ],
+    "answer": 1,
+    "explanation": "Add 1 to the thousands digit: 6,725 becomes 7,725."
+  },
+  {
+    "id": "math-g3-14",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Comparing numbers",
+    "prompt": "Which list is in order from greatest to least?",
+    "options": [
+      "5,012; 5,120; 5,210",
+      "5,120; 5,210; 5,012",
+      "5,210; 5,120; 5,012",
+      "5,210; 5,012; 5,120"
+    ],
+    "answer": 2,
+    "explanation": "Same thousands. Compare hundreds: 2 > 1 > 0."
+  },
+  {
+    "id": "math-g3-15",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Rounding",
+    "prompt": "Round 2,684 to the nearest hundred.",
+    "options": [
+      "2,600",
+      "3,000",
+      "2,680",
+      "2,700"
+    ],
+    "answer": 3,
+    "explanation": "Look at the tens digit, 8. It is 5 or more, so round up to 2,700."
+  },
+  {
+    "id": "math-g3-16",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Rounding",
+    "prompt": "Round 1,450 to the nearest thousand.",
+    "options": [
+      "1,000",
+      "2,000",
+      "1,500",
+      "1,400"
+    ],
+    "answer": 0,
+    "explanation": "The hundreds digit is 4, which is less than 5, so round down."
+  },
+  {
+    "id": "math-g3-17",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Addition",
+    "prompt": "What is 3,456 + 2,378?",
+    "options": [
+      "5,724",
+      "5,834",
+      "5,824",
+      "6,834"
+    ],
+    "answer": 1,
+    "explanation": "6 + 8 = 14 (carry 1), 5 + 7 + 1 = 13 (carry 1), 4 + 3 + 1 = 8, 3 + 2 = 5."
+  },
+  {
+    "id": "math-g3-18",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Addition",
+    "prompt": "Estimate 398 + 512 by rounding each to the nearest hundred.",
+    "options": [
+      "800",
+      "1,000",
+      "900",
+      "910"
+    ],
+    "answer": 2,
+    "explanation": "398 rounds to 400 and 512 rounds to 500. 400 + 500 = 900."
+  },
+  {
+    "id": "math-g3-19",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Subtraction",
+    "prompt": "What is 5,000 − 1,236?",
+    "options": [
+      "4,236",
+      "3,874",
+      "4,764",
+      "3,764"
+    ],
+    "answer": 3,
+    "explanation": "Regroup across the zeros: 5,000 − 1,236 = 3,764. Check: 3,764 + 1,236 = 5,000."
+  },
+  {
+    "id": "math-g3-20",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Subtraction",
+    "prompt": "A barangay had 2,450 trees. A typhoon knocked down 315. How many trees still stand?",
+    "options": [
+      "2,135",
+      "2,765",
+      "2,145",
+      "2,235"
+    ],
+    "answer": 0,
+    "explanation": "2,450 − 315 = 2,135."
+  },
+  {
+    "id": "math-g3-21",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "What is 9 × 6?",
+    "options": [
+      "56",
+      "54",
+      "45",
+      "63"
+    ],
+    "answer": 1,
+    "explanation": "9 × 6 = 54. Check: 10 × 6 = 60, minus 6 is 54."
+  },
+  {
+    "id": "math-g3-22",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "What is 7 × 7?",
+    "options": [
+      "42",
+      "56",
+      "49",
+      "14"
+    ],
+    "answer": 2,
+    "explanation": "7 groups of 7 make 49."
+  },
+  {
+    "id": "math-g3-23",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "What is 23 × 3?",
+    "options": [
+      "66",
+      "26",
+      "96",
+      "69"
+    ],
+    "answer": 3,
+    "explanation": "20 × 3 = 60 and 3 × 3 = 9. 60 + 9 = 69."
+  },
+  {
+    "id": "math-g3-24",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "What is 45 × 2?",
+    "options": [
+      "90",
+      "80",
+      "47",
+      "810"
+    ],
+    "answer": 0,
+    "explanation": "40 × 2 = 80 and 5 × 2 = 10. 80 + 10 = 90."
+  },
+  {
+    "id": "math-g3-25",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "What is 6 × 100?",
+    "options": [
+      "106",
+      "600",
+      "60",
+      "6,000"
+    ],
+    "answer": 1,
+    "explanation": "Multiplying by 100 adds two zeros: 600."
+  },
+  {
+    "id": "math-g3-26",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "Any number multiplied by 0 equals what?",
+    "options": [
+      "The same number",
+      "1",
+      "0",
+      "10"
+    ],
+    "answer": 2,
+    "explanation": "Zero groups of anything is zero."
+  },
+  {
+    "id": "math-g3-27",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Multiplication",
+    "prompt": "A box holds 8 polvoron. How many polvoron are in 6 boxes?",
+    "options": [
+      "14",
+      "42",
+      "56",
+      "48"
+    ],
+    "answer": 3,
+    "explanation": "6 × 8 = 48."
+  },
+  {
+    "id": "math-g3-28",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Division",
+    "prompt": "What is 56 ÷ 8?",
+    "options": [
+      "7",
+      "6",
+      "8",
+      "48"
+    ],
+    "answer": 0,
+    "explanation": "8 × 7 = 56, so 56 ÷ 8 = 7."
+  },
+  {
+    "id": "math-g3-29",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Division",
+    "prompt": "What is 17 ÷ 5?",
+    "options": [
+      "3 remainder 1",
+      "3 remainder 2",
+      "2 remainder 7",
+      "4 remainder 3"
+    ],
+    "answer": 1,
+    "explanation": "5 × 3 = 15, and 17 − 15 = 2 left over."
+  },
+  {
+    "id": "math-g3-30",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Division",
+    "prompt": "30 pupils ride in vans that hold 8 each. How many vans are needed so everyone rides?",
+    "options": [
+      "3",
+      "5",
+      "4",
+      "38"
+    ],
+    "answer": 2,
+    "explanation": "30 ÷ 8 = 3 remainder 6. The 6 extra pupils need a fourth van."
+  },
+  {
+    "id": "math-g3-31",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Division",
+    "prompt": "Which division fact is related to 4 × 9 = 36?",
+    "options": [
+      "36 ÷ 6 = 6",
+      "9 ÷ 4 = 36",
+      "36 − 9 = 27",
+      "36 ÷ 9 = 4"
+    ],
+    "answer": 3,
+    "explanation": "Multiplication and division undo each other: 36 ÷ 9 = 4."
+  },
+  {
+    "id": "math-g3-32",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Division",
+    "prompt": "Any number divided by 1 equals what?",
+    "options": [
+      "The same number",
+      "1",
+      "0",
+      "Ten times the number"
+    ],
+    "answer": 0,
+    "explanation": "Putting a number into one group leaves it unchanged."
+  },
+  {
+    "id": "math-g3-33",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Fractions",
+    "prompt": "What fraction of the week is 3 days?",
+    "options": [
+      "7/3",
+      "3/7",
+      "3/10",
+      "1/3"
+    ],
+    "answer": 1,
+    "explanation": "A week has 7 days, so 3 days is 3 out of 7, or 3/7."
+  },
+  {
+    "id": "math-g3-34",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Fractions",
+    "prompt": "Which unit fraction is the smallest?",
+    "options": [
+      "1/2",
+      "1/4",
+      "1/8",
+      "1/3"
+    ],
+    "answer": 2,
+    "explanation": "With the same whole, more equal parts means smaller parts. Eighths are smallest."
+  },
+  {
+    "id": "math-g3-35",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Fractions",
+    "prompt": "What is 1/3 of 12 eggs?",
+    "options": [
+      "3",
+      "9",
+      "36",
+      "4"
+    ],
+    "answer": 3,
+    "explanation": "Divide 12 into 3 equal groups: 12 ÷ 3 = 4."
+  },
+  {
+    "id": "math-g3-36",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Fractions",
+    "prompt": "Which fraction is equal to 1/2?",
+    "options": [
+      "2/4",
+      "1/4",
+      "2/3",
+      "3/4"
+    ],
+    "answer": 0,
+    "explanation": "Two of four equal parts is the same amount as one of two equal parts."
+  },
+  {
+    "id": "math-g3-37",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Fractions",
+    "prompt": "Which is greater: 2/5 or 4/5?",
+    "options": [
+      "2/5",
+      "4/5",
+      "They are equal",
+      "They cannot be compared"
+    ],
+    "answer": 1,
+    "explanation": "Same-size parts (fifths): 4 parts is more than 2 parts."
+  },
+  {
+    "id": "math-g3-38",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Money",
+    "prompt": "How many centavos are in ₱1?",
+    "options": [
+      "10",
+      "25",
+      "100",
+      "1,000"
+    ],
+    "answer": 2,
+    "explanation": "One peso equals 100 centavos."
+  },
+  {
+    "id": "math-g3-39",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Money",
+    "prompt": "A pencil costs ₱8.50 and an eraser costs ₱5.25. How much do both cost?",
+    "options": [
+      "₱13.25",
+      "₱3.25",
+      "₱12.75",
+      "₱13.75"
+    ],
+    "answer": 3,
+    "explanation": "₱8 + ₱5 = ₱13 and 50¢ + 25¢ = 75¢, so ₱13.75."
+  },
+  {
+    "id": "math-g3-40",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Money",
+    "prompt": "Paolo pays ₱100 for a ₱65 snack. What is his change?",
+    "options": [
+      "₱35",
+      "₱45",
+      "₱165",
+      "₱25"
+    ],
+    "answer": 0,
+    "explanation": "₱100 − ₱65 = ₱35."
+  },
+  {
+    "id": "math-g3-41",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Time",
+    "prompt": "A movie starts at 1:40 p.m. and lasts 1 hour 30 minutes. When does it end?",
+    "options": [
+      "2:70 p.m.",
+      "3:10 p.m.",
+      "3:40 p.m.",
+      "2:10 p.m."
+    ],
+    "answer": 1,
+    "explanation": "1:40 + 1 hour = 2:40, + 30 minutes = 3:10 p.m."
+  },
+  {
+    "id": "math-g3-42",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Time",
+    "prompt": "Which time is in the morning?",
+    "options": [
+      "7:00 p.m.",
+      "8:00 p.m.",
+      "7:00 a.m.",
+      "9:00 p.m."
+    ],
+    "answer": 2,
+    "explanation": "a.m. is from midnight until noon, so 7:00 a.m. is morning."
+  },
+  {
+    "id": "math-g3-43",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Time",
+    "prompt": "How many minutes are in 2 hours?",
+    "options": [
+      "60",
+      "200",
+      "100",
+      "120"
+    ],
+    "answer": 3,
+    "explanation": "1 hour = 60 minutes, so 2 hours = 120 minutes."
+  },
+  {
+    "id": "math-g3-44",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Measurement",
+    "prompt": "How many centimeters are in 3 meters?",
+    "options": [
+      "300",
+      "30",
+      "3,000",
+      "103"
+    ],
+    "answer": 0,
+    "explanation": "1 m = 100 cm, so 3 m = 300 cm."
+  },
+  {
+    "id": "math-g3-45",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Measurement",
+    "prompt": "Which is longer: 1 meter or 90 centimeters?",
+    "options": [
+      "90 centimeters",
+      "1 meter",
+      "They are equal",
+      "You cannot compare them"
+    ],
+    "answer": 1,
+    "explanation": "1 meter is 100 cm, which is more than 90 cm."
+  },
+  {
+    "id": "math-g3-46",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Capacity",
+    "prompt": "How many milliliters are in 2 liters?",
+    "options": [
+      "200",
+      "20",
+      "2,000",
+      "2,000,000"
+    ],
+    "answer": 2,
+    "explanation": "1 L = 1,000 mL, so 2 L = 2,000 mL."
+  },
+  {
+    "id": "math-g3-47",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Mass",
+    "prompt": "A bag has 2 kg of rice and another has 500 g. How many grams are there in all?",
+    "options": [
+      "502 g",
+      "700 g",
+      "2,050 g",
+      "2,500 g"
+    ],
+    "answer": 3,
+    "explanation": "2 kg = 2,000 g. 2,000 g + 500 g = 2,500 g."
+  },
+  {
+    "id": "math-g3-48",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Perimeter",
+    "prompt": "A rectangle is 8 m long and 3 m wide. What is its perimeter?",
+    "options": [
+      "22 m",
+      "24 m",
+      "11 m",
+      "22 m²"
+    ],
+    "answer": 0,
+    "explanation": "Add all sides: 8 + 3 + 8 + 3 = 22 m."
+  },
+  {
+    "id": "math-g3-49",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Perimeter",
+    "prompt": "A triangle has sides 5 cm, 6 cm and 7 cm. What is its perimeter?",
+    "options": [
+      "210 cm",
+      "18 cm",
+      "13 cm",
+      "11 cm"
+    ],
+    "answer": 1,
+    "explanation": "Perimeter is the sum of the sides: 5 + 6 + 7 = 18 cm."
+  },
+  {
+    "id": "math-g3-50",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Area",
+    "prompt": "A square tile is 6 cm on each side. What is its area?",
+    "options": [
+      "24 cm²",
+      "12 cm²",
+      "36 cm²",
+      "36 cm"
+    ],
+    "answer": 2,
+    "explanation": "Area of a square = side × side = 6 × 6 = 36 square centimeters."
+  },
+  {
+    "id": "math-g3-51",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Area",
+    "prompt": "A floor is covered by 5 rows of 7 square tiles. How many tiles are there?",
+    "options": [
+      "12",
+      "24",
+      "57",
+      "35"
+    ],
+    "answer": 3,
+    "explanation": "Rows times tiles in each row: 5 × 7 = 35."
+  },
+  {
+    "id": "math-g3-52",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Lines and angles",
+    "prompt": "Which letter is made only of straight lines that meet at a right angle?",
+    "options": [
+      "L",
+      "O",
+      "S",
+      "C"
+    ],
+    "answer": 0,
+    "explanation": "The two strokes of L meet at a square corner, a right angle."
+  },
+  {
+    "id": "math-g3-53",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Lines and angles",
+    "prompt": "Two lines that never meet, like railroad tracks, are called what?",
+    "options": [
+      "Intersecting lines",
+      "Parallel lines",
+      "Curved lines",
+      "Perpendicular lines"
+    ],
+    "answer": 1,
+    "explanation": "Parallel lines stay the same distance apart and never meet."
+  },
+  {
+    "id": "math-g3-54",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Symmetry",
+    "prompt": "How many lines of symmetry does a square have?",
+    "options": [
+      "2",
+      "1",
+      "4",
+      "0"
+    ],
+    "answer": 2,
+    "explanation": "A square folds evenly across 2 diagonals and 2 middle lines."
+  },
+  {
+    "id": "math-g3-55",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Patterns",
+    "prompt": "What comes next: 3, 6, 12, 24, __?",
+    "options": [
+      "30",
+      "36",
+      "27",
+      "48"
+    ],
+    "answer": 3,
+    "explanation": "Each term doubles: 24 × 2 = 48."
+  },
+  {
+    "id": "math-g3-56",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Patterns",
+    "prompt": "What is the missing number: 7 × __ = 63?",
+    "options": [
+      "9",
+      "8",
+      "56",
+      "70"
+    ],
+    "answer": 0,
+    "explanation": "Think of the 7 times table: 7 × 9 = 63."
+  },
+  {
+    "id": "math-g3-57",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Data",
+    "prompt": "A bar graph shows Monday 12 pupils, Tuesday 18, Wednesday 15 who brought water bottles. What is the total?",
+    "options": [
+      "33",
+      "45",
+      "18",
+      "40"
+    ],
+    "answer": 1,
+    "explanation": "12 + 18 + 15 = 45."
+  },
+  {
+    "id": "math-g3-58",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Data",
+    "prompt": "Mangoes sold: Mon 25, Tue 40, Wed 30. On which day were the fewest sold?",
+    "options": [
+      "Tuesday",
+      "Wednesday",
+      "Monday",
+      "All were equal"
+    ],
+    "answer": 2,
+    "explanation": "25 is the smallest number."
+  },
+  {
+    "id": "math-g3-59",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Order of operations",
+    "prompt": "What is 20 − 4 × 3?",
+    "options": [
+      "48",
+      "12",
+      "36",
+      "8"
+    ],
+    "answer": 3,
+    "explanation": "Multiply first: 4 × 3 = 12. Then 20 − 12 = 8."
+  },
+  {
+    "id": "math-g3-60",
+    "subject": "math",
+    "grade": 3,
+    "topic": "Problem solving",
+    "prompt": "Ana reads 15 pages a day. How many pages does she read in a week?",
+    "options": [
+      "105",
+      "22",
+      "75",
+      "150"
+    ],
+    "answer": 0,
+    "explanation": "A week has 7 days: 15 × 7 = 105."
   },
   {
     "id": "math-g4-01",
@@ -573,7 +2876,7 @@
     "subject": "math",
     "grade": 4,
     "topic": "Angles",
-    "prompt": "Look at this right angle. What is its measure?",
+    "prompt": "What is the measure of a right angle?",
     "options": [
       "90°",
       "45°",
@@ -581,8 +2884,7 @@
       "360°"
     ],
     "answer": 0,
-    "explanation": "A right angle is a quarter of a full turn, or 90 degrees.",
-    "visual": { "kind": "shape", "shape": "right_angle" }
+    "explanation": "A right angle is a quarter of a full turn, or 90 degrees."
   },
   {
     "id": "math-g4-09",
@@ -598,7 +2900,13 @@
     ],
     "answer": 1,
     "explanation": "Multiply length by width: 9 × 4 = 36 square meters.",
-    "visual": { "kind": "grid", "rows": 4, "cols": 9, "rowLabel": "4 m", "colLabel": "9 m" }
+    "visual": {
+      "kind": "grid",
+      "rows": 4,
+      "cols": 9,
+      "rowLabel": "4 m",
+      "colLabel": "9 m"
+    }
   },
   {
     "id": "math-g4-10",
@@ -614,6 +2922,756 @@
     ],
     "answer": 2,
     "explanation": "It folds onto itself through the center horizontally and vertically."
+  },
+  {
+    "id": "math-g4-11",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Large numbers",
+    "prompt": "How do you write \"thirty-five thousand, two hundred eight\"?",
+    "options": [
+      "35,208",
+      "35,280",
+      "3,528",
+      "350,208"
+    ],
+    "answer": 0,
+    "explanation": "35 thousands, 2 hundreds, 0 tens, 8 ones: 35,208."
+  },
+  {
+    "id": "math-g4-12",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Large numbers",
+    "prompt": "Round 68,452 to the nearest thousand.",
+    "options": [
+      "69,000",
+      "68,000",
+      "68,500",
+      "70,000"
+    ],
+    "answer": 1,
+    "explanation": "The hundreds digit is 4, less than 5, so keep 68 thousands."
+  },
+  {
+    "id": "math-g4-13",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Large numbers",
+    "prompt": "Which of these five-digit numbers is the greatest?",
+    "options": [
+      "89,999",
+      "9,999",
+      "90,001",
+      "90,000"
+    ],
+    "answer": 2,
+    "explanation": "90,001 has the most thousands and one more than 90,000."
+  },
+  {
+    "id": "math-g4-14",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Large numbers",
+    "prompt": "What is 40,000 + 3,000 + 60 + 5?",
+    "options": [
+      "43,605",
+      "4,365",
+      "403,065",
+      "43,065"
+    ],
+    "answer": 3,
+    "explanation": "Place each value: 4 ten-thousands, 3 thousands, 0 hundreds, 6 tens, 5 ones."
+  },
+  {
+    "id": "math-g4-15",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Addition and subtraction",
+    "prompt": "What is 25,630 + 14,875?",
+    "options": [
+      "40,505",
+      "39,505",
+      "40,405",
+      "11,755"
+    ],
+    "answer": 0,
+    "explanation": "25,630 + 14,875 = 40,505 (regroup in the tens, hundreds and thousands)."
+  },
+  {
+    "id": "math-g4-16",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Addition and subtraction",
+    "prompt": "What is 30,000 − 12,485?",
+    "options": [
+      "18,515",
+      "17,515",
+      "22,485",
+      "17,625"
+    ],
+    "answer": 1,
+    "explanation": "Check by adding: 17,515 + 12,485 = 30,000."
+  },
+  {
+    "id": "math-g4-17",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiplication",
+    "prompt": "What is 36 × 25?",
+    "options": [
+      "800",
+      "61",
+      "900",
+      "1,000"
+    ],
+    "answer": 2,
+    "explanation": "36 × 25 = 36 × 100 ÷ 4 = 3,600 ÷ 4 = 900."
+  },
+  {
+    "id": "math-g4-18",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiplication",
+    "prompt": "What is 125 × 8?",
+    "options": [
+      "1,250",
+      "960",
+      "133",
+      "1,000"
+    ],
+    "answer": 3,
+    "explanation": "100 × 8 = 800 and 25 × 8 = 200. 800 + 200 = 1,000."
+  },
+  {
+    "id": "math-g4-19",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiplication",
+    "prompt": "What is 400 × 30?",
+    "options": [
+      "12,000",
+      "1,200",
+      "120,000",
+      "430"
+    ],
+    "answer": 0,
+    "explanation": "4 × 3 = 12, then attach the three zeros: 12,000."
+  },
+  {
+    "id": "math-g4-20",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiplication",
+    "prompt": "A school orders 14 boxes of chalk with 48 pieces each. How many pieces is that?",
+    "options": [
+      "62",
+      "672",
+      "572",
+      "682"
+    ],
+    "answer": 1,
+    "explanation": "14 × 48 = 14 × 50 − 14 × 2 = 700 − 28 = 672."
+  },
+  {
+    "id": "math-g4-21",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Division",
+    "prompt": "What is 945 ÷ 5?",
+    "options": [
+      "199",
+      "179",
+      "189",
+      "940"
+    ],
+    "answer": 2,
+    "explanation": "5 × 189 = 945."
+  },
+  {
+    "id": "math-g4-22",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Division",
+    "prompt": "What is 2,400 ÷ 60?",
+    "options": [
+      "400",
+      "4",
+      "24",
+      "40"
+    ],
+    "answer": 3,
+    "explanation": "Remove a zero from both: 240 ÷ 6 = 40."
+  },
+  {
+    "id": "math-g4-23",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Division",
+    "prompt": "What is 100 ÷ 7?",
+    "options": [
+      "14 remainder 2",
+      "14 remainder 3",
+      "13 remainder 9",
+      "15"
+    ],
+    "answer": 0,
+    "explanation": "7 × 14 = 98, and 100 − 98 = 2."
+  },
+  {
+    "id": "math-g4-24",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Division",
+    "prompt": "₱1,500 is shared equally by 6 cousins. How much does each get?",
+    "options": [
+      "₱300",
+      "₱250",
+      "₱200",
+      "₱1,494"
+    ],
+    "answer": 1,
+    "explanation": "1,500 ÷ 6 = 250."
+  },
+  {
+    "id": "math-g4-25",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Factors",
+    "prompt": "Which list shows all the factors of 12?",
+    "options": [
+      "1, 2, 3, 4, 12",
+      "2, 3, 4, 6",
+      "1, 2, 3, 4, 6, 12",
+      "12, 24, 36, 48"
+    ],
+    "answer": 2,
+    "explanation": "Factor pairs of 12: 1×12, 2×6, 3×4."
+  },
+  {
+    "id": "math-g4-26",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Prime and composite",
+    "prompt": "Which number is prime?",
+    "options": [
+      "15",
+      "21",
+      "27",
+      "13"
+    ],
+    "answer": 3,
+    "explanation": "13 has only two factors, 1 and 13. The others can be divided by 3."
+  },
+  {
+    "id": "math-g4-27",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Prime and composite",
+    "prompt": "Which number is composite?",
+    "options": [
+      "9",
+      "2",
+      "7",
+      "11"
+    ],
+    "answer": 0,
+    "explanation": "9 has factors 1, 3 and 9, so it has more than two factors."
+  },
+  {
+    "id": "math-g4-28",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiples",
+    "prompt": "What is the least common multiple of 4 and 6?",
+    "options": [
+      "24",
+      "12",
+      "2",
+      "10"
+    ],
+    "answer": 1,
+    "explanation": "Multiples of 4: 4, 8, 12... Multiples of 6: 6, 12... The first common one is 12."
+  },
+  {
+    "id": "math-g4-29",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Multiples",
+    "prompt": "What is the greatest common factor of 18 and 24?",
+    "options": [
+      "3",
+      "2",
+      "6",
+      "72"
+    ],
+    "answer": 2,
+    "explanation": "Common factors are 1, 2, 3 and 6. The greatest is 6."
+  },
+  {
+    "id": "math-g4-30",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Divisibility",
+    "prompt": "Which number is divisible by 3?",
+    "options": [
+      "250",
+      "211",
+      "133",
+      "252"
+    ],
+    "answer": 3,
+    "explanation": "Digits of 252 add to 9, which is divisible by 3."
+  },
+  {
+    "id": "math-g4-31",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Equivalent fractions",
+    "prompt": "Write 12/16 in lowest terms.",
+    "options": [
+      "3/4",
+      "6/8",
+      "2/3",
+      "4/3"
+    ],
+    "answer": 0,
+    "explanation": "Divide both by their GCF, 4: 12 ÷ 4 = 3 and 16 ÷ 4 = 4."
+  },
+  {
+    "id": "math-g4-32",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Equivalent fractions",
+    "prompt": "Which fraction is NOT equal to 1/2?",
+    "options": [
+      "4/8",
+      "3/8",
+      "5/10",
+      "6/12"
+    ],
+    "answer": 1,
+    "explanation": "3/8 is less than 4/8, which is one half."
+  },
+  {
+    "id": "math-g4-33",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Comparing fractions",
+    "prompt": "Which is greater: 3/5 or 3/8?",
+    "options": [
+      "3/8",
+      "They are equal",
+      "3/5",
+      "They cannot be compared"
+    ],
+    "answer": 2,
+    "explanation": "Same number of parts, but fifths are bigger than eighths."
+  },
+  {
+    "id": "math-g4-34",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Mixed numbers",
+    "prompt": "Which mixed number equals 7/3?",
+    "options": [
+      "1 2/3",
+      "3 1/7",
+      "2 2/3",
+      "2 1/3"
+    ],
+    "answer": 3,
+    "explanation": "7 ÷ 3 = 2 remainder 1, so 7/3 = 2 1/3."
+  },
+  {
+    "id": "math-g4-35",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Mixed numbers",
+    "prompt": "Change 3 1/4 to an improper fraction.",
+    "options": [
+      "13/4",
+      "7/4",
+      "31/4",
+      "12/4"
+    ],
+    "answer": 0,
+    "explanation": "3 × 4 + 1 = 13 fourths."
+  },
+  {
+    "id": "math-g4-36",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Adding fractions",
+    "prompt": "What is 5/8 − 2/8?",
+    "options": [
+      "7/16",
+      "3/8",
+      "7/8",
+      "3/16"
+    ],
+    "answer": 1,
+    "explanation": "Same denominators: subtract numerators. 5 − 2 = 3 eighths."
+  },
+  {
+    "id": "math-g4-37",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Adding fractions",
+    "prompt": "What is 1/3 + 1/6?",
+    "options": [
+      "2/9",
+      "2/6",
+      "1/2",
+      "1/18"
+    ],
+    "answer": 2,
+    "explanation": "Rename 1/3 as 2/6. 2/6 + 1/6 = 3/6 = 1/2."
+  },
+  {
+    "id": "math-g4-38",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Fraction of a set",
+    "prompt": "What is 3/4 of 20?",
+    "options": [
+      "5",
+      "12",
+      "80",
+      "15"
+    ],
+    "answer": 3,
+    "explanation": "1/4 of 20 is 5, so 3/4 is 3 × 5 = 15."
+  },
+  {
+    "id": "math-g4-39",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Decimals",
+    "prompt": "What is 0.6 written as a fraction?",
+    "options": [
+      "6/10",
+      "6/100",
+      "1/6",
+      "60/10"
+    ],
+    "answer": 0,
+    "explanation": "The 6 is in the tenths place: 6 tenths = 6/10."
+  },
+  {
+    "id": "math-g4-40",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Decimals",
+    "prompt": "Which decimal is greatest?",
+    "options": [
+      "0.75",
+      "0.8",
+      "0.09",
+      "0.7"
+    ],
+    "answer": 1,
+    "explanation": "Compare tenths first: 8 tenths is the most."
+  },
+  {
+    "id": "math-g4-41",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Decimals",
+    "prompt": "What is 3.45 rounded to the nearest tenth?",
+    "options": [
+      "3.4",
+      "3.0",
+      "3.5",
+      "4"
+    ],
+    "answer": 2,
+    "explanation": "The hundredths digit is 5, so round the tenths up: 3.5."
+  },
+  {
+    "id": "math-g4-42",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Decimals",
+    "prompt": "What is 2.5 − 1.75?",
+    "options": [
+      "1.25",
+      "1.30",
+      "0.85",
+      "0.75"
+    ],
+    "answer": 3,
+    "explanation": "Line up the decimal points: 2.50 − 1.75 = 0.75."
+  },
+  {
+    "id": "math-g4-43",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Decimals",
+    "prompt": "How do you write 7 hundredths as a decimal?",
+    "options": [
+      "0.07",
+      "0.7",
+      "7.00",
+      "0.007"
+    ],
+    "answer": 0,
+    "explanation": "Hundredths are two places after the decimal point: 0.07."
+  },
+  {
+    "id": "math-g4-44",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Angles",
+    "prompt": "An angle measures 120°. What kind of angle is it?",
+    "options": [
+      "Acute",
+      "Obtuse",
+      "Right",
+      "Straight"
+    ],
+    "answer": 1,
+    "explanation": "Obtuse angles are more than 90° but less than 180°."
+  },
+  {
+    "id": "math-g4-45",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Angles",
+    "prompt": "An angle measures 35°. What kind of angle is it?",
+    "options": [
+      "Obtuse",
+      "Right",
+      "Acute",
+      "Reflex"
+    ],
+    "answer": 2,
+    "explanation": "Acute angles are less than 90°."
+  },
+  {
+    "id": "math-g4-46",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Angles",
+    "prompt": "How many degrees are in a straight angle?",
+    "options": [
+      "90°",
+      "360°",
+      "100°",
+      "180°"
+    ],
+    "answer": 3,
+    "explanation": "A straight line makes half a full turn: 180°."
+  },
+  {
+    "id": "math-g4-47",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Lines",
+    "prompt": "Lines that meet to form right angles are called what?",
+    "options": [
+      "Perpendicular",
+      "Parallel",
+      "Skew",
+      "Curved"
+    ],
+    "answer": 0,
+    "explanation": "Perpendicular lines cross at 90°."
+  },
+  {
+    "id": "math-g4-48",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Triangles",
+    "prompt": "A triangle has all three sides of different lengths. What is it called?",
+    "options": [
+      "Isosceles",
+      "Scalene",
+      "Equilateral",
+      "Right"
+    ],
+    "answer": 1,
+    "explanation": "Scalene triangles have no equal sides."
+  },
+  {
+    "id": "math-g4-49",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Quadrilaterals",
+    "prompt": "Which shape has exactly one pair of parallel sides?",
+    "options": [
+      "Square",
+      "Rectangle",
+      "Trapezoid",
+      "Parallelogram"
+    ],
+    "answer": 2,
+    "explanation": "A trapezoid has exactly one pair of parallel sides."
+  },
+  {
+    "id": "math-g4-50",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Area",
+    "prompt": "A square lot has a perimeter of 36 m. What is its area?",
+    "options": [
+      "36 m²",
+      "144 m²",
+      "9 m²",
+      "81 m²"
+    ],
+    "answer": 3,
+    "explanation": "Each side is 36 ÷ 4 = 9 m. Area = 9 × 9 = 81 m²."
+  },
+  {
+    "id": "math-g4-51",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Area",
+    "prompt": "A rectangle has an area of 48 cm² and a length of 8 cm. What is its width?",
+    "options": [
+      "6 cm",
+      "40 cm",
+      "384 cm",
+      "5 cm"
+    ],
+    "answer": 0,
+    "explanation": "Width = area ÷ length = 48 ÷ 8 = 6 cm."
+  },
+  {
+    "id": "math-g4-52",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Area",
+    "prompt": "What is the area of a triangle with base 10 cm and height 6 cm?",
+    "options": [
+      "60 cm²",
+      "30 cm²",
+      "16 cm²",
+      "32 cm²"
+    ],
+    "answer": 1,
+    "explanation": "Area = base × height ÷ 2 = 10 × 6 ÷ 2 = 30 cm²."
+  },
+  {
+    "id": "math-g4-53",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Time",
+    "prompt": "How many hours are in 3 days?",
+    "options": [
+      "36",
+      "60",
+      "72",
+      "84"
+    ],
+    "answer": 2,
+    "explanation": "1 day = 24 hours, so 3 × 24 = 72."
+  },
+  {
+    "id": "math-g4-54",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Time",
+    "prompt": "A bus leaves at 9:45 a.m. and arrives at 1:15 p.m. How long is the trip?",
+    "options": [
+      "4 hours 30 minutes",
+      "3 hours 70 minutes",
+      "2 hours 30 minutes",
+      "3 hours 30 minutes"
+    ],
+    "answer": 3,
+    "explanation": "9:45 to 12:45 is 3 hours, plus 30 minutes to 1:15."
+  },
+  {
+    "id": "math-g4-55",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Measurement",
+    "prompt": "How many meters are in 4.5 kilometers?",
+    "options": [
+      "4,500",
+      "450",
+      "45",
+      "45,000"
+    ],
+    "answer": 0,
+    "explanation": "1 km = 1,000 m, so 4.5 × 1,000 = 4,500 m."
+  },
+  {
+    "id": "math-g4-56",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Data",
+    "prompt": "Scores: 8, 10, 7, 9, 6. What is the total?",
+    "options": [
+      "38",
+      "40",
+      "10",
+      "42"
+    ],
+    "answer": 1,
+    "explanation": "8 + 10 + 7 + 9 + 6 = 40."
+  },
+  {
+    "id": "math-g4-57",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Patterns",
+    "prompt": "What is the next term: 1, 4, 9, 16, __?",
+    "options": [
+      "20",
+      "24",
+      "25",
+      "32"
+    ],
+    "answer": 2,
+    "explanation": "These are square numbers: 1², 2², 3², 4², so next is 5² = 25."
+  },
+  {
+    "id": "math-g4-58",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Number sentences",
+    "prompt": "What number makes this true: 8 × __ = 6 × 12?",
+    "options": [
+      "10",
+      "72",
+      "8",
+      "9"
+    ],
+    "answer": 3,
+    "explanation": "6 × 12 = 72, and 8 × 9 = 72."
+  },
+  {
+    "id": "math-g4-59",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Problem solving",
+    "prompt": "A tricycle driver earns ₱450 a day. How much does he earn in 6 days?",
+    "options": [
+      "₱2,700",
+      "₱2,400",
+      "₱456",
+      "₱3,600"
+    ],
+    "answer": 0,
+    "explanation": "₱450 × 6 = ₱2,700."
+  },
+  {
+    "id": "math-g4-60",
+    "subject": "math",
+    "grade": 4,
+    "topic": "Problem solving",
+    "prompt": "A rope 5 m long is cut into pieces of 50 cm. How many pieces are there?",
+    "options": [
+      "25",
+      "10",
+      "100",
+      "5"
+    ],
+    "answer": 1,
+    "explanation": "5 m = 500 cm, and 500 ÷ 50 = 10."
   },
   {
     "id": "math-g5-01",
@@ -766,6 +3824,756 @@
     "explanation": "There are 2 green balls among 5 equally likely balls."
   },
   {
+    "id": "math-g5-11",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fractions",
+    "prompt": "What is 2/3 + 1/4?",
+    "options": [
+      "3/7",
+      "11/12",
+      "3/12",
+      "2/12"
+    ],
+    "answer": 1,
+    "explanation": "Use 12 as the common denominator: 8/12 + 3/12 = 11/12."
+  },
+  {
+    "id": "math-g5-12",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fractions",
+    "prompt": "What is 5/6 − 1/3?",
+    "options": [
+      "4/3",
+      "4/6",
+      "1/2",
+      "1/6"
+    ],
+    "answer": 2,
+    "explanation": "Rename 1/3 as 2/6. 5/6 − 2/6 = 3/6 = 1/2."
+  },
+  {
+    "id": "math-g5-13",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fractions",
+    "prompt": "Arrange from least to greatest: 2/3, 1/2, 3/4.",
+    "options": [
+      "3/4, 2/3, 1/2",
+      "2/3, 1/2, 3/4",
+      "1/2, 3/4, 2/3",
+      "1/2, 2/3, 3/4"
+    ],
+    "answer": 3,
+    "explanation": "In twelfths: 6/12, 8/12, 9/12."
+  },
+  {
+    "id": "math-g5-14",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fractions",
+    "prompt": "Mila ate 3/8 of a cake and Ben ate 1/4. How much of the cake did they eat together?",
+    "options": [
+      "5/8",
+      "4/12",
+      "4/8",
+      "3/32"
+    ],
+    "answer": 0,
+    "explanation": "1/4 = 2/8, so 3/8 + 2/8 = 5/8."
+  },
+  {
+    "id": "math-g5-15",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Mixed numbers",
+    "prompt": "What is 4 1/2 − 1 3/4?",
+    "options": [
+      "3 1/4",
+      "2 3/4",
+      "3 3/4",
+      "2 1/4"
+    ],
+    "answer": 1,
+    "explanation": "In fourths: 4 2/4 = 3 6/4. 3 6/4 − 1 3/4 = 2 3/4."
+  },
+  {
+    "id": "math-g5-16",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Mixed numbers",
+    "prompt": "What is 1 2/5 + 2 4/5?",
+    "options": [
+      "3 6/10",
+      "3 1/5",
+      "4 1/5",
+      "4 6/5"
+    ],
+    "answer": 2,
+    "explanation": "1 + 2 = 3 and 2/5 + 4/5 = 6/5 = 1 1/5. Total: 4 1/5."
+  },
+  {
+    "id": "math-g5-17",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fraction multiplication",
+    "prompt": "What is 3/4 × 8?",
+    "options": [
+      "24/32",
+      "3/32",
+      "11",
+      "6"
+    ],
+    "answer": 3,
+    "explanation": "8 ÷ 4 = 2, and 2 × 3 = 6."
+  },
+  {
+    "id": "math-g5-18",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fraction multiplication",
+    "prompt": "What is 1/2 × 1/3?",
+    "options": [
+      "1/6",
+      "2/5",
+      "1/5",
+      "2/3"
+    ],
+    "answer": 0,
+    "explanation": "Multiply numerators and denominators: 1 × 1 over 2 × 3."
+  },
+  {
+    "id": "math-g5-19",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Fraction multiplication",
+    "prompt": "What is 2/5 of ₱150?",
+    "options": [
+      "₱30",
+      "₱60",
+      "₱75",
+      "₱375"
+    ],
+    "answer": 1,
+    "explanation": "1/5 of 150 is 30, so 2/5 is 60."
+  },
+  {
+    "id": "math-g5-20",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimals",
+    "prompt": "What is 12.6 + 3.85?",
+    "options": [
+      "15.45",
+      "16.91",
+      "16.45",
+      "4.97"
+    ],
+    "answer": 2,
+    "explanation": "Line up decimal points: 12.60 + 3.85 = 16.45."
+  },
+  {
+    "id": "math-g5-21",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimals",
+    "prompt": "What is 10 − 2.37?",
+    "options": [
+      "8.37",
+      "7.73",
+      "8.63",
+      "7.63"
+    ],
+    "answer": 3,
+    "explanation": "10.00 − 2.37 = 7.63."
+  },
+  {
+    "id": "math-g5-22",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimal multiplication",
+    "prompt": "What is 3.2 × 4?",
+    "options": [
+      "12.8",
+      "1.28",
+      "128",
+      "12.08"
+    ],
+    "answer": 0,
+    "explanation": "32 × 4 = 128; one decimal place gives 12.8."
+  },
+  {
+    "id": "math-g5-23",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimal multiplication",
+    "prompt": "What is 0.25 × 100?",
+    "options": [
+      "2.5",
+      "25",
+      "0.0025",
+      "250"
+    ],
+    "answer": 1,
+    "explanation": "Multiplying by 100 moves the decimal point two places right."
+  },
+  {
+    "id": "math-g5-24",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimal multiplication",
+    "prompt": "A kilo of galunggong costs ₱180.50. How much do 2 kilos cost?",
+    "options": [
+      "₱360.50",
+      "₱182.50",
+      "₱361",
+      "₱361.50"
+    ],
+    "answer": 2,
+    "explanation": "₱180.50 × 2 = ₱361.00."
+  },
+  {
+    "id": "math-g5-25",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimal division",
+    "prompt": "What is 7.5 ÷ 0.5?",
+    "options": [
+      "1.5",
+      "0.15",
+      "3.75",
+      "15"
+    ],
+    "answer": 3,
+    "explanation": "Multiply both by 10: 75 ÷ 5 = 15."
+  },
+  {
+    "id": "math-g5-26",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimal division",
+    "prompt": "What is 36 ÷ 100?",
+    "options": [
+      "0.36",
+      "3.6",
+      "0.036",
+      "3,600"
+    ],
+    "answer": 0,
+    "explanation": "Dividing by 100 moves the decimal point two places left."
+  },
+  {
+    "id": "math-g5-27",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimals and fractions",
+    "prompt": "What is 3/5 as a decimal?",
+    "options": [
+      "0.35",
+      "0.6",
+      "3.5",
+      "0.53"
+    ],
+    "answer": 1,
+    "explanation": "3/5 = 6/10 = 0.6."
+  },
+  {
+    "id": "math-g5-28",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Decimals and fractions",
+    "prompt": "What is 0.125 as a fraction in lowest terms?",
+    "options": [
+      "1/4",
+      "125/100",
+      "1/8",
+      "12/5"
+    ],
+    "answer": 2,
+    "explanation": "0.125 = 125/1,000 = 1/8."
+  },
+  {
+    "id": "math-g5-29",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Percent",
+    "prompt": "What is 0.07 as a percent?",
+    "options": [
+      "70%",
+      "0.07%",
+      "700%",
+      "7%"
+    ],
+    "answer": 3,
+    "explanation": "Multiply by 100: 0.07 × 100 = 7%."
+  },
+  {
+    "id": "math-g5-30",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Percent",
+    "prompt": "What is 3/4 as a percent?",
+    "options": [
+      "75%",
+      "34%",
+      "43%",
+      "7.5%"
+    ],
+    "answer": 0,
+    "explanation": "3/4 = 75/100 = 75%."
+  },
+  {
+    "id": "math-g5-31",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Percent",
+    "prompt": "What is 10% of 350?",
+    "options": [
+      "3.5",
+      "35",
+      "350",
+      "340"
+    ],
+    "answer": 1,
+    "explanation": "10% is one-tenth: 350 ÷ 10 = 35."
+  },
+  {
+    "id": "math-g5-32",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Percent",
+    "prompt": "A class of 40 has 60% girls. How many girls are there?",
+    "options": [
+      "16",
+      "20",
+      "24",
+      "60"
+    ],
+    "answer": 2,
+    "explanation": "60% of 40 = 0.6 × 40 = 24."
+  },
+  {
+    "id": "math-g5-33",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Percent",
+    "prompt": "18 out of 20 items were correct. What percent is that?",
+    "options": [
+      "18%",
+      "80%",
+      "2%",
+      "90%"
+    ],
+    "answer": 3,
+    "explanation": "18/20 = 90/100 = 90%."
+  },
+  {
+    "id": "math-g5-34",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Ratio",
+    "prompt": "Write the ratio 12:18 in lowest terms.",
+    "options": [
+      "2:3",
+      "3:2",
+      "6:9",
+      "4:6"
+    ],
+    "answer": 0,
+    "explanation": "Divide both terms by 6."
+  },
+  {
+    "id": "math-g5-35",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Ratio",
+    "prompt": "For every 2 cups of rice, use 3 cups of water. How much water for 6 cups of rice?",
+    "options": [
+      "7 cups",
+      "9 cups",
+      "4 cups",
+      "12 cups"
+    ],
+    "answer": 1,
+    "explanation": "6 is 3 times 2, so water is 3 × 3 = 9 cups."
+  },
+  {
+    "id": "math-g5-36",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Ratio",
+    "prompt": "Boys to girls is 4:5 in a class of 36. How many girls are there?",
+    "options": [
+      "16",
+      "9",
+      "20",
+      "25"
+    ],
+    "answer": 2,
+    "explanation": "There are 9 parts of 4 each. Girls: 5 × 4 = 20."
+  },
+  {
+    "id": "math-g5-37",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Order of operations",
+    "prompt": "What is 18 ÷ 3 + 2 × 5?",
+    "options": [
+      "40",
+      "20",
+      "13",
+      "16"
+    ],
+    "answer": 3,
+    "explanation": "Divide and multiply first: 6 + 10 = 16."
+  },
+  {
+    "id": "math-g5-38",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Order of operations",
+    "prompt": "What is (8 + 4) × 3 − 6?",
+    "options": [
+      "30",
+      "14",
+      "18",
+      "42"
+    ],
+    "answer": 0,
+    "explanation": "Parentheses first: 12 × 3 = 36, then 36 − 6 = 30."
+  },
+  {
+    "id": "math-g5-39",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Polygons",
+    "prompt": "What is the sum of the angles in a triangle?",
+    "options": [
+      "360°",
+      "180°",
+      "90°",
+      "270°"
+    ],
+    "answer": 1,
+    "explanation": "The three angles of any triangle add up to 180°."
+  },
+  {
+    "id": "math-g5-40",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Polygons",
+    "prompt": "Two angles of a triangle are 45° and 75°. What is the third angle?",
+    "options": [
+      "120°",
+      "30°",
+      "60°",
+      "240°"
+    ],
+    "answer": 2,
+    "explanation": "180° − 45° − 75° = 60°."
+  },
+  {
+    "id": "math-g5-41",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Polygons",
+    "prompt": "What is the sum of the angles in a quadrilateral?",
+    "options": [
+      "180°",
+      "540°",
+      "400°",
+      "360°"
+    ],
+    "answer": 3,
+    "explanation": "A quadrilateral splits into two triangles: 2 × 180° = 360°."
+  },
+  {
+    "id": "math-g5-42",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Polygons",
+    "prompt": "A regular polygon has 8 equal sides. What is it called?",
+    "options": [
+      "Octagon",
+      "Hexagon",
+      "Pentagon",
+      "Decagon"
+    ],
+    "answer": 0,
+    "explanation": "Octa- means eight."
+  },
+  {
+    "id": "math-g5-43",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Circles",
+    "prompt": "The radius of a circle is 7 cm. What is its diameter?",
+    "options": [
+      "3.5 cm",
+      "14 cm",
+      "21 cm",
+      "49 cm"
+    ],
+    "answer": 1,
+    "explanation": "Diameter is twice the radius: 2 × 7 = 14 cm."
+  },
+  {
+    "id": "math-g5-44",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Circles",
+    "prompt": "Using π ≈ 3.14, what is the circumference of a circle with diameter 10 cm?",
+    "options": [
+      "314 cm",
+      "15.7 cm",
+      "31.4 cm",
+      "62.8 cm"
+    ],
+    "answer": 2,
+    "explanation": "Circumference = π × d = 3.14 × 10 = 31.4 cm."
+  },
+  {
+    "id": "math-g5-45",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Volume",
+    "prompt": "What is the volume of a cube with edges of 5 cm?",
+    "options": [
+      "25 cm³",
+      "15 cm³",
+      "150 cm³",
+      "125 cm³"
+    ],
+    "answer": 3,
+    "explanation": "Volume = edge × edge × edge = 5 × 5 × 5."
+  },
+  {
+    "id": "math-g5-46",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Volume",
+    "prompt": "A tank is 50 cm long, 30 cm wide and 20 cm high. What is its volume?",
+    "options": [
+      "30,000 cm³",
+      "100 cm³",
+      "3,000 cm³",
+      "300,000 cm³"
+    ],
+    "answer": 0,
+    "explanation": "50 × 30 × 20 = 30,000 cubic centimeters."
+  },
+  {
+    "id": "math-g5-47",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Volume",
+    "prompt": "A box has a volume of 60 cm³, length 5 cm and width 4 cm. What is its height?",
+    "options": [
+      "20 cm",
+      "3 cm",
+      "12 cm",
+      "51 cm"
+    ],
+    "answer": 1,
+    "explanation": "Height = volume ÷ (length × width) = 60 ÷ 20 = 3 cm."
+  },
+  {
+    "id": "math-g5-48",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Area",
+    "prompt": "A parallelogram has base 12 m and height 5 m. What is its area?",
+    "options": [
+      "30 m²",
+      "34 m²",
+      "60 m²",
+      "17 m²"
+    ],
+    "answer": 2,
+    "explanation": "Area of a parallelogram = base × height."
+  },
+  {
+    "id": "math-g5-49",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Area",
+    "prompt": "A trapezoid has bases 6 cm and 10 cm and height 4 cm. What is its area?",
+    "options": [
+      "64 cm²",
+      "240 cm²",
+      "20 cm²",
+      "32 cm²"
+    ],
+    "answer": 3,
+    "explanation": "Area = (6 + 10) × 4 ÷ 2 = 32 cm²."
+  },
+  {
+    "id": "math-g5-50",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Measurement",
+    "prompt": "Water freezes at what temperature in degrees Celsius?",
+    "options": [
+      "0 °C",
+      "100 °C",
+      "32 °C",
+      "−10 °C"
+    ],
+    "answer": 0,
+    "explanation": "On the Celsius scale, water freezes at 0 °C."
+  },
+  {
+    "id": "math-g5-51",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Measurement",
+    "prompt": "How many grams are in 3.25 kg?",
+    "options": [
+      "325 g",
+      "3,250 g",
+      "32.5 g",
+      "32,500 g"
+    ],
+    "answer": 1,
+    "explanation": "1 kg = 1,000 g, so 3.25 × 1,000 = 3,250 g."
+  },
+  {
+    "id": "math-g5-52",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Average",
+    "prompt": "Jun scored 85, 90 and 95. What is his average?",
+    "options": [
+      "85",
+      "270",
+      "90",
+      "95"
+    ],
+    "answer": 2,
+    "explanation": "(85 + 90 + 95) ÷ 3 = 270 ÷ 3 = 90."
+  },
+  {
+    "id": "math-g5-53",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Average",
+    "prompt": "The average of 4 numbers is 12. What is their sum?",
+    "options": [
+      "16",
+      "3",
+      "12",
+      "48"
+    ],
+    "answer": 3,
+    "explanation": "Sum = average × count = 12 × 4 = 48."
+  },
+  {
+    "id": "math-g5-54",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Data",
+    "prompt": "In a pie graph, half the class chose basketball. What fraction of the circle is that part?",
+    "options": [
+      "1/2",
+      "1/4",
+      "1/3",
+      "2/3"
+    ],
+    "answer": 0,
+    "explanation": "Half the class is half the circle."
+  },
+  {
+    "id": "math-g5-55",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Data",
+    "prompt": "A line graph of temperatures rises from Monday to Friday. What does that show?",
+    "options": [
+      "It got colder each day",
+      "It got warmer each day",
+      "It stayed the same",
+      "It rained each day"
+    ],
+    "answer": 1,
+    "explanation": "A rising line means the values are increasing."
+  },
+  {
+    "id": "math-g5-56",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Probability",
+    "prompt": "A die is rolled once. What is the probability of getting a 6?",
+    "options": [
+      "1/2",
+      "6/6",
+      "1/6",
+      "1/5"
+    ],
+    "answer": 2,
+    "explanation": "One favorable outcome out of six equally likely outcomes."
+  },
+  {
+    "id": "math-g5-57",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Probability",
+    "prompt": "A spinner has 4 equal parts: red, blue, green, yellow. Which describes landing on purple?",
+    "options": [
+      "Certain",
+      "Likely",
+      "Equally likely as red",
+      "Impossible"
+    ],
+    "answer": 3,
+    "explanation": "There is no purple part, so the event cannot happen."
+  },
+  {
+    "id": "math-g5-58",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Probability",
+    "prompt": "A bag has 5 red and 5 white marbles. Picking red is __.",
+    "options": [
+      "As likely as picking white",
+      "More likely than white",
+      "Less likely than white",
+      "Impossible"
+    ],
+    "answer": 0,
+    "explanation": "There are equal numbers of each color."
+  },
+  {
+    "id": "math-g5-59",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Patterns",
+    "prompt": "What is the 10th term of 3, 8, 13, 18, ...?",
+    "options": [
+      "53",
+      "48",
+      "43",
+      "50"
+    ],
+    "answer": 1,
+    "explanation": "Add 5 each time: 3 + 9 × 5 = 48."
+  },
+  {
+    "id": "math-g5-60",
+    "subject": "math",
+    "grade": 5,
+    "topic": "Problem solving",
+    "prompt": "A store gives 1 free notebook for every 5 bought. Ana buys 20. How many notebooks does she get in all?",
+    "options": [
+      "25",
+      "20",
+      "24",
+      "4"
+    ],
+    "answer": 2,
+    "explanation": "20 ÷ 5 = 4 free notebooks. 20 + 4 = 24."
+  },
+  {
     "id": "math-g6-01",
     "subject": "math",
     "grade": 6,
@@ -914,6 +4722,756 @@
     ],
     "answer": 0,
     "explanation": "Multiply liters by 1,000: 2.5 × 1,000 = 2,500 milliliters."
+  },
+  {
+    "id": "math-g6-11",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Fraction division",
+    "prompt": "What is 6 ÷ 2/3?",
+    "options": [
+      "4",
+      "3",
+      "9",
+      "12"
+    ],
+    "answer": 2,
+    "explanation": "Multiply by the reciprocal: 6 × 3/2 = 9."
+  },
+  {
+    "id": "math-g6-12",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Fraction division",
+    "prompt": "What is 2/5 ÷ 4?",
+    "options": [
+      "8/5",
+      "1/20",
+      "10",
+      "1/10"
+    ],
+    "answer": 3,
+    "explanation": "2/5 × 1/4 = 2/20 = 1/10."
+  },
+  {
+    "id": "math-g6-13",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Fraction division",
+    "prompt": "How many 1/4-kilo packs can be made from 3 kilos of sugar?",
+    "options": [
+      "12",
+      "3/4",
+      "7",
+      "4"
+    ],
+    "answer": 0,
+    "explanation": "3 ÷ 1/4 = 3 × 4 = 12 packs."
+  },
+  {
+    "id": "math-g6-14",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Fraction division",
+    "prompt": "What is 1 1/2 ÷ 3/4?",
+    "options": [
+      "9/8",
+      "2",
+      "1 1/8",
+      "1/2"
+    ],
+    "answer": 1,
+    "explanation": "3/2 × 4/3 = 12/6 = 2."
+  },
+  {
+    "id": "math-g6-15",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Decimal division",
+    "prompt": "What is 9.6 ÷ 0.3?",
+    "options": [
+      "3.2",
+      "0.32",
+      "32",
+      "320"
+    ],
+    "answer": 2,
+    "explanation": "Multiply both by 10: 96 ÷ 3 = 32."
+  },
+  {
+    "id": "math-g6-16",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Decimal division",
+    "prompt": "Five friends share a ₱437.50 bill equally. How much does each pay?",
+    "options": [
+      "₱85.50",
+      "₱88",
+      "₱92.50",
+      "₱87.50"
+    ],
+    "answer": 3,
+    "explanation": "₱437.50 ÷ 5 = ₱87.50."
+  },
+  {
+    "id": "math-g6-17",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Ratio and rate",
+    "prompt": "Which is the better buy?",
+    "options": [
+      "3 for ₱45",
+      "2 for ₱32",
+      "5 for ₱80",
+      "All cost the same per item"
+    ],
+    "answer": 0,
+    "explanation": "Unit prices: ₱15, ₱16 and ₱16 each. ₱15 is lowest."
+  },
+  {
+    "id": "math-g6-18",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Ratio and rate",
+    "prompt": "A printer prints 30 pages per minute. How long does it take to print 450 pages?",
+    "options": [
+      "13,500 minutes",
+      "15 minutes",
+      "420 minutes",
+      "25 minutes"
+    ],
+    "answer": 1,
+    "explanation": "450 ÷ 30 = 15 minutes."
+  },
+  {
+    "id": "math-g6-19",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Proportion",
+    "prompt": "Solve: 3/8 = x/40.",
+    "options": [
+      "35",
+      "120",
+      "15",
+      "24"
+    ],
+    "answer": 2,
+    "explanation": "8 × 5 = 40, so x = 3 × 5 = 15."
+  },
+  {
+    "id": "math-g6-20",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Proportion",
+    "prompt": "On a map, 1 cm stands for 5 km. Two towns are 7 cm apart on the map. How far apart are they?",
+    "options": [
+      "12 km",
+      "7 km",
+      "5 km",
+      "35 km"
+    ],
+    "answer": 3,
+    "explanation": "7 × 5 = 35 km."
+  },
+  {
+    "id": "math-g6-21",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Proportion",
+    "prompt": "If 4 workers paint a classroom in 6 hours, how long would 8 workers take at the same rate?",
+    "options": [
+      "3 hours",
+      "12 hours",
+      "4 hours",
+      "2 hours"
+    ],
+    "answer": 0,
+    "explanation": "Twice the workers need half the time: an inverse proportion."
+  },
+  {
+    "id": "math-g6-22",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "What is 15% of ₱600?",
+    "options": [
+      "₱60",
+      "₱90",
+      "₱15",
+      "₱150"
+    ],
+    "answer": 1,
+    "explanation": "10% is ₱60 and 5% is ₱30. ₱60 + ₱30 = ₱90."
+  },
+  {
+    "id": "math-g6-23",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "30 is what percent of 120?",
+    "options": [
+      "30%",
+      "40%",
+      "25%",
+      "4%"
+    ],
+    "answer": 2,
+    "explanation": "30/120 = 1/4 = 25%."
+  },
+  {
+    "id": "math-g6-24",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "20% of a number is 14. What is the number?",
+    "options": [
+      "2.8",
+      "34",
+      "280",
+      "70"
+    ],
+    "answer": 3,
+    "explanation": "If 20% is 14, then 100% is 14 × 5 = 70."
+  },
+  {
+    "id": "math-g6-25",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "A ₱1,200 phone case is marked 25% off. How much do you save?",
+    "options": [
+      "₱300",
+      "₱900",
+      "₱250",
+      "₱25"
+    ],
+    "answer": 0,
+    "explanation": "25% of ₱1,200 is ₱1,200 ÷ 4 = ₱300."
+  },
+  {
+    "id": "math-g6-26",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "A bank pays 2% simple interest per year. How much interest does ₱5,000 earn in one year?",
+    "options": [
+      "₱1,000",
+      "₱100",
+      "₱10",
+      "₱5,100"
+    ],
+    "answer": 1,
+    "explanation": "2% of ₱5,000 = 0.02 × 5,000 = ₱100."
+  },
+  {
+    "id": "math-g6-27",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Percent",
+    "prompt": "Sales tax is 12%. What is the tax on a ₱250 item?",
+    "options": [
+      "₱12",
+      "₱25",
+      "₱30",
+      "₱280"
+    ],
+    "answer": 2,
+    "explanation": "0.12 × 250 = 30."
+  },
+  {
+    "id": "math-g6-28",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Integers",
+    "prompt": "What is −8 − 5?",
+    "options": [
+      "−3",
+      "3",
+      "13",
+      "−13"
+    ],
+    "answer": 3,
+    "explanation": "Subtracting 5 moves further left: −8 − 5 = −13."
+  },
+  {
+    "id": "math-g6-29",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Integers",
+    "prompt": "What is 6 − (−4)?",
+    "options": [
+      "10",
+      "2",
+      "−10",
+      "−2"
+    ],
+    "answer": 0,
+    "explanation": "Subtracting a negative is like adding: 6 + 4 = 10."
+  },
+  {
+    "id": "math-g6-30",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Integers",
+    "prompt": "Which is the coldest temperature?",
+    "options": [
+      "−3 °C",
+      "−12 °C",
+      "0 °C",
+      "5 °C"
+    ],
+    "answer": 1,
+    "explanation": "On a number line, −12 is the farthest left."
+  },
+  {
+    "id": "math-g6-31",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Integers",
+    "prompt": "A diver is 15 m below sea level and rises 6 m. Where is she now?",
+    "options": [
+      "−21 m",
+      "9 m",
+      "−9 m",
+      "21 m"
+    ],
+    "answer": 2,
+    "explanation": "−15 + 6 = −9, so 9 m below sea level."
+  },
+  {
+    "id": "math-g6-32",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Integers",
+    "prompt": "What is the opposite of −25?",
+    "options": [
+      "−25",
+      "0",
+      "1/25",
+      "25"
+    ],
+    "answer": 3,
+    "explanation": "Opposites are the same distance from 0 on different sides."
+  },
+  {
+    "id": "math-g6-33",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Exponents",
+    "prompt": "What is 5² + 3²?",
+    "options": [
+      "34",
+      "64",
+      "16",
+      "30"
+    ],
+    "answer": 0,
+    "explanation": "25 + 9 = 34."
+  },
+  {
+    "id": "math-g6-34",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Exponents",
+    "prompt": "What is 10⁴?",
+    "options": [
+      "40",
+      "10,000",
+      "1,000",
+      "100,000"
+    ],
+    "answer": 1,
+    "explanation": "10 × 10 × 10 × 10 = 10,000."
+  },
+  {
+    "id": "math-g6-35",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Exponents",
+    "prompt": "Which equals 3 × 3 × 3 × 3?",
+    "options": [
+      "4³",
+      "3 × 4",
+      "3⁴",
+      "12"
+    ],
+    "answer": 2,
+    "explanation": "Four factors of 3 is written 3⁴."
+  },
+  {
+    "id": "math-g6-36",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Order of operations",
+    "prompt": "What is 2 + 3² × 4?",
+    "options": [
+      "100",
+      "44",
+      "26",
+      "38"
+    ],
+    "answer": 3,
+    "explanation": "Exponent first: 9. Then 9 × 4 = 36. Then 2 + 36 = 38."
+  },
+  {
+    "id": "math-g6-37",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Algebra",
+    "prompt": "Which expression means \"5 less than twice a number n\"?",
+    "options": [
+      "2n − 5",
+      "5 − 2n",
+      "2(n − 5)",
+      "n − 10"
+    ],
+    "answer": 0,
+    "explanation": "Twice a number is 2n; 5 less than that is 2n − 5."
+  },
+  {
+    "id": "math-g6-38",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Algebra",
+    "prompt": "Evaluate 3a + 4 when a = 6.",
+    "options": [
+      "34",
+      "22",
+      "13",
+      "64"
+    ],
+    "answer": 1,
+    "explanation": "3 × 6 + 4 = 18 + 4 = 22."
+  },
+  {
+    "id": "math-g6-39",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Algebra",
+    "prompt": "If 4y = 28, what is y?",
+    "options": [
+      "24",
+      "32",
+      "7",
+      "112"
+    ],
+    "answer": 2,
+    "explanation": "Divide both sides by 4: y = 7."
+  },
+  {
+    "id": "math-g6-40",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Algebra",
+    "prompt": "Solve: n/5 = 9.",
+    "options": [
+      "14",
+      "4",
+      "1.8",
+      "45"
+    ],
+    "answer": 3,
+    "explanation": "Multiply both sides by 5: n = 45."
+  },
+  {
+    "id": "math-g6-41",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Algebra",
+    "prompt": "A load costs ₱x. Three loads cost ₱150. Which equation fits?",
+    "options": [
+      "3x = 150",
+      "x + 3 = 150",
+      "x/3 = 150",
+      "150x = 3"
+    ],
+    "answer": 0,
+    "explanation": "Three loads at ₱x each cost 3x, which equals 150."
+  },
+  {
+    "id": "math-g6-42",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Circles",
+    "prompt": "Using π ≈ 3.14, what is the circumference of a circle with radius 5 cm?",
+    "options": [
+      "15.7 cm",
+      "31.4 cm",
+      "78.5 cm",
+      "62.8 cm"
+    ],
+    "answer": 1,
+    "explanation": "C = 2πr = 2 × 3.14 × 5 = 31.4 cm."
+  },
+  {
+    "id": "math-g6-43",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Circle area",
+    "prompt": "Using π ≈ 3.14, what is the area of a circle with diameter 10 m?",
+    "options": [
+      "314 m²",
+      "31.4 m²",
+      "78.5 m²",
+      "15.7 m²"
+    ],
+    "answer": 2,
+    "explanation": "The radius is 5 m. A = πr² = 3.14 × 25 = 78.5 m²."
+  },
+  {
+    "id": "math-g6-44",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Surface area",
+    "prompt": "What is the surface area of a cube with 3 cm edges?",
+    "options": [
+      "27 cm²",
+      "18 cm²",
+      "9 cm²",
+      "54 cm²"
+    ],
+    "answer": 3,
+    "explanation": "Six faces, each 3 × 3 = 9 cm²: 6 × 9 = 54 cm²."
+  },
+  {
+    "id": "math-g6-45",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Volume",
+    "prompt": "What is the volume of a rectangular prism 6 cm × 4 cm × 5 cm?",
+    "options": [
+      "120 cm³",
+      "15 cm³",
+      "74 cm³",
+      "240 cm³"
+    ],
+    "answer": 0,
+    "explanation": "6 × 4 × 5 = 120 cm³."
+  },
+  {
+    "id": "math-g6-46",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Volume",
+    "prompt": "Using π ≈ 3.14, what is the volume of a cylinder with radius 2 cm and height 10 cm?",
+    "options": [
+      "62.8 cm³",
+      "125.6 cm³",
+      "40 cm³",
+      "1,256 cm³"
+    ],
+    "answer": 1,
+    "explanation": "V = πr²h = 3.14 × 4 × 10 = 125.6 cm³."
+  },
+  {
+    "id": "math-g6-47",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Unit conversion",
+    "prompt": "How many seconds are in 15 minutes?",
+    "options": [
+      "150",
+      "1,500",
+      "900",
+      "60"
+    ],
+    "answer": 2,
+    "explanation": "15 × 60 = 900 seconds."
+  },
+  {
+    "id": "math-g6-48",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Unit conversion",
+    "prompt": "How many cubic centimeters are in 1 liter?",
+    "options": [
+      "100",
+      "10",
+      "1",
+      "1,000"
+    ],
+    "answer": 3,
+    "explanation": "1 L = 1,000 mL = 1,000 cm³."
+  },
+  {
+    "id": "math-g6-49",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Speed",
+    "prompt": "A bus travels at 60 km/h for 2.5 hours. How far does it go?",
+    "options": [
+      "150 km",
+      "24 km",
+      "62.5 km",
+      "120 km"
+    ],
+    "answer": 0,
+    "explanation": "Distance = speed × time = 60 × 2.5 = 150 km."
+  },
+  {
+    "id": "math-g6-50",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Speed",
+    "prompt": "A runner covers 400 m in 80 seconds. What is her speed?",
+    "options": [
+      "32 m/s",
+      "5 m/s",
+      "0.2 m/s",
+      "480 m/s"
+    ],
+    "answer": 1,
+    "explanation": "Speed = distance ÷ time = 400 ÷ 80 = 5 m/s."
+  },
+  {
+    "id": "math-g6-51",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Median",
+    "prompt": "What is the median of 9, 3, 7, 1, 5, 11?",
+    "options": [
+      "7",
+      "5",
+      "6",
+      "36"
+    ],
+    "answer": 2,
+    "explanation": "Sort: 1, 3, 5, 7, 9, 11. The middle two are 5 and 7; their mean is 6."
+  },
+  {
+    "id": "math-g6-52",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Statistics",
+    "prompt": "What is the mode of 4, 7, 4, 9, 7, 4, 2?",
+    "options": [
+      "7",
+      "9",
+      "5.3",
+      "4"
+    ],
+    "answer": 3,
+    "explanation": "4 appears three times, more than any other value."
+  },
+  {
+    "id": "math-g6-53",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Statistics",
+    "prompt": "What is the range of 15, 22, 8, 30, 19?",
+    "options": [
+      "22",
+      "30",
+      "8",
+      "19"
+    ],
+    "answer": 0,
+    "explanation": "Range = greatest − least = 30 − 8 = 22."
+  },
+  {
+    "id": "math-g6-54",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Statistics",
+    "prompt": "The mean of 5 quiz scores is 8. Four scores are 7, 9, 6 and 10. What is the fifth?",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "40"
+    ],
+    "answer": 1,
+    "explanation": "Total must be 5 × 8 = 40. 40 − (7 + 9 + 6 + 10) = 8."
+  },
+  {
+    "id": "math-g6-55",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Probability",
+    "prompt": "A coin is tossed twice. How many possible outcomes are there?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "8"
+    ],
+    "answer": 2,
+    "explanation": "HH, HT, TH and TT: 4 outcomes."
+  },
+  {
+    "id": "math-g6-56",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Probability",
+    "prompt": "A box has 3 red, 5 blue and 2 green pens. What is P(blue)?",
+    "options": [
+      "1/5",
+      "3/10",
+      "5/7",
+      "1/2"
+    ],
+    "answer": 3,
+    "explanation": "5 blue out of 10 pens: 5/10 = 1/2."
+  },
+  {
+    "id": "math-g6-57",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Geometry",
+    "prompt": "What is the sum of the interior angles of a pentagon?",
+    "options": [
+      "540°",
+      "360°",
+      "720°",
+      "500°"
+    ],
+    "answer": 0,
+    "explanation": "(5 − 2) × 180° = 540°."
+  },
+  {
+    "id": "math-g6-58",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Geometry",
+    "prompt": "Two angles are supplementary. One is 72°. What is the other?",
+    "options": [
+      "18°",
+      "108°",
+      "288°",
+      "118°"
+    ],
+    "answer": 1,
+    "explanation": "Supplementary angles add to 180°: 180° − 72° = 108°."
+  },
+  {
+    "id": "math-g6-59",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Number theory",
+    "prompt": "What is the GCF of 36 and 48?",
+    "options": [
+      "6",
+      "4",
+      "12",
+      "144"
+    ],
+    "answer": 2,
+    "explanation": "Factors in common: 1, 2, 3, 4, 6, 12. Greatest is 12."
+  },
+  {
+    "id": "math-g6-60",
+    "subject": "math",
+    "grade": 6,
+    "topic": "Problem solving",
+    "prompt": "Jeepney fare is ₱13 for the first 4 km and ₱1.80 for each extra km. What is the fare for 9 km?",
+    "options": [
+      "₱16.20",
+      "₱29.20",
+      "₱20.20",
+      "₱22"
+    ],
+    "answer": 3,
+    "explanation": "9 − 4 = 5 extra km. ₱13 + 5 × ₱1.80 = ₱13 + ₱9 = ₱22."
   },
   {
     "id": "math-g7-01",
@@ -1066,6 +5624,756 @@
     "explanation": "0.75 is 75/100, which simplifies to 3/4."
   },
   {
+    "id": "math-g7-11",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Sets",
+    "prompt": "If A = {a, b, c} and B = {c, d}, what is A ∪ B?",
+    "options": [
+      "{c}",
+      "{a, b}",
+      "{a, b, c, c, d}",
+      "{a, b, c, d}"
+    ],
+    "answer": 3,
+    "explanation": "The union lists every element in either set once."
+  },
+  {
+    "id": "math-g7-12",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Sets",
+    "prompt": "How many subsets does {1, 2, 3} have?",
+    "options": [
+      "8",
+      "6",
+      "3",
+      "9"
+    ],
+    "answer": 0,
+    "explanation": "A set with n elements has 2ⁿ subsets: 2³ = 8."
+  },
+  {
+    "id": "math-g7-13",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Sets",
+    "prompt": "U = {1, 2, 3, 4, 5} and A = {2, 4}. What is the complement of A?",
+    "options": [
+      "{2, 4}",
+      "{1, 3, 5}",
+      "{1, 2, 3, 4, 5}",
+      "{ }"
+    ],
+    "answer": 1,
+    "explanation": "The complement holds the elements of U that are not in A."
+  },
+  {
+    "id": "math-g7-14",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Sets",
+    "prompt": "Which set is empty?",
+    "options": [
+      "Even prime numbers",
+      "Days in a week",
+      "Months with 32 days",
+      "Vowels in English"
+    ],
+    "answer": 2,
+    "explanation": "No month has 32 days. (2 is an even prime.)"
+  },
+  {
+    "id": "math-g7-15",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Sets",
+    "prompt": "In a class, 20 like math, 15 like science and 8 like both. How many like at least one?",
+    "options": [
+      "35",
+      "43",
+      "12",
+      "27"
+    ],
+    "answer": 3,
+    "explanation": "Use n(A ∪ B) = 20 + 15 − 8 = 27."
+  },
+  {
+    "id": "math-g7-16",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Integer operations",
+    "prompt": "What is (−48) ÷ 6?",
+    "options": [
+      "−8",
+      "8",
+      "−42",
+      "−54"
+    ],
+    "answer": 0,
+    "explanation": "A negative divided by a positive is negative: −8."
+  },
+  {
+    "id": "math-g7-17",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Integer operations",
+    "prompt": "What is (−3)³?",
+    "options": [
+      "27",
+      "−27",
+      "−9",
+      "9"
+    ],
+    "answer": 1,
+    "explanation": "(−3) × (−3) × (−3) = 9 × (−3) = −27."
+  },
+  {
+    "id": "math-g7-18",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Integer operations",
+    "prompt": "What is −2²?",
+    "options": [
+      "4",
+      "−2",
+      "−4",
+      "2"
+    ],
+    "answer": 2,
+    "explanation": "Without parentheses, only 2 is squared: −(2²) = −4."
+  },
+  {
+    "id": "math-g7-19",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Integer operations",
+    "prompt": "What is |−7| − |3|?",
+    "options": [
+      "−10",
+      "10",
+      "−4",
+      "4"
+    ],
+    "answer": 3,
+    "explanation": "7 − 3 = 4."
+  },
+  {
+    "id": "math-g7-20",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Rational numbers",
+    "prompt": "What is −3/4 + 1/2?",
+    "options": [
+      "−1/4",
+      "−2/6",
+      "1/4",
+      "−5/4"
+    ],
+    "answer": 0,
+    "explanation": "−3/4 + 2/4 = −1/4."
+  },
+  {
+    "id": "math-g7-21",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Rational numbers",
+    "prompt": "Which is the decimal form of 2/9?",
+    "options": [
+      "0.29",
+      "0.222...",
+      "2.9",
+      "0.2"
+    ],
+    "answer": 1,
+    "explanation": "2 ÷ 9 = 0.2222..., a repeating decimal."
+  },
+  {
+    "id": "math-g7-22",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Rational numbers",
+    "prompt": "Which number is irrational?",
+    "options": [
+      "0.75",
+      "−5",
+      "√2",
+      "1/3"
+    ],
+    "answer": 2,
+    "explanation": "√2 cannot be written as a fraction of integers; its decimal never repeats."
+  },
+  {
+    "id": "math-g7-23",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Rational numbers",
+    "prompt": "Which list is in increasing order?",
+    "options": [
+      "−1/2, −1.5, 0.3, 2/3",
+      "0.3, −1/2, 2/3, −1.5",
+      "2/3, 0.3, −1/2, −1.5",
+      "−1.5, −1/2, 0.3, 2/3"
+    ],
+    "answer": 3,
+    "explanation": "−1.5 < −0.5 < 0.3 < 0.666..."
+  },
+  {
+    "id": "math-g7-24",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Square roots",
+    "prompt": "Between which two whole numbers is √50?",
+    "options": [
+      "7 and 8",
+      "6 and 7",
+      "24 and 25",
+      "8 and 9"
+    ],
+    "answer": 0,
+    "explanation": "7² = 49 and 8² = 64, so √50 is between 7 and 8."
+  },
+  {
+    "id": "math-g7-25",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Scientific notation",
+    "prompt": "Write 45,000 in scientific notation.",
+    "options": [
+      "45 × 10³",
+      "4.5 × 10⁴",
+      "4.5 × 10³",
+      "0.45 × 10⁵"
+    ],
+    "answer": 1,
+    "explanation": "Move the decimal 4 places to get a number from 1 to 10."
+  },
+  {
+    "id": "math-g7-26",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Measurement",
+    "prompt": "How many square centimeters are in 1 square meter?",
+    "options": [
+      "100",
+      "1,000",
+      "10,000",
+      "1,000,000"
+    ],
+    "answer": 2,
+    "explanation": "1 m = 100 cm, so 1 m² = 100 × 100 = 10,000 cm²."
+  },
+  {
+    "id": "math-g7-27",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Measurement",
+    "prompt": "Convert 72 km/h to meters per second.",
+    "options": [
+      "72,000 m/s",
+      "1.2 m/s",
+      "7.2 m/s",
+      "20 m/s"
+    ],
+    "answer": 3,
+    "explanation": "72,000 m ÷ 3,600 s = 20 m/s."
+  },
+  {
+    "id": "math-g7-28",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Algebraic expressions",
+    "prompt": "Simplify 4a − 7 + 2a + 3.",
+    "options": [
+      "6a − 4",
+      "6a − 10",
+      "2a − 4",
+      "6a + 4"
+    ],
+    "answer": 0,
+    "explanation": "Combine like terms: 4a + 2a = 6a and −7 + 3 = −4."
+  },
+  {
+    "id": "math-g7-29",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Algebraic expressions",
+    "prompt": "Expand 3(2x − 5).",
+    "options": [
+      "6x − 5",
+      "6x − 15",
+      "5x − 15",
+      "6x + 15"
+    ],
+    "answer": 1,
+    "explanation": "Distribute 3 to both terms: 3 × 2x and 3 × (−5)."
+  },
+  {
+    "id": "math-g7-30",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Algebraic expressions",
+    "prompt": "Simplify −2(x − 4).",
+    "options": [
+      "−2x − 8",
+      "2x + 8",
+      "−2x + 8",
+      "−2x − 4"
+    ],
+    "answer": 2,
+    "explanation": "−2 × x = −2x and −2 × (−4) = +8."
+  },
+  {
+    "id": "math-g7-31",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Algebraic expressions",
+    "prompt": "Evaluate x² − 3x when x = −2.",
+    "options": [
+      "−2",
+      "−10",
+      "2",
+      "10"
+    ],
+    "answer": 3,
+    "explanation": "(−2)² − 3(−2) = 4 + 6 = 10."
+  },
+  {
+    "id": "math-g7-32",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Algebraic expressions",
+    "prompt": "How many terms are in 5x² − 3x + 7?",
+    "options": [
+      "3",
+      "2",
+      "5",
+      "1"
+    ],
+    "answer": 0,
+    "explanation": "The terms are 5x², −3x and 7."
+  },
+  {
+    "id": "math-g7-33",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Polynomials",
+    "prompt": "What is (2x + 3) + (x − 5)?",
+    "options": [
+      "3x + 8",
+      "3x − 2",
+      "2x² − 2",
+      "x − 2"
+    ],
+    "answer": 1,
+    "explanation": "Add like terms: 2x + x = 3x and 3 − 5 = −2."
+  },
+  {
+    "id": "math-g7-34",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Polynomials",
+    "prompt": "What is x³ · x⁴?",
+    "options": [
+      "x¹²",
+      "2x⁷",
+      "x⁷",
+      "x"
+    ],
+    "answer": 2,
+    "explanation": "Same base: add the exponents, 3 + 4 = 7."
+  },
+  {
+    "id": "math-g7-35",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Polynomials",
+    "prompt": "Multiply (x + 2)(x + 3).",
+    "options": [
+      "x² + 6x + 5",
+      "x² + 6",
+      "2x + 5",
+      "x² + 5x + 6"
+    ],
+    "answer": 3,
+    "explanation": "FOIL: x² + 3x + 2x + 6."
+  },
+  {
+    "id": "math-g7-36",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Equations",
+    "prompt": "Solve 5x + 2 = 3x + 10.",
+    "options": [
+      "x = 4",
+      "x = 6",
+      "x = 1.5",
+      "x = 8"
+    ],
+    "answer": 0,
+    "explanation": "Subtract 3x and 2 from both sides: 2x = 8, so x = 4."
+  },
+  {
+    "id": "math-g7-37",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Equations",
+    "prompt": "Solve 4(x − 2) = 20.",
+    "options": [
+      "x = 5.5",
+      "x = 7",
+      "x = 3",
+      "x = 4.5"
+    ],
+    "answer": 1,
+    "explanation": "Divide by 4: x − 2 = 5, so x = 7."
+  },
+  {
+    "id": "math-g7-38",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Equations",
+    "prompt": "Solve x/4 − 1 = 2.",
+    "options": [
+      "x = 4",
+      "x = 3/4",
+      "x = 12",
+      "x = 9"
+    ],
+    "answer": 2,
+    "explanation": "Add 1: x/4 = 3. Multiply by 4: x = 12."
+  },
+  {
+    "id": "math-g7-39",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Equations",
+    "prompt": "The sum of two consecutive integers is 37. What is the smaller?",
+    "options": [
+      "19",
+      "17",
+      "36",
+      "18"
+    ],
+    "answer": 3,
+    "explanation": "n + (n + 1) = 37 gives 2n = 36, so n = 18."
+  },
+  {
+    "id": "math-g7-40",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Equations",
+    "prompt": "A number tripled, then increased by 5, gives 26. What is the number?",
+    "options": [
+      "7",
+      "31",
+      "10.3",
+      "9"
+    ],
+    "answer": 0,
+    "explanation": "3n + 5 = 26, so 3n = 21 and n = 7."
+  },
+  {
+    "id": "math-g7-41",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Inequalities",
+    "prompt": "Solve 2x − 3 > 7.",
+    "options": [
+      "x > 2",
+      "x > 5",
+      "x < 5",
+      "x > 10"
+    ],
+    "answer": 1,
+    "explanation": "Add 3: 2x > 10. Divide by 2: x > 5."
+  },
+  {
+    "id": "math-g7-42",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Inequalities",
+    "prompt": "Solve −3x ≤ 12.",
+    "options": [
+      "x ≤ −4",
+      "x ≥ 4",
+      "x ≥ −4",
+      "x ≤ 4"
+    ],
+    "answer": 2,
+    "explanation": "Dividing by a negative flips the sign: x ≥ −4."
+  },
+  {
+    "id": "math-g7-43",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Inequalities",
+    "prompt": "Ana has ₱500. Each ticket costs ₱120. Which inequality shows how many tickets t she can buy?",
+    "options": [
+      "120t ≥ 500",
+      "t + 120 ≤ 500",
+      "500t ≤ 120",
+      "120t ≤ 500"
+    ],
+    "answer": 3,
+    "explanation": "The total cost 120t cannot be more than ₱500."
+  },
+  {
+    "id": "math-g7-44",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Angles",
+    "prompt": "Two angles are complementary. One is 38°. What is the other?",
+    "options": [
+      "52°",
+      "142°",
+      "62°",
+      "322°"
+    ],
+    "answer": 0,
+    "explanation": "Complementary angles add to 90°: 90° − 38° = 52°."
+  },
+  {
+    "id": "math-g7-45",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Angles",
+    "prompt": "Two lines cross. One angle is 70°. What is the angle vertical to it?",
+    "options": [
+      "110°",
+      "70°",
+      "20°",
+      "290°"
+    ],
+    "answer": 1,
+    "explanation": "Vertical angles are always equal."
+  },
+  {
+    "id": "math-g7-46",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Angles",
+    "prompt": "Parallel lines are cut by a transversal. One angle is 65°. Its corresponding angle is __.",
+    "options": [
+      "115°",
+      "25°",
+      "65°",
+      "130°"
+    ],
+    "answer": 2,
+    "explanation": "Corresponding angles on parallel lines are equal."
+  },
+  {
+    "id": "math-g7-47",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Polygons",
+    "prompt": "What is each interior angle of a regular hexagon?",
+    "options": [
+      "60°",
+      "108°",
+      "135°",
+      "120°"
+    ],
+    "answer": 3,
+    "explanation": "Sum = (6 − 2) × 180° = 720°. 720° ÷ 6 = 120°."
+  },
+  {
+    "id": "math-g7-48",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Polygons",
+    "prompt": "How many diagonals does a pentagon have?",
+    "options": [
+      "5",
+      "10",
+      "3",
+      "2"
+    ],
+    "answer": 0,
+    "explanation": "n(n − 3)/2 = 5 × 2 / 2 = 5."
+  },
+  {
+    "id": "math-g7-49",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Triangles",
+    "prompt": "Can sides of 3 cm, 4 cm and 9 cm form a triangle?",
+    "options": [
+      "Yes, any three lengths work",
+      "No, because 3 + 4 < 9",
+      "Yes, because 9 > 4",
+      "No, because the sides are different"
+    ],
+    "answer": 1,
+    "explanation": "Any two sides must add to more than the third side."
+  },
+  {
+    "id": "math-g7-50",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Geometry",
+    "prompt": "What do you call a segment from the center of a circle to a point on the circle?",
+    "options": [
+      "Chord",
+      "Diameter",
+      "Radius",
+      "Tangent"
+    ],
+    "answer": 2,
+    "explanation": "A radius joins the center to the circle."
+  },
+  {
+    "id": "math-g7-51",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Percent change",
+    "prompt": "A ₱800 item now costs ₱600. What is the percent decrease?",
+    "options": [
+      "20%",
+      "33%",
+      "200%",
+      "25%"
+    ],
+    "answer": 3,
+    "explanation": "Decrease is ₱200. 200/800 = 25%."
+  },
+  {
+    "id": "math-g7-52",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Percent change",
+    "prompt": "A town of 12,000 people grows by 5%. What is the new population?",
+    "options": [
+      "12,600",
+      "12,005",
+      "600",
+      "17,000"
+    ],
+    "answer": 0,
+    "explanation": "5% of 12,000 is 600. 12,000 + 600 = 12,600."
+  },
+  {
+    "id": "math-g7-53",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Statistics",
+    "prompt": "Which measure is most affected by one very large value?",
+    "options": [
+      "Median",
+      "Mean",
+      "Mode",
+      "None of the measures change"
+    ],
+    "answer": 1,
+    "explanation": "The mean uses every value, so an outlier pulls it strongly."
+  },
+  {
+    "id": "math-g7-54",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Statistics",
+    "prompt": "Find the mean of 12, 15, 18, 21, 24.",
+    "options": [
+      "15",
+      "90",
+      "18",
+      "21"
+    ],
+    "answer": 2,
+    "explanation": "Sum is 90; 90 ÷ 5 = 18."
+  },
+  {
+    "id": "math-g7-55",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Statistics",
+    "prompt": "A survey asks every 10th person who enters a mall. What is this sampling called?",
+    "options": [
+      "Convenience sampling",
+      "Census",
+      "Cluster sampling",
+      "Systematic sampling"
+    ],
+    "answer": 3,
+    "explanation": "Choosing every k-th member from a list is systematic sampling."
+  },
+  {
+    "id": "math-g7-56",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Statistics",
+    "prompt": "Which graph best shows how one student's height changed over 5 years?",
+    "options": [
+      "Line graph",
+      "Pie chart",
+      "Venn diagram",
+      "Pictograph of favorite foods"
+    ],
+    "answer": 0,
+    "explanation": "Line graphs show change over time."
+  },
+  {
+    "id": "math-g7-57",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Statistics",
+    "prompt": "What is the median of 4, 9, 2, 7, 6, 3?",
+    "options": [
+      "6",
+      "5",
+      "5.5",
+      "4.5"
+    ],
+    "answer": 1,
+    "explanation": "Sorted: 2, 3, 4, 6, 7, 9. Middle values 4 and 6 average to 5."
+  },
+  {
+    "id": "math-g7-58",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Number theory",
+    "prompt": "What is the LCM of 8 and 12?",
+    "options": [
+      "96",
+      "4",
+      "24",
+      "48"
+    ],
+    "answer": 2,
+    "explanation": "Multiples of 12: 12, 24... 24 is the first also divisible by 8."
+  },
+  {
+    "id": "math-g7-59",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Problem solving",
+    "prompt": "Paolo is 3 years older than twice his sister's age. He is 15. How old is his sister?",
+    "options": [
+      "9",
+      "7",
+      "24",
+      "6"
+    ],
+    "answer": 3,
+    "explanation": "2s + 3 = 15, so 2s = 12 and s = 6."
+  },
+  {
+    "id": "math-g7-60",
+    "subject": "math",
+    "grade": 7,
+    "topic": "Problem solving",
+    "prompt": "A rectangle's length is 4 cm more than its width. Its perimeter is 40 cm. What is its width?",
+    "options": [
+      "8 cm",
+      "12 cm",
+      "10 cm",
+      "9 cm"
+    ],
+    "answer": 0,
+    "explanation": "2(w + w + 4) = 40 gives 4w + 8 = 40, so w = 8."
+  },
+  {
     "id": "math-g8-01",
     "subject": "math",
     "grade": 8,
@@ -1214,6 +6522,756 @@
     ],
     "answer": 2,
     "explanation": "Move the decimal four places right to make 4.2, then multiply by 10⁻⁴."
+  },
+  {
+    "id": "math-g8-11",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor 6x² + 9x completely.",
+    "options": [
+      "3x(2x + 3)",
+      "3(2x² + 3x)",
+      "x(6x + 9)",
+      "6x(x + 9)"
+    ],
+    "answer": 0,
+    "explanation": "The GCF of 6x² and 9x is 3x."
+  },
+  {
+    "id": "math-g8-12",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor x² − 49.",
+    "options": [
+      "(x − 7)²",
+      "(x + 7)(x − 7)",
+      "(x + 7)²",
+      "(x − 49)(x + 1)"
+    ],
+    "answer": 1,
+    "explanation": "Difference of two squares: a² − b² = (a + b)(a − b)."
+  },
+  {
+    "id": "math-g8-13",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor x² − 6x + 9.",
+    "options": [
+      "(x + 3)²",
+      "(x − 9)(x + 1)",
+      "(x − 3)²",
+      "(x + 3)(x − 3)"
+    ],
+    "answer": 2,
+    "explanation": "Perfect square trinomial: (x − 3)² = x² − 6x + 9."
+  },
+  {
+    "id": "math-g8-14",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor x² − x − 12.",
+    "options": [
+      "(x + 4)(x − 3)",
+      "(x − 6)(x + 2)",
+      "(x − 12)(x + 1)",
+      "(x − 4)(x + 3)"
+    ],
+    "answer": 3,
+    "explanation": "Find numbers that multiply to −12 and add to −1: −4 and 3."
+  },
+  {
+    "id": "math-g8-15",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor 2x² + 7x + 3.",
+    "options": [
+      "(2x + 1)(x + 3)",
+      "(2x + 3)(x + 1)",
+      "(2x + 7)(x + 3)",
+      "(x + 1)(x + 3)"
+    ],
+    "answer": 0,
+    "explanation": "Check: (2x + 1)(x + 3) = 2x² + 6x + x + 3 = 2x² + 7x + 3."
+  },
+  {
+    "id": "math-g8-16",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Factoring",
+    "prompt": "Factor 8x³ − 27.",
+    "options": [
+      "(2x − 3)³",
+      "(2x − 3)(4x² + 6x + 9)",
+      "(2x + 3)(4x² − 6x + 9)",
+      "(8x − 27)(x² + 1)"
+    ],
+    "answer": 1,
+    "explanation": "Difference of cubes: a³ − b³ = (a − b)(a² + ab + b²) with a = 2x, b = 3."
+  },
+  {
+    "id": "math-g8-17",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Rational expressions",
+    "prompt": "Simplify (x² − 4)/(x − 2), with x ≠ 2.",
+    "options": [
+      "x − 2",
+      "x² − 2",
+      "x + 2",
+      "2"
+    ],
+    "answer": 2,
+    "explanation": "x² − 4 = (x + 2)(x − 2); cancel the common factor x − 2."
+  },
+  {
+    "id": "math-g8-18",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Rational expressions",
+    "prompt": "For which x is 5/(x + 3) undefined?",
+    "options": [
+      "x = 3",
+      "x = 0",
+      "x = 5",
+      "x = −3"
+    ],
+    "answer": 3,
+    "explanation": "A fraction is undefined when its denominator is 0: x + 3 = 0."
+  },
+  {
+    "id": "math-g8-19",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Rational expressions",
+    "prompt": "What is 2/x + 3/x?",
+    "options": [
+      "5/x",
+      "5/(2x)",
+      "6/x",
+      "5/x²"
+    ],
+    "answer": 0,
+    "explanation": "Same denominators: add numerators."
+  },
+  {
+    "id": "math-g8-20",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Rational expressions",
+    "prompt": "What is (x/3) · (6/x²)?",
+    "options": [
+      "6/(3x)",
+      "2/x",
+      "2x",
+      "x/2"
+    ],
+    "answer": 1,
+    "explanation": "6x/(3x²) = 2/x."
+  },
+  {
+    "id": "math-g8-21",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Exponent laws",
+    "prompt": "Simplify (2a³)².",
+    "options": [
+      "2a⁶",
+      "4a⁵",
+      "4a⁶",
+      "2a⁵"
+    ],
+    "answer": 2,
+    "explanation": "Square each factor: 2² = 4 and (a³)² = a⁶."
+  },
+  {
+    "id": "math-g8-22",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Exponent laws",
+    "prompt": "What is 5⁰?",
+    "options": [
+      "0",
+      "5",
+      "Undefined",
+      "1"
+    ],
+    "answer": 3,
+    "explanation": "Any non-zero number raised to 0 equals 1."
+  },
+  {
+    "id": "math-g8-23",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Exponent laws",
+    "prompt": "What is 2⁻³?",
+    "options": [
+      "1/8",
+      "−8",
+      "−6",
+      "8"
+    ],
+    "answer": 0,
+    "explanation": "A negative exponent means a reciprocal: 1/2³ = 1/8."
+  },
+  {
+    "id": "math-g8-24",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear equations",
+    "prompt": "Which point lies on y = 2x + 1?",
+    "options": [
+      "(2, 4)",
+      "(3, 7)",
+      "(0, 2)",
+      "(1, 2)"
+    ],
+    "answer": 1,
+    "explanation": "Substitute x = 3: 2(3) + 1 = 7."
+  },
+  {
+    "id": "math-g8-25",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear equations",
+    "prompt": "Rewrite 3x + y = 5 in slope-intercept form.",
+    "options": [
+      "y = 3x + 5",
+      "y = 3x − 5",
+      "y = −3x + 5",
+      "y = −3x − 5"
+    ],
+    "answer": 2,
+    "explanation": "Subtract 3x from both sides."
+  },
+  {
+    "id": "math-g8-26",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Slope",
+    "prompt": "What is the slope of y = −4x + 7?",
+    "options": [
+      "7",
+      "4",
+      "−7",
+      "−4"
+    ],
+    "answer": 3,
+    "explanation": "In y = mx + b, the slope is m."
+  },
+  {
+    "id": "math-g8-27",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Slope",
+    "prompt": "What is the slope of a horizontal line?",
+    "options": [
+      "0",
+      "Undefined",
+      "1",
+      "−1"
+    ],
+    "answer": 0,
+    "explanation": "A horizontal line does not rise, so its slope is 0."
+  },
+  {
+    "id": "math-g8-28",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Slope",
+    "prompt": "What is the slope through (−1, 4) and (3, −4)?",
+    "options": [
+      "2",
+      "−2",
+      "−1/2",
+      "0"
+    ],
+    "answer": 1,
+    "explanation": "(−4 − 4)/(3 − (−1)) = −8/4 = −2."
+  },
+  {
+    "id": "math-g8-29",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Slope",
+    "prompt": "Which line is parallel to y = 3x − 1?",
+    "options": [
+      "y = −3x − 1",
+      "y = −(1/3)x",
+      "y = 3x + 4",
+      "y = x − 1"
+    ],
+    "answer": 2,
+    "explanation": "Parallel lines have equal slopes."
+  },
+  {
+    "id": "math-g8-30",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear graphs",
+    "prompt": "What is the x-intercept of 2x + 5y = 10?",
+    "options": [
+      "(0, 2)",
+      "(2, 0)",
+      "(10, 0)",
+      "(5, 0)"
+    ],
+    "answer": 3,
+    "explanation": "Set y = 0: 2x = 10, so x = 5."
+  },
+  {
+    "id": "math-g8-31",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear graphs",
+    "prompt": "Find the equation of the line with slope 2 through (1, 3).",
+    "options": [
+      "y = 2x + 1",
+      "y = 2x + 3",
+      "y = 2x − 1",
+      "y = 3x + 2"
+    ],
+    "answer": 0,
+    "explanation": "3 = 2(1) + b, so b = 1."
+  },
+  {
+    "id": "math-g8-32",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear graphs",
+    "prompt": "A taxi charges ₱40 plus ₱13.50 per km. Which equation gives the fare y for x km?",
+    "options": [
+      "y = 40x + 13.50",
+      "y = 13.50x + 40",
+      "y = 53.50x",
+      "y = 13.50x − 40"
+    ],
+    "answer": 1,
+    "explanation": "The ₱40 flagdown is fixed; ₱13.50 is added for each km."
+  },
+  {
+    "id": "math-g8-33",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Functions",
+    "prompt": "Which relation is a function?",
+    "options": [
+      "{(1, 2), (1, 3), (2, 4)}",
+      "{(2, 5), (2, 6), (3, 7)}",
+      "{(1, 2), (2, 3), (3, 4)}",
+      "{(0, 1), (0, 2), (1, 1)}"
+    ],
+    "answer": 2,
+    "explanation": "In a function, each x-value has exactly one y-value."
+  },
+  {
+    "id": "math-g8-34",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Functions",
+    "prompt": "If f(x) = 3x − 2, what is f(4)?",
+    "options": [
+      "14",
+      "12",
+      "1",
+      "10"
+    ],
+    "answer": 3,
+    "explanation": "3(4) − 2 = 10."
+  },
+  {
+    "id": "math-g8-35",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Functions",
+    "prompt": "What is the domain of f(x) = 2x + 5?",
+    "options": [
+      "All real numbers",
+      "x > 0",
+      "x ≥ 5",
+      "Only whole numbers"
+    ],
+    "answer": 0,
+    "explanation": "Any real x can be multiplied by 2 and added to 5."
+  },
+  {
+    "id": "math-g8-36",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Systems",
+    "prompt": "Solve: y = 2x and x + y = 9.",
+    "options": [
+      "(6, 3)",
+      "(3, 6)",
+      "(2, 7)",
+      "(4.5, 4.5)"
+    ],
+    "answer": 1,
+    "explanation": "Substitute: x + 2x = 9, so x = 3 and y = 6."
+  },
+  {
+    "id": "math-g8-37",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Systems",
+    "prompt": "How many solutions does y = 2x + 1 and y = 2x − 3 have?",
+    "options": [
+      "One",
+      "Two",
+      "None",
+      "Infinitely many"
+    ],
+    "answer": 2,
+    "explanation": "Same slope, different intercepts: the lines are parallel and never meet."
+  },
+  {
+    "id": "math-g8-38",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Systems",
+    "prompt": "Two pencils and a pen cost ₱40. One pencil and a pen cost ₱28. How much is one pencil?",
+    "options": [
+      "₱16",
+      "₱14",
+      "₱28",
+      "₱12"
+    ],
+    "answer": 3,
+    "explanation": "Subtract the equations: one pencil = ₱40 − ₱28 = ₱12."
+  },
+  {
+    "id": "math-g8-39",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Systems",
+    "prompt": "Solve: 2x + y = 11 and x − y = 1.",
+    "options": [
+      "(4, 3)",
+      "(3, 5)",
+      "(5, 1)",
+      "(6, −1)"
+    ],
+    "answer": 0,
+    "explanation": "Add the equations: 3x = 12, so x = 4 and y = 3."
+  },
+  {
+    "id": "math-g8-40",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear inequalities",
+    "prompt": "Which point satisfies y > x + 2?",
+    "options": [
+      "(1, 2)",
+      "(0, 3)",
+      "(2, 4)",
+      "(3, 1)"
+    ],
+    "answer": 1,
+    "explanation": "For (0, 3): 3 > 0 + 2 is true."
+  },
+  {
+    "id": "math-g8-41",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Linear inequalities",
+    "prompt": "When graphing y ≤ 2x − 1, what kind of boundary line is used?",
+    "options": [
+      "Broken (dashed)",
+      "No line at all",
+      "Solid",
+      "A vertical line only"
+    ],
+    "answer": 2,
+    "explanation": "≤ includes points on the line, so the boundary is solid."
+  },
+  {
+    "id": "math-g8-42",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Reasoning",
+    "prompt": "What is the converse of \"If it rains, then the ground is wet\"?",
+    "options": [
+      "If it does not rain, then the ground is not wet.",
+      "If the ground is not wet, then it does not rain.",
+      "It rains and the ground is wet.",
+      "If the ground is wet, then it rains."
+    ],
+    "answer": 3,
+    "explanation": "The converse swaps the hypothesis and conclusion."
+  },
+  {
+    "id": "math-g8-43",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Reasoning",
+    "prompt": "What is the hypothesis of \"If a number is divisible by 4, then it is even\"?",
+    "options": [
+      "A number is divisible by 4",
+      "It is even",
+      "A number is odd",
+      "Every even number is divisible by 4"
+    ],
+    "answer": 0,
+    "explanation": "The hypothesis is the \"if\" part."
+  },
+  {
+    "id": "math-g8-44",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Reasoning",
+    "prompt": "Which is a counterexample to \"All prime numbers are odd\"?",
+    "options": [
+      "3",
+      "2",
+      "9",
+      "15"
+    ],
+    "answer": 1,
+    "explanation": "2 is prime and even, so the statement is false."
+  },
+  {
+    "id": "math-g8-45",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Reasoning",
+    "prompt": "\"Every square is a rectangle. ABCD is a square.\" Which conclusion follows?",
+    "options": [
+      "ABCD is not a rectangle.",
+      "Every rectangle is a square.",
+      "ABCD is a rectangle.",
+      "ABCD has no right angles."
+    ],
+    "answer": 2,
+    "explanation": "This is deductive reasoning from a general rule."
+  },
+  {
+    "id": "math-g8-46",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Congruence",
+    "prompt": "Two triangles have two pairs of equal sides and equal included angles. Which postulate proves them congruent?",
+    "options": [
+      "SSS",
+      "ASA",
+      "AAA",
+      "SAS"
+    ],
+    "answer": 3,
+    "explanation": "Side-Angle-Side: the angle is between the two sides."
+  },
+  {
+    "id": "math-g8-47",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Congruence",
+    "prompt": "Which is NOT enough to prove two triangles congruent?",
+    "options": [
+      "AAA",
+      "SSS",
+      "SAS",
+      "ASA"
+    ],
+    "answer": 0,
+    "explanation": "Equal angles alone give similar triangles of any size."
+  },
+  {
+    "id": "math-g8-48",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Congruence",
+    "prompt": "In an isosceles triangle, the base angles are __.",
+    "options": [
+      "Supplementary",
+      "Equal",
+      "Always 90°",
+      "Always 45°"
+    ],
+    "answer": 1,
+    "explanation": "The angles opposite the equal sides are congruent."
+  },
+  {
+    "id": "math-g8-49",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Triangle inequalities",
+    "prompt": "In triangle ABC, AB = 5, BC = 8 and AC = 6. Which angle is largest?",
+    "options": [
+      "Angle B",
+      "Angle C",
+      "Angle A",
+      "They are all equal"
+    ],
+    "answer": 2,
+    "explanation": "The largest angle is opposite the longest side, BC, which is angle A."
+  },
+  {
+    "id": "math-g8-50",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Triangle inequalities",
+    "prompt": "Two sides of a triangle are 4 and 9. Which could be the third side?",
+    "options": [
+      "4",
+      "13",
+      "15",
+      "7"
+    ],
+    "answer": 3,
+    "explanation": "The third side must be between 9 − 4 = 5 and 9 + 4 = 13."
+  },
+  {
+    "id": "math-g8-51",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Triangle angles",
+    "prompt": "An exterior angle of a triangle is 130°. One remote interior angle is 50°. What is the other?",
+    "options": [
+      "80°",
+      "50°",
+      "130°",
+      "180°"
+    ],
+    "answer": 0,
+    "explanation": "An exterior angle equals the sum of the two remote interior angles."
+  },
+  {
+    "id": "math-g8-52",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Pythagorean theorem",
+    "prompt": "A 13 m ladder leans on a wall with its foot 5 m from the wall. How high does it reach?",
+    "options": [
+      "8 m",
+      "12 m",
+      "18 m",
+      "144 m"
+    ],
+    "answer": 1,
+    "explanation": "√(13² − 5²) = √(169 − 25) = √144 = 12 m."
+  },
+  {
+    "id": "math-g8-53",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Pythagorean theorem",
+    "prompt": "Which set of lengths forms a right triangle?",
+    "options": [
+      "4, 5, 6",
+      "2, 3, 4",
+      "5, 12, 13",
+      "6, 7, 8"
+    ],
+    "answer": 2,
+    "explanation": "5² + 12² = 25 + 144 = 169 = 13²."
+  },
+  {
+    "id": "math-g8-54",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Probability",
+    "prompt": "Two coins are tossed. What is the probability of exactly one head?",
+    "options": [
+      "1/4",
+      "3/4",
+      "1/3",
+      "1/2"
+    ],
+    "answer": 3,
+    "explanation": "HT and TH are 2 of the 4 outcomes."
+  },
+  {
+    "id": "math-g8-55",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Probability",
+    "prompt": "A card is drawn from 10 cards numbered 1 to 10. What is P(even)?",
+    "options": [
+      "1/2",
+      "1/5",
+      "2/5",
+      "1/10"
+    ],
+    "answer": 0,
+    "explanation": "Five of the ten numbers are even."
+  },
+  {
+    "id": "math-g8-56",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Probability",
+    "prompt": "The probability of rain tomorrow is 0.3. What is the probability it will not rain?",
+    "options": [
+      "0.3",
+      "0.7",
+      "1.3",
+      "0"
+    ],
+    "answer": 1,
+    "explanation": "Complement: 1 − 0.3 = 0.7."
+  },
+  {
+    "id": "math-g8-57",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Probability",
+    "prompt": "Two dice are rolled. How many outcomes give a sum of 7?",
+    "options": [
+      "7",
+      "5",
+      "6",
+      "36"
+    ],
+    "answer": 2,
+    "explanation": "(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)."
+  },
+  {
+    "id": "math-g8-58",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Probability",
+    "prompt": "A survey of 200 students found 50 walk to school. Estimate the probability a student walks.",
+    "options": [
+      "1/2",
+      "1/50",
+      "50",
+      "1/4"
+    ],
+    "answer": 3,
+    "explanation": "50/200 = 1/4 (experimental probability)."
+  },
+  {
+    "id": "math-g8-59",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Variation",
+    "prompt": "A jeepney uses 1 liter of diesel for 8 km. How many liters for 56 km?",
+    "options": [
+      "7",
+      "8",
+      "64",
+      "48"
+    ],
+    "answer": 0,
+    "explanation": "56 ÷ 8 = 7 liters."
+  },
+  {
+    "id": "math-g8-60",
+    "subject": "math",
+    "grade": 8,
+    "topic": "Problem solving",
+    "prompt": "The sum of two numbers is 30 and their difference is 6. What is the larger number?",
+    "options": [
+      "12",
+      "18",
+      "24",
+      "15"
+    ],
+    "answer": 1,
+    "explanation": "x + y = 30 and x − y = 6 give 2x = 36, so x = 18."
   },
   {
     "id": "math-g9-01",
@@ -1366,6 +7424,756 @@
     "explanation": "An exponent of 1/3 means cube root. Three cubed is 27."
   },
   {
+    "id": "math-g9-11",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic equations",
+    "prompt": "Which equation is quadratic?",
+    "options": [
+      "3x − 4 = 0",
+      "x² + 3x − 4 = 0",
+      "x³ − 1 = 0",
+      "1/x + 2 = 0"
+    ],
+    "answer": 1,
+    "explanation": "A quadratic equation has 2 as its highest power of x."
+  },
+  {
+    "id": "math-g9-12",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic equations",
+    "prompt": "Write x(x − 4) = 5 in standard form.",
+    "options": [
+      "x² − 4x + 5 = 0",
+      "x² − 4 = 5",
+      "x² − 4x − 5 = 0",
+      "x² + 4x − 5 = 0"
+    ],
+    "answer": 2,
+    "explanation": "Expand: x² − 4x = 5, then subtract 5."
+  },
+  {
+    "id": "math-g9-13",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic equations",
+    "prompt": "Solve x² = 64.",
+    "options": [
+      "x = 8 only",
+      "x = 32",
+      "x = 4 or x = −4",
+      "x = 8 or x = −8"
+    ],
+    "answer": 3,
+    "explanation": "Take square roots of both sides: x = ±8."
+  },
+  {
+    "id": "math-g9-14",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic equations",
+    "prompt": "Solve (x − 5)² = 16.",
+    "options": [
+      "x = 9 or x = 1",
+      "x = 21 or x = −11",
+      "x = 9 only",
+      "x = 4 or x = −4"
+    ],
+    "answer": 0,
+    "explanation": "x − 5 = ±4, so x = 9 or x = 1."
+  },
+  {
+    "id": "math-g9-15",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic factoring",
+    "prompt": "Solve x² + 7x + 10 = 0.",
+    "options": [
+      "x = 2 or x = 5",
+      "x = −2 or x = −5",
+      "x = −1 or x = −10",
+      "x = 2 or x = −5"
+    ],
+    "answer": 1,
+    "explanation": "(x + 2)(x + 5) = 0 gives x = −2 or x = −5."
+  },
+  {
+    "id": "math-g9-16",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic factoring",
+    "prompt": "Solve x² − 4x = 0.",
+    "options": [
+      "x = 4 only",
+      "x = 2 or x = −2",
+      "x = 0 or x = 4",
+      "x = −4 or x = 0"
+    ],
+    "answer": 2,
+    "explanation": "Factor out x: x(x − 4) = 0."
+  },
+  {
+    "id": "math-g9-17",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic factoring",
+    "prompt": "Solve 2x² − 3x − 2 = 0.",
+    "options": [
+      "x = −2 or x = 1/2",
+      "x = 1 or x = −2",
+      "x = 3 or x = −2",
+      "x = 2 or x = −1/2"
+    ],
+    "answer": 3,
+    "explanation": "(2x + 1)(x − 2) = 0."
+  },
+  {
+    "id": "math-g9-18",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic formula",
+    "prompt": "In the quadratic formula for 3x² − 5x + 1 = 0, what is the value of b?",
+    "options": [
+      "−5",
+      "5",
+      "3",
+      "1"
+    ],
+    "answer": 0,
+    "explanation": "In ax² + bx + c = 0, b is the coefficient of x."
+  },
+  {
+    "id": "math-g9-19",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic formula",
+    "prompt": "Use the quadratic formula: what are the roots of x² − 2x − 2 = 0?",
+    "options": [
+      "2 ± √3",
+      "1 ± √3",
+      "1 ± √2",
+      "−1 ± √3"
+    ],
+    "answer": 1,
+    "explanation": "x = [2 ± √(4 + 8)]/2 = (2 ± 2√3)/2 = 1 ± √3."
+  },
+  {
+    "id": "math-g9-20",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Discriminant",
+    "prompt": "The discriminant of a quadratic is −16. What are its roots?",
+    "options": [
+      "Two equal real roots",
+      "Two distinct rational roots",
+      "Not real",
+      "Two irrational roots"
+    ],
+    "answer": 2,
+    "explanation": "A negative discriminant means there are no real roots."
+  },
+  {
+    "id": "math-g9-21",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Discriminant",
+    "prompt": "What kind of roots does x² − 5x + 6 = 0 have?",
+    "options": [
+      "Two equal roots",
+      "No real roots",
+      "Two irrational roots",
+      "Two distinct rational roots"
+    ],
+    "answer": 3,
+    "explanation": "D = 25 − 24 = 1, a positive perfect square."
+  },
+  {
+    "id": "math-g9-22",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Sum and product of roots",
+    "prompt": "What is the sum of the roots of x² − 9x + 14 = 0?",
+    "options": [
+      "9",
+      "−9",
+      "14",
+      "−14"
+    ],
+    "answer": 0,
+    "explanation": "Sum of roots = −b/a = −(−9)/1 = 9."
+  },
+  {
+    "id": "math-g9-23",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Sum and product of roots",
+    "prompt": "What is the product of the roots of 2x² + 3x − 10 = 0?",
+    "options": [
+      "5",
+      "−5",
+      "−3/2",
+      "−10"
+    ],
+    "answer": 1,
+    "explanation": "Product of roots = c/a = −10/2 = −5."
+  },
+  {
+    "id": "math-g9-24",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic inequalities",
+    "prompt": "Which value of x satisfies x² − 9 < 0?",
+    "options": [
+      "3",
+      "−4",
+      "2",
+      "5"
+    ],
+    "answer": 2,
+    "explanation": "x² < 9 means −3 < x < 3. Only 2 works."
+  },
+  {
+    "id": "math-g9-25",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic functions",
+    "prompt": "Which way does y = −2x² + 3 open?",
+    "options": [
+      "Upward",
+      "To the right",
+      "To the left",
+      "Downward"
+    ],
+    "answer": 3,
+    "explanation": "A negative a makes the parabola open downward."
+  },
+  {
+    "id": "math-g9-26",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic functions",
+    "prompt": "What is the axis of symmetry of y = x² − 6x + 5?",
+    "options": [
+      "x = 3",
+      "x = −3",
+      "x = 6",
+      "y = 5"
+    ],
+    "answer": 0,
+    "explanation": "x = −b/(2a) = 6/2 = 3."
+  },
+  {
+    "id": "math-g9-27",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic functions",
+    "prompt": "What is the minimum value of y = (x + 1)² − 4?",
+    "options": [
+      "1",
+      "−4",
+      "−1",
+      "4"
+    ],
+    "answer": 1,
+    "explanation": "The vertex is (−1, −4); the parabola opens up, so −4 is the minimum."
+  },
+  {
+    "id": "math-g9-28",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic functions",
+    "prompt": "What is the y-intercept of y = 2x² − 3x + 7?",
+    "options": [
+      "2",
+      "−3",
+      "7",
+      "0"
+    ],
+    "answer": 2,
+    "explanation": "Set x = 0: y = 7."
+  },
+  {
+    "id": "math-g9-29",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic graphs",
+    "prompt": "What are the zeros of y = (x − 1)(x + 6)?",
+    "options": [
+      "−1 and 6",
+      "1 and 6",
+      "−6 only",
+      "1 and −6"
+    ],
+    "answer": 3,
+    "explanation": "y = 0 when x − 1 = 0 or x + 6 = 0."
+  },
+  {
+    "id": "math-g9-30",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadratic graphs",
+    "prompt": "A ball's height is h = −5t² + 20t. When does it reach maximum height?",
+    "options": [
+      "t = 2",
+      "t = 4",
+      "t = 20",
+      "t = 5"
+    ],
+    "answer": 0,
+    "explanation": "t = −b/(2a) = −20/(−10) = 2."
+  },
+  {
+    "id": "math-g9-31",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Direct variation",
+    "prompt": "Which equation shows direct variation?",
+    "options": [
+      "y = 7/x",
+      "y = 7x",
+      "y = x + 7",
+      "xy = 7"
+    ],
+    "answer": 1,
+    "explanation": "Direct variation has the form y = kx."
+  },
+  {
+    "id": "math-g9-32",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Direct variation",
+    "prompt": "Pay varies directly with hours worked. 8 hours earn ₱640. How much do 5 hours earn?",
+    "options": [
+      "₱320",
+      "₱1,024",
+      "₱400",
+      "₱80"
+    ],
+    "answer": 2,
+    "explanation": "k = 640/8 = 80 per hour. 80 × 5 = ₱400."
+  },
+  {
+    "id": "math-g9-33",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Inverse variation",
+    "prompt": "Time to finish a job varies inversely with workers. 6 workers take 10 days. How long for 4 workers?",
+    "options": [
+      "6.7 days",
+      "8 days",
+      "40 days",
+      "15 days"
+    ],
+    "answer": 3,
+    "explanation": "k = 6 × 10 = 60 worker-days. 60 ÷ 4 = 15 days."
+  },
+  {
+    "id": "math-g9-34",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Joint variation",
+    "prompt": "z varies jointly with x and y. z = 24 when x = 2 and y = 3. What is k?",
+    "options": [
+      "4",
+      "6",
+      "12",
+      "48"
+    ],
+    "answer": 0,
+    "explanation": "z = kxy: 24 = k(6), so k = 4."
+  },
+  {
+    "id": "math-g9-35",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Combined variation",
+    "prompt": "Which equation says \"y varies directly with x and inversely with z\"?",
+    "options": [
+      "y = kxz",
+      "y = kx/z",
+      "y = kz/x",
+      "y = k/(xz)"
+    ],
+    "answer": 1,
+    "explanation": "Direct factors go in the numerator, inverse factors in the denominator."
+  },
+  {
+    "id": "math-g9-36",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Rational exponents",
+    "prompt": "What is 16^(3/4)?",
+    "options": [
+      "12",
+      "64",
+      "8",
+      "4"
+    ],
+    "answer": 2,
+    "explanation": "Fourth root of 16 is 2, and 2³ = 8."
+  },
+  {
+    "id": "math-g9-37",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Rational exponents",
+    "prompt": "Write √(x³) using a rational exponent.",
+    "options": [
+      "x^(2/3)",
+      "x^6",
+      "x^(1/3)",
+      "x^(3/2)"
+    ],
+    "answer": 3,
+    "explanation": "The index 2 goes in the denominator: x^(3/2)."
+  },
+  {
+    "id": "math-g9-38",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Rational exponents",
+    "prompt": "Simplify x^(1/2) · x^(1/3).",
+    "options": [
+      "x^(5/6)",
+      "x^(1/6)",
+      "x^(2/5)",
+      "x^(1/5)"
+    ],
+    "answer": 0,
+    "explanation": "Add exponents: 1/2 + 1/3 = 5/6."
+  },
+  {
+    "id": "math-g9-39",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Radicals",
+    "prompt": "Simplify √72.",
+    "options": [
+      "2√6",
+      "6√2",
+      "36√2",
+      "8√3"
+    ],
+    "answer": 1,
+    "explanation": "√72 = √(36 × 2) = 6√2."
+  },
+  {
+    "id": "math-g9-40",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Radicals",
+    "prompt": "What is 3√5 + 2√5?",
+    "options": [
+      "5√10",
+      "6√5",
+      "5√5",
+      "6√25"
+    ],
+    "answer": 2,
+    "explanation": "Add like radicals the way you add like terms: 3√5 + 2√5 = 5√5."
+  },
+  {
+    "id": "math-g9-41",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Radicals",
+    "prompt": "What is √3 × √12?",
+    "options": [
+      "√15",
+      "36",
+      "3√2",
+      "6"
+    ],
+    "answer": 3,
+    "explanation": "√36 = 6."
+  },
+  {
+    "id": "math-g9-42",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Radicals",
+    "prompt": "Rationalize 6/√3.",
+    "options": [
+      "2√3",
+      "6√3",
+      "√3/6",
+      "3√2"
+    ],
+    "answer": 0,
+    "explanation": "Multiply by √3/√3: 6√3/3 = 2√3."
+  },
+  {
+    "id": "math-g9-43",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Radical equations",
+    "prompt": "Solve √(x + 4) = 5.",
+    "options": [
+      "x = 1",
+      "x = 21",
+      "x = 29",
+      "x = 9"
+    ],
+    "answer": 1,
+    "explanation": "Square both sides: x + 4 = 25, so x = 21."
+  },
+  {
+    "id": "math-g9-44",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadrilaterals",
+    "prompt": "Which property is true of every parallelogram?",
+    "options": [
+      "All angles are right angles",
+      "Diagonals are always equal",
+      "Opposite sides are equal",
+      "All sides are equal"
+    ],
+    "answer": 2,
+    "explanation": "Opposite sides of a parallelogram are parallel and congruent."
+  },
+  {
+    "id": "math-g9-45",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadrilaterals",
+    "prompt": "In a parallelogram, one angle is 70°. What is a consecutive angle?",
+    "options": [
+      "70°",
+      "20°",
+      "290°",
+      "110°"
+    ],
+    "answer": 3,
+    "explanation": "Consecutive angles of a parallelogram are supplementary."
+  },
+  {
+    "id": "math-g9-46",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadrilaterals",
+    "prompt": "Which quadrilateral has diagonals that are perpendicular but not necessarily equal?",
+    "options": [
+      "Rhombus",
+      "Rectangle",
+      "Trapezoid",
+      "Isosceles trapezoid"
+    ],
+    "answer": 0,
+    "explanation": "A rhombus's diagonals bisect each other at right angles."
+  },
+  {
+    "id": "math-g9-47",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Quadrilaterals",
+    "prompt": "The bases of a trapezoid are 10 cm and 16 cm. How long is its midsegment?",
+    "options": [
+      "26 cm",
+      "13 cm",
+      "6 cm",
+      "16 cm"
+    ],
+    "answer": 1,
+    "explanation": "Midsegment = (10 + 16)/2 = 13 cm."
+  },
+  {
+    "id": "math-g9-48",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Similar triangles",
+    "prompt": "Triangles ABC and DEF are similar. AB = 4, DE = 10 and BC = 6. What is EF?",
+    "options": [
+      "12",
+      "24",
+      "15",
+      "2.4"
+    ],
+    "answer": 2,
+    "explanation": "Scale factor = 10/4 = 2.5. EF = 6 × 2.5 = 15."
+  },
+  {
+    "id": "math-g9-49",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Similar triangles",
+    "prompt": "A 1.5 m post casts a 2 m shadow. At the same time a tree casts a 12 m shadow. How tall is the tree?",
+    "options": [
+      "16 m",
+      "8 m",
+      "18 m",
+      "9 m"
+    ],
+    "answer": 3,
+    "explanation": "1.5/2 = h/12, so h = 9 m."
+  },
+  {
+    "id": "math-g9-50",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Similar triangles",
+    "prompt": "Which similarity theorem uses two pairs of equal angles?",
+    "options": [
+      "AA",
+      "SSS",
+      "SAS",
+      "HL"
+    ],
+    "answer": 0,
+    "explanation": "Two pairs of equal angles guarantee similar triangles (AA)."
+  },
+  {
+    "id": "math-g9-51",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "In a right triangle, opposite = 3, adjacent = 4, hypotenuse = 5. What is tan θ?",
+    "options": [
+      "4/3",
+      "3/4",
+      "3/5",
+      "4/5"
+    ],
+    "answer": 1,
+    "explanation": "tan = opposite/adjacent."
+  },
+  {
+    "id": "math-g9-52",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "What is the exact value of sin 30°?",
+    "options": [
+      "√3/2",
+      "√2/2",
+      "1/2",
+      "1"
+    ],
+    "answer": 2,
+    "explanation": "In a 30-60-90 triangle, the side opposite 30° is half the hypotenuse."
+  },
+  {
+    "id": "math-g9-53",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "What is the exact value of cos 60°?",
+    "options": [
+      "√3/2",
+      "0",
+      "√3",
+      "1/2"
+    ],
+    "answer": 3,
+    "explanation": "cos 60° = adjacent/hypotenuse = 1/2."
+  },
+  {
+    "id": "math-g9-54",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "What is tan 45°?",
+    "options": [
+      "1",
+      "0",
+      "√2",
+      "1/2"
+    ],
+    "answer": 0,
+    "explanation": "In a 45-45-90 triangle the legs are equal, so tan 45° = 1."
+  },
+  {
+    "id": "math-g9-55",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "A ramp makes a 30° angle with the ground and is 8 m long. How high does it rise?",
+    "options": [
+      "8√3 m",
+      "4 m",
+      "4√3 m",
+      "16 m"
+    ],
+    "answer": 1,
+    "explanation": "Height = 8 × sin 30° = 8 × 1/2 = 4 m."
+  },
+  {
+    "id": "math-g9-56",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Trigonometry",
+    "prompt": "Which identity is always true?",
+    "options": [
+      "sin θ + cos θ = 1",
+      "tan θ = cos θ / sin θ",
+      "sin²θ + cos²θ = 1",
+      "sin²θ − cos²θ = 1"
+    ],
+    "answer": 2,
+    "explanation": "This Pythagorean identity follows from a² + b² = c²."
+  },
+  {
+    "id": "math-g9-57",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Angles of elevation",
+    "prompt": "From a point on the ground, you look up at a rooftop. The angle you look up is called the angle of __.",
+    "options": [
+      "Depression",
+      "Reflection",
+      "Incidence",
+      "Elevation"
+    ],
+    "answer": 3,
+    "explanation": "Looking up from the horizontal is an angle of elevation."
+  },
+  {
+    "id": "math-g9-58",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Special right triangles",
+    "prompt": "In a 45-45-90 triangle, each leg is 5. What is the hypotenuse?",
+    "options": [
+      "5√2",
+      "10",
+      "5√3",
+      "25"
+    ],
+    "answer": 0,
+    "explanation": "The hypotenuse is leg × √2."
+  },
+  {
+    "id": "math-g9-59",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Law of sines",
+    "prompt": "Which law relates a/sin A = b/sin B = c/sin C in any triangle?",
+    "options": [
+      "Law of cosines",
+      "Law of sines",
+      "Pythagorean theorem",
+      "Triangle inequality"
+    ],
+    "answer": 1,
+    "explanation": "This ratio of sides to sines of opposite angles is the law of sines."
+  },
+  {
+    "id": "math-g9-60",
+    "subject": "math",
+    "grade": 9,
+    "topic": "Problem solving",
+    "prompt": "A rectangular garden has area 60 m² and its length is 4 m more than its width. What is the width?",
+    "options": [
+      "10 m",
+      "15 m",
+      "6 m",
+      "4 m"
+    ],
+    "answer": 2,
+    "explanation": "w(w + 4) = 60 → w² + 4w − 60 = 0 → (w + 10)(w − 6) = 0, so w = 6."
+  },
+  {
     "id": "math-g10-01",
     "subject": "math",
     "grade": 10,
@@ -1514,5 +8322,755 @@
     ],
     "answer": 0,
     "explanation": "With six ordered values, average the two middle ones: (6 + 8)/2 = 7."
+  },
+  {
+    "id": "math-g10-11",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic sequences",
+    "prompt": "What is the common difference of 20, 14, 8, 2, …?",
+    "options": [
+      "6",
+      "−4",
+      "−6",
+      "2"
+    ],
+    "answer": 2,
+    "explanation": "Each term is 6 less than the one before."
+  },
+  {
+    "id": "math-g10-12",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic sequences",
+    "prompt": "Find the 20th term of 5, 9, 13, ….",
+    "options": [
+      "85",
+      "77",
+      "100",
+      "81"
+    ],
+    "answer": 3,
+    "explanation": "aₙ = 5 + (20 − 1)(4) = 5 + 76 = 81."
+  },
+  {
+    "id": "math-g10-13",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic sequences",
+    "prompt": "Insert the arithmetic mean between 8 and 20.",
+    "options": [
+      "14",
+      "12",
+      "16",
+      "28"
+    ],
+    "answer": 0,
+    "explanation": "The arithmetic mean is (8 + 20)/2 = 14."
+  },
+  {
+    "id": "math-g10-14",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic series",
+    "prompt": "What is the sum of the first 10 terms of 2, 5, 8, …?",
+    "options": [
+      "29",
+      "155",
+      "145",
+      "290"
+    ],
+    "answer": 1,
+    "explanation": "S = 10/2 × [2(2) + 9(3)] = 5 × 31 = 155."
+  },
+  {
+    "id": "math-g10-15",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic series",
+    "prompt": "What is 1 + 2 + 3 + … + 100?",
+    "options": [
+      "5,000",
+      "10,100",
+      "5,050",
+      "4,950"
+    ],
+    "answer": 2,
+    "explanation": "S = 100 × 101 / 2 = 5,050."
+  },
+  {
+    "id": "math-g10-16",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arithmetic series",
+    "prompt": "A student saves ₱10 in week 1, ₱15 in week 2, ₱20 in week 3, and so on. How much in 8 weeks?",
+    "options": [
+      "₱45",
+      "₱180",
+      "₱200",
+      "₱220"
+    ],
+    "answer": 3,
+    "explanation": "S = 8/2 × (10 + 45) = 4 × 55 = ₱220."
+  },
+  {
+    "id": "math-g10-17",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric sequences",
+    "prompt": "What is the common ratio of 81, 27, 9, 3, …?",
+    "options": [
+      "1/3",
+      "3",
+      "−3",
+      "−54"
+    ],
+    "answer": 0,
+    "explanation": "Each term is the previous one times 1/3."
+  },
+  {
+    "id": "math-g10-18",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric sequences",
+    "prompt": "Find the 6th term of 3, 6, 12, ….",
+    "options": [
+      "48",
+      "96",
+      "192",
+      "18"
+    ],
+    "answer": 1,
+    "explanation": "aₙ = 3 × 2⁵ = 3 × 32 = 96."
+  },
+  {
+    "id": "math-g10-19",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric sequences",
+    "prompt": "Insert the positive geometric mean between 4 and 36.",
+    "options": [
+      "20",
+      "16",
+      "12",
+      "9"
+    ],
+    "answer": 2,
+    "explanation": "The geometric mean is √(4 × 36) = √144 = 12."
+  },
+  {
+    "id": "math-g10-20",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric series",
+    "prompt": "What is the sum of 2 + 6 + 18 + 54 + 162?",
+    "options": [
+      "240",
+      "486",
+      "162",
+      "242"
+    ],
+    "answer": 3,
+    "explanation": "S = 2(3⁵ − 1)/(3 − 1) = 242."
+  },
+  {
+    "id": "math-g10-21",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric series",
+    "prompt": "What is the sum of the infinite series 8 + 4 + 2 + 1 + …?",
+    "options": [
+      "16",
+      "15",
+      "∞",
+      "12"
+    ],
+    "answer": 0,
+    "explanation": "S = a/(1 − r) = 8/(1 − 1/2) = 16."
+  },
+  {
+    "id": "math-g10-22",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Geometric sequences",
+    "prompt": "A culture of 500 bacteria doubles every hour. How many are there after 4 hours?",
+    "options": [
+      "4,000",
+      "8,000",
+      "2,500",
+      "2,000"
+    ],
+    "answer": 1,
+    "explanation": "500 × 2⁴ = 500 × 16 = 8,000."
+  },
+  {
+    "id": "math-g10-23",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Sequences",
+    "prompt": "Which sequence is harmonic?",
+    "options": [
+      "1, 2, 4, 8, …",
+      "1, 3, 5, 7, …",
+      "1, 1/2, 1/3, 1/4, …",
+      "1, 4, 9, 16, …"
+    ],
+    "answer": 2,
+    "explanation": "A harmonic sequence is made of reciprocals of an arithmetic sequence."
+  },
+  {
+    "id": "math-g10-24",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial division",
+    "prompt": "Divide (x² + 5x + 6) by (x + 2).",
+    "options": [
+      "x + 2",
+      "x − 3",
+      "x + 7",
+      "x + 3"
+    ],
+    "answer": 3,
+    "explanation": "x² + 5x + 6 = (x + 2)(x + 3)."
+  },
+  {
+    "id": "math-g10-25",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial division",
+    "prompt": "Using synthetic division, what is the quotient of (x³ − 1) ÷ (x − 1)?",
+    "options": [
+      "x² + x + 1",
+      "x² − x + 1",
+      "x² + 1",
+      "x² − 1"
+    ],
+    "answer": 0,
+    "explanation": "x³ − 1 = (x − 1)(x² + x + 1)."
+  },
+  {
+    "id": "math-g10-26",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial remainder",
+    "prompt": "Find the remainder when 2x³ − 3x + 4 is divided by x + 2.",
+    "options": [
+      "14",
+      "−6",
+      "−18",
+      "6"
+    ],
+    "answer": 1,
+    "explanation": "Remainder theorem: P(−2) = 2(−8) + 6 + 4 = −6."
+  },
+  {
+    "id": "math-g10-27",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial roots",
+    "prompt": "Is x + 1 a factor of x³ + 1?",
+    "options": [
+      "No, because P(1) = 2",
+      "Yes, because P(1) = 0",
+      "Yes, because P(−1) = 0",
+      "No, because P(−1) = 2"
+    ],
+    "answer": 2,
+    "explanation": "P(−1) = −1 + 1 = 0, so by the factor theorem it is a factor."
+  },
+  {
+    "id": "math-g10-28",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial roots",
+    "prompt": "What are the roots of x³ − 4x = 0?",
+    "options": [
+      "0 and 4",
+      "2 and −2 only",
+      "0, 4, −4",
+      "0, 2, −2"
+    ],
+    "answer": 3,
+    "explanation": "x(x² − 4) = x(x − 2)(x + 2) = 0."
+  },
+  {
+    "id": "math-g10-29",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial roots",
+    "prompt": "How many roots (counting multiplicity) does a 5th-degree polynomial equation have?",
+    "options": [
+      "5",
+      "4",
+      "6",
+      "Exactly 1"
+    ],
+    "answer": 0,
+    "explanation": "By the fundamental theorem of algebra, a degree-n equation has n roots."
+  },
+  {
+    "id": "math-g10-30",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial roots",
+    "prompt": "By the rational root theorem, which could be a root of x³ − 2x² − 5x + 6 = 0?",
+    "options": [
+      "4",
+      "3",
+      "5",
+      "1/2"
+    ],
+    "answer": 1,
+    "explanation": "Possible rational roots divide 6: ±1, ±2, ±3, ±6. And P(3) = 27 − 18 − 15 + 6 = 0."
+  },
+  {
+    "id": "math-g10-31",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial functions",
+    "prompt": "What is the degree of P(x) = 4x³ − x⁵ + 2?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "2"
+    ],
+    "answer": 2,
+    "explanation": "The degree is the highest exponent, 5."
+  },
+  {
+    "id": "math-g10-32",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial functions",
+    "prompt": "P(x) = −2x⁴ + x. As x grows very large, what happens to P(x)?",
+    "options": [
+      "It goes to positive infinity",
+      "It approaches 0",
+      "It approaches −2",
+      "It goes to negative infinity"
+    ],
+    "answer": 3,
+    "explanation": "The leading term −2x⁴ is even degree with a negative coefficient: both ends go down."
+  },
+  {
+    "id": "math-g10-33",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Polynomial functions",
+    "prompt": "At a root of multiplicity 2, how does the graph behave?",
+    "options": [
+      "It touches the x-axis and turns back",
+      "It crosses the x-axis",
+      "It never reaches the x-axis",
+      "It becomes a vertical line"
+    ],
+    "answer": 0,
+    "explanation": "Even multiplicity: the graph is tangent to the x-axis there."
+  },
+  {
+    "id": "math-g10-34",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circle angles",
+    "prompt": "A central angle intercepts a 110° arc. What is the central angle?",
+    "options": [
+      "55°",
+      "110°",
+      "220°",
+      "70°"
+    ],
+    "answer": 1,
+    "explanation": "A central angle equals its intercepted arc."
+  },
+  {
+    "id": "math-g10-35",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circle angles",
+    "prompt": "An angle inscribed in a semicircle measures __.",
+    "options": [
+      "180°",
+      "45°",
+      "90°",
+      "60°"
+    ],
+    "answer": 2,
+    "explanation": "It intercepts a 180° arc, so it is 180°/2 = 90°."
+  },
+  {
+    "id": "math-g10-36",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circle angles",
+    "prompt": "A quadrilateral is inscribed in a circle. One angle is 75°. What is the opposite angle?",
+    "options": [
+      "75°",
+      "285°",
+      "15°",
+      "105°"
+    ],
+    "answer": 3,
+    "explanation": "Opposite angles of a cyclic quadrilateral are supplementary."
+  },
+  {
+    "id": "math-g10-37",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circles",
+    "prompt": "A tangent line and a radius meet at the point of tangency. What angle do they form?",
+    "options": [
+      "90°",
+      "45°",
+      "180°",
+      "60°"
+    ],
+    "answer": 0,
+    "explanation": "A tangent is perpendicular to the radius at the point of tangency."
+  },
+  {
+    "id": "math-g10-38",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circles",
+    "prompt": "Two tangent segments are drawn to a circle from the same outside point. One is 9 cm. How long is the other?",
+    "options": [
+      "18 cm",
+      "9 cm",
+      "4.5 cm",
+      "It cannot be found"
+    ],
+    "answer": 1,
+    "explanation": "Tangent segments from the same external point are congruent."
+  },
+  {
+    "id": "math-g10-39",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Circles",
+    "prompt": "Two chords intersect inside a circle. One is split into 4 and 6, the other into 3 and x. What is x?",
+    "options": [
+      "7",
+      "4.5",
+      "8",
+      "2"
+    ],
+    "answer": 2,
+    "explanation": "Intersecting chords: 4 × 6 = 3 × x, so x = 8."
+  },
+  {
+    "id": "math-g10-40",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Arc length",
+    "prompt": "A circle has radius 6 cm. What is the length of a 60° arc? (Use π.)",
+    "options": [
+      "6π cm",
+      "12π cm",
+      "π cm",
+      "2π cm"
+    ],
+    "answer": 3,
+    "explanation": "Arc length = (60/360) × 2π(6) = 2π cm."
+  },
+  {
+    "id": "math-g10-41",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Sector area",
+    "prompt": "What is the area of a 90° sector of a circle with radius 4 m? (Use π.)",
+    "options": [
+      "4π m²",
+      "16π m²",
+      "8π m²",
+      "2π m²"
+    ],
+    "answer": 0,
+    "explanation": "Area = (90/360) × π(4²) = 4π m²."
+  },
+  {
+    "id": "math-g10-42",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Coordinate geometry",
+    "prompt": "What is the midpoint of (2, −4) and (8, 6)?",
+    "options": [
+      "(10, 2)",
+      "(5, 1)",
+      "(3, 5)",
+      "(6, 10)"
+    ],
+    "answer": 1,
+    "explanation": "Average the coordinates: ((2 + 8)/2, (−4 + 6)/2)."
+  },
+  {
+    "id": "math-g10-43",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Coordinate geometry",
+    "prompt": "What is the center and radius of (x − 3)² + (y + 2)² = 25?",
+    "options": [
+      "Center (−3, 2), radius 5",
+      "Center (3, −2), radius 25",
+      "Center (3, −2), radius 5",
+      "Center (3, 2), radius 5"
+    ],
+    "answer": 2,
+    "explanation": "Compare with (x − h)² + (y − k)² = r²."
+  },
+  {
+    "id": "math-g10-44",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Coordinate geometry",
+    "prompt": "Which is the equation of a circle with center (0, 0) and radius 7?",
+    "options": [
+      "x² + y² = 7",
+      "x + y = 49",
+      "(x − 7)² + y² = 0",
+      "x² + y² = 49"
+    ],
+    "answer": 3,
+    "explanation": "x² + y² = r² with r = 7."
+  },
+  {
+    "id": "math-g10-45",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Coordinate geometry",
+    "prompt": "What is the distance between (−1, −1) and (5, 7)?",
+    "options": [
+      "10",
+      "14",
+      "√28",
+      "8"
+    ],
+    "answer": 0,
+    "explanation": "√(6² + 8²) = √100 = 10."
+  },
+  {
+    "id": "math-g10-46",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Permutations",
+    "prompt": "How many ways can a president, vice-president and secretary be chosen from 8 students?",
+    "options": [
+      "56",
+      "336",
+      "24",
+      "512"
+    ],
+    "answer": 1,
+    "explanation": "Order matters: P(8, 3) = 8 × 7 × 6 = 336."
+  },
+  {
+    "id": "math-g10-47",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Permutations",
+    "prompt": "How many distinct arrangements can be made from the letters of LOLO?",
+    "options": [
+      "24",
+      "12",
+      "6",
+      "4"
+    ],
+    "answer": 2,
+    "explanation": "4!/(2! × 2!) = 24/4 = 6."
+  },
+  {
+    "id": "math-g10-48",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Permutations",
+    "prompt": "In how many ways can 5 people sit around a round table?",
+    "options": [
+      "120",
+      "60",
+      "5",
+      "24"
+    ],
+    "answer": 3,
+    "explanation": "Circular permutation: (5 − 1)! = 24."
+  },
+  {
+    "id": "math-g10-49",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Combinations",
+    "prompt": "How many ways can a committee of 3 be chosen from 7 people?",
+    "options": [
+      "35",
+      "210",
+      "21",
+      "7"
+    ],
+    "answer": 0,
+    "explanation": "Order does not matter: C(7, 3) = 35."
+  },
+  {
+    "id": "math-g10-50",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Combinations",
+    "prompt": "Which situation is a combination, not a permutation?",
+    "options": [
+      "Assigning 1st, 2nd and 3rd place",
+      "Choosing 4 toppings for a pizza",
+      "Making a 4-digit PIN",
+      "Seating guests in a row"
+    ],
+    "answer": 1,
+    "explanation": "Toppings have no order; the others depend on order."
+  },
+  {
+    "id": "math-g10-51",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Combinations",
+    "prompt": "How many diagonals does a decagon have?",
+    "options": [
+      "45",
+      "10",
+      "35",
+      "90"
+    ],
+    "answer": 2,
+    "explanation": "C(10, 2) − 10 sides = 45 − 10 = 35."
+  },
+  {
+    "id": "math-g10-52",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Counting",
+    "prompt": "A shirt comes in 4 colors and 3 sizes. How many different choices are there?",
+    "options": [
+      "7",
+      "64",
+      "81",
+      "12"
+    ],
+    "answer": 3,
+    "explanation": "Fundamental counting principle: 4 × 3 = 12."
+  },
+  {
+    "id": "math-g10-53",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Probability",
+    "prompt": "A card is drawn from a standard 52-card deck. What is P(heart or king)?",
+    "options": [
+      "16/52",
+      "17/52",
+      "13/52",
+      "4/52"
+    ],
+    "answer": 0,
+    "explanation": "13 hearts + 4 kings − 1 king of hearts = 16 cards."
+  },
+  {
+    "id": "math-g10-54",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Probability",
+    "prompt": "Two events cannot happen at the same time. What are they called?",
+    "options": [
+      "Independent",
+      "Mutually exclusive",
+      "Equally likely",
+      "Dependent"
+    ],
+    "answer": 1,
+    "explanation": "Mutually exclusive events have no outcomes in common."
+  },
+  {
+    "id": "math-g10-55",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Probability",
+    "prompt": "A bag has 4 red and 6 blue balls. Two are drawn without replacement. What is P(both red)?",
+    "options": [
+      "4/25",
+      "1/5",
+      "2/15",
+      "3/10"
+    ],
+    "answer": 2,
+    "explanation": "4/10 × 3/9 = 12/90 = 2/15."
+  },
+  {
+    "id": "math-g10-56",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Conditional probability",
+    "prompt": "P(A and B) = 0.12 and P(B) = 0.4. What is P(A | B)?",
+    "options": [
+      "0.048",
+      "0.52",
+      "0.28",
+      "0.3"
+    ],
+    "answer": 3,
+    "explanation": "P(A | B) = P(A and B)/P(B) = 0.12/0.4 = 0.3."
+  },
+  {
+    "id": "math-g10-57",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Measures of position",
+    "prompt": "Data in order: 3, 5, 7, 8, 10, 12, 15. What is the first quartile, Q1?",
+    "options": [
+      "5",
+      "7",
+      "3",
+      "4"
+    ],
+    "answer": 0,
+    "explanation": "The median is 8. The lower half 3, 5, 7 has median 5."
+  },
+  {
+    "id": "math-g10-58",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Measures of position",
+    "prompt": "A score is at the 90th percentile. What does that mean?",
+    "options": [
+      "It is 90 points",
+      "It is higher than about 90% of the scores",
+      "It is 90% correct",
+      "Only 90 students took the test"
+    ],
+    "answer": 1,
+    "explanation": "A percentile tells the percent of data at or below a value."
+  },
+  {
+    "id": "math-g10-59",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Statistics",
+    "prompt": "What is the interquartile range if Q1 = 12 and Q3 = 30?",
+    "options": [
+      "42",
+      "21",
+      "18",
+      "9"
+    ],
+    "answer": 2,
+    "explanation": "IQR = Q3 − Q1 = 30 − 12 = 18."
+  },
+  {
+    "id": "math-g10-60",
+    "subject": "math",
+    "grade": 10,
+    "topic": "Problem solving",
+    "prompt": "A theater has 20 seats in the first row and each row has 2 more seats than the one in front. How many seats are in row 15?",
+    "options": [
+      "50",
+      "46",
+      "34",
+      "48"
+    ],
+    "answer": 3,
+    "explanation": "a₁₅ = 20 + 14 × 2 = 48."
   }
 ]
