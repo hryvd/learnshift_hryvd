@@ -59,7 +59,7 @@
     "lint": "expo lint",
     "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
-    "test:local": "node scripts/validate-content.mjs && node scripts/test-learning-break.mjs && node scripts/test-credential-storage.mjs",
+    "test:local": "node scripts/validate-content.mjs && npx -y tsx --tsconfig tsconfig.json scripts/test-question-rotation.ts && node scripts/test-learning-break.mjs && node scripts/test-credential-storage.mjs",
     "test:database": "node scripts/test-database.mjs"
   },
   "private": true
