@@ -420,6 +420,8 @@ const fil: Strings = {
     sheetSub: 'Sa malusog na araw lang galing ang barya',
     newBuilt: (n) => `Nakatayo na ang ${n}!`,
     hint: 'I-pinch at i-drag para tumingin',
+    progress: (b, n) => `${b} sa ${n} ang nakatayo · lumalago tuwing magandang araw`,
+    complete: 'Buo na ang isla mo',
   },
   how: {
     title: 'Paano lumalago ang isla',
