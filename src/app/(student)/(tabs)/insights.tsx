@@ -19,19 +19,33 @@ import { heatmapMonths, seedHeatmap } from '@/data/seed';
 import { SHORT } from '@/data/skills';
 import { IS_PITCH } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
+import { flushStudent, pullStudent } from '@/services/backend/sync';
+import { reportNow } from '@/services/monitor';
+import { useDevice } from '@/services/monitor/bridge';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 import { useWeek, weeklyGrade, learnHeatmap, masteryGain } from '@/hooks/useWeek';
 import { formatDuration, useT, useL } from '@/i18n/useT';
-import { useAppStore } from '@/store/useAppStore';
+import { todayKey, useAppStore } from '@/store/useAppStore';
+import { useAuth } from '@/store/useAuth';
 
 const WEEKS = 22;
+
+async function refreshInsights() {
+  await useDevice.getState().refresh();
+  const id = useAuth.getState().profile?.id;
+  if (IS_PITCH || !id) return;
+  await reportNow().catch(() => {});
+  await flushStudent(id).catch(() => {});
+  await pullStudent(id);
+}
 
 export default function Insights() {
   const { c } = useTheme();
   const t = useT();
   const L = useL();
   const week = useWeek();
+  const breaksToday = useAppStore((s) => (s.breaksDay === todayKey() ? s.breaksToday : 0));
   const mastery = useAppStore((s) => s.mastery);
   const feed = useAppStore((s) => s.feed);
   const learnDays = useAppStore((s) => s.learnDays);
@@ -59,6 +73,7 @@ export default function Insights() {
   return (
     <Screen
       tabs
+      onRefresh={refreshInsights}
       header={
         <LargeTitleHeader
           title={t.insights.title}
@@ -116,8 +131,8 @@ export default function Insights() {
         />
         <StatTile
           label={t.insights.breaks}
-          value={`${week.breaks}/${week.breakTarget}`}
-          caption={t.insights.taken}
+          value={week.breaks}
+          caption={breaksToday > 0 ? `${breaksToday} ${t.common.today.toLowerCase()} · ${t.insights.thisWeek}` : t.insights.taken}
           icon={<Lightning size={16} weight="fill" color={c.accent} />}
           style={styles.flex}
         />

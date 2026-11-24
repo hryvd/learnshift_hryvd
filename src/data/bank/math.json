@@ -4,7 +4,7 @@
     "subject": "math",
     "grade": 1,
     "topic": "Counting",
-    "prompt": "What number comes after 8?",
+    "prompt": "Count the stars. What number comes after 8?",
     "options": [
       "6",
       "10",
@@ -12,7 +12,8 @@
       "7"
     ],
     "answer": 2,
-    "explanation": "Count forward: 7, 8, 9. Nine comes after eight."
+    "explanation": "Count forward: 7, 8, 9. Nine comes after eight.",
+    "visual": { "kind": "count", "item": "star", "count": 8, "askNext": true }
   },
   {
     "id": "math-g1-02",
@@ -27,7 +28,8 @@
       "5"
     ],
     "answer": 3,
-    "explanation": "Start at 3 and count 2 more: 4, 5."
+    "explanation": "Start at 3 and count 2 more: 4, 5.",
+    "visual": { "kind": "count", "item": "pencil", "count": 3, "addCount": 2 }
   },
   {
     "id": "math-g1-03",
@@ -42,7 +44,8 @@
       "4"
     ],
     "answer": 0,
-    "explanation": "Taking 2 away from 7 leaves 5."
+    "explanation": "Taking 2 away from 7 leaves 5.",
+    "visual": { "kind": "count", "item": "banana", "count": 7, "crossOut": 2 }
   },
   {
     "id": "math-g1-04",
@@ -64,7 +67,7 @@
     "subject": "math",
     "grade": 1,
     "topic": "Shapes",
-    "prompt": "Which shape has 3 straight sides?",
+    "prompt": "Look at the shape in the picture. What is it called?",
     "options": [
       "Square",
       "Rectangle",
@@ -72,7 +75,8 @@
       "Circle"
     ],
     "answer": 2,
-    "explanation": "A triangle has three sides and three corners."
+    "explanation": "A triangle has three sides and three corners.",
+    "visual": { "kind": "shape", "shape": "triangle" }
   },
   {
     "id": "math-g1-06",
@@ -102,14 +106,15 @@
       "0"
     ],
     "answer": 0,
-    "explanation": "Fourteen is 1 ten and 4 ones."
+    "explanation": "Fourteen is 1 ten and 4 ones.",
+    "visual": { "kind": "count", "item": "block", "count": 14, "groupSize": 10 }
   },
   {
     "id": "math-g1-08",
     "subject": "math",
     "grade": 1,
     "topic": "Time",
-    "prompt": "A clock's short hand points to 3 and its long hand to 12. What time is it?",
+    "prompt": "Look at the clock. What time is it?",
     "options": [
       "9 o'clock",
       "3 o'clock",
@@ -117,14 +122,15 @@
       "6 o'clock"
     ],
     "answer": 1,
-    "explanation": "The short hand gives the hour. The long hand at 12 means exactly that hour."
+    "explanation": "The short hand gives the hour. The long hand at 12 means exactly that hour.",
+    "visual": { "kind": "clock", "hour": 3, "minute": 0 }
   },
   {
     "id": "math-g1-09",
     "subject": "math",
     "grade": 1,
     "topic": "Length",
-    "prompt": "Which tool helps you measure the length of a pencil?",
+    "prompt": "Look at this tool. What is it called and used to measure length?",
     "options": [
       "Clock",
       "Thermometer",
@@ -132,7 +138,8 @@
       "Cup"
     ],
     "answer": 2,
-    "explanation": "A ruler measures length using marks such as centimeters."
+    "explanation": "A ruler measures length using marks such as centimeters.",
+    "visual": { "kind": "scene", "id": "ruler" }
   },
   {
     "id": "math-g1-10",
@@ -147,7 +154,8 @@
       "2"
     ],
     "answer": 3,
-    "explanation": "Give each child one cookie twice. Each gets two."
+    "explanation": "Give each child one cookie twice. Each gets two.",
+    "visual": { "kind": "count", "item": "cookie", "count": 4, "groupSize": 2 }
   },
   {
     "id": "math-g2-01",
@@ -207,7 +215,8 @@
       "7"
     ],
     "answer": 2,
-    "explanation": "Three equal groups of four are 4 + 4 + 4 = 12."
+    "explanation": "Three equal groups of four are 4 + 4 + 4 = 12.",
+    "visual": { "kind": "count", "item": "marble", "count": 12, "groupSize": 4 }
   },
   {
     "id": "math-g2-05",
@@ -229,7 +238,7 @@
     "subject": "math",
     "grade": 2,
     "topic": "Fractions",
-    "prompt": "A sandwich is cut into 2 equal pieces. What fraction is one piece?",
+    "prompt": "Look at the shaded piece of the circle. What fraction is shown?",
     "options": [
       "1/2",
       "1/3",
@@ -237,7 +246,8 @@
       "2/1"
     ],
     "answer": 0,
-    "explanation": "One of two equal pieces is one-half."
+    "explanation": "One of two equal pieces is one-half.",
+    "visual": { "kind": "fraction", "parts": 2, "filled": 1, "style": "pie" }
   },
   {
     "id": "math-g2-07",
@@ -357,7 +367,8 @@
       "3/4"
     ],
     "answer": 3,
-    "explanation": "The pieces are the same size. Three fourths is more pieces than one fourth."
+    "explanation": "The pieces are the same size. Three fourths is more pieces than one fourth.",
+    "visual": { "kind": "fraction", "parts": 4, "filled": 3, "style": "bar", "compareParts": 4, "compareFilled": 1 }
   },
   {
     "id": "math-g3-05",
@@ -372,7 +383,8 @@
       "15 cm"
     ],
     "answer": 0,
-    "explanation": "Perimeter is the total side length: 5 + 5 + 5 + 5 = 20 cm."
+    "explanation": "Perimeter is the total side length: 5 + 5 + 5 + 5 = 20 cm.",
+    "visual": { "kind": "shape", "shape": "square", "sideLabel": "5 cm" }
   },
   {
     "id": "math-g3-06",
@@ -387,7 +399,8 @@
       "14 cm²"
     ],
     "answer": 1,
-    "explanation": "Area is length times width: 4 × 3 = 12 square centimeters."
+    "explanation": "Area is length times width: 4 × 3 = 12 square centimeters.",
+    "visual": { "kind": "grid", "rows": 3, "cols": 4, "rowLabel": "3 cm", "colLabel": "4 cm" }
   },
   {
     "id": "math-g3-07",
@@ -432,7 +445,8 @@
       "All were equal"
     ],
     "answer": 0,
-    "explanation": "Nine is the largest count, and it belongs to dogs."
+    "explanation": "Nine is the largest count, and it belongs to dogs.",
+    "visual": { "kind": "bars", "items": [{ "label": "Cats", "value": 6 }, { "label": "Dogs", "value": 9 }, { "label": "Birds", "value": 4 }] }
   },
   {
     "id": "math-g3-10",
@@ -559,7 +573,7 @@
     "subject": "math",
     "grade": 4,
     "topic": "Angles",
-    "prompt": "What is the measure of a right angle?",
+    "prompt": "Look at this right angle. What is its measure?",
     "options": [
       "90°",
       "45°",
@@ -567,7 +581,8 @@
       "360°"
     ],
     "answer": 0,
-    "explanation": "A right angle is a quarter of a full turn, or 90 degrees."
+    "explanation": "A right angle is a quarter of a full turn, or 90 degrees.",
+    "visual": { "kind": "shape", "shape": "right_angle" }
   },
   {
     "id": "math-g4-09",
@@ -582,7 +597,8 @@
       "13 m²"
     ],
     "answer": 1,
-    "explanation": "Multiply length by width: 9 × 4 = 36 square meters."
+    "explanation": "Multiply length by width: 9 × 4 = 36 square meters.",
+    "visual": { "kind": "grid", "rows": 4, "cols": 9, "rowLabel": "4 m", "colLabel": "9 m" }
   },
   {
     "id": "math-g4-10",

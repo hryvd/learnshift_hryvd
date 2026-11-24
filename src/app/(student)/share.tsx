@@ -28,7 +28,7 @@ export default function ShareCard() {
     week.lateMinutes,
     masteryGain(mastery[focus], history[focus] ?? []),
   );
-  const body = t.insights.shareBody(formatDuration(week.avgMinutes), formatDuration(week.dropMinutes), grade);
+  const body = t.insights.shareBody(formatDuration(week.avgMinutes), formatDuration(week.dropMinutes), grade, week.breaks);
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingBottom: insets.bottom + 16 }]}>

@@ -103,12 +103,19 @@ export default function Onboarding() {
   const [draft, setDraft] = useState<Draft>({ role: 'student', grade: useAppStore.getState().learningGrade });
   const step = flow[i];
 
-  if (!IS_PITCH && status === 'signedIn' && profile) {
-    // Guardians see the notification step right after creating their account.
-    if (profile.role !== 'student' && step !== 'notify') return <Redirect href="/" />;
+  const inSignupFlow = step === 'account' || step === 'notify';
+  if (!IS_PITCH && status === 'signedIn' && profile && !inSignupFlow) {
+    if (profile.role === 'teacher') return <Redirect href="/teacher" />;
+    if (profile.role === 'guardian') return <Redirect href="/guardian" />;
     if (onboarded) return <Redirect href="/home" />;
   }
 
+  const startOnboarding = () => {
+    haptic.light();
+    setFlow(IS_PITCH ? PITCH_FLOW : START);
+    setDir(1);
+    setI(1);
+  };
   const next = () => {
     haptic.light();
     // The existing adaptive diagnostic covers secondary-school math only.
@@ -122,7 +129,11 @@ export default function Onboarding() {
   };
   const back = () => {
     setDir(-1);
-    setI((k) => Math.max(0, k - 1));
+    setI((k) => {
+      const target = Math.max(0, k - 1);
+      if (target === 0) setFlow(IS_PITCH ? PITCH_FLOW : START);
+      return target;
+    });
   };
   const chooseRole = (role: Role) => {
     setDraft((d) => ({ ...d, role }));
@@ -188,6 +199,7 @@ export default function Onboarding() {
           step={step}
           draft={draft}
           setDraft={setDraft}
+          start={startOnboarding}
           next={next}
           chooseRole={chooseRole}
           toSignIn={toSignIn}
@@ -225,16 +237,17 @@ type BodyProps = {
   step: Step;
   draft: Draft;
   setDraft: (fn: (d: Draft) => Draft) => void;
+  start: () => void;
   next: () => void;
   chooseRole: (r: Role) => void;
   toSignIn: () => void;
   finish: () => void;
 };
 
-function StepBody({ step, draft, setDraft, next, chooseRole, toSignIn, finish }: BodyProps) {
+function StepBody({ step, draft, setDraft, start, next, chooseRole, toSignIn, finish }: BodyProps) {
   switch (step) {
     case 'welcome':
-      return <Welcome next={next} toSignIn={toSignIn} />;
+      return <Welcome next={start} toSignIn={toSignIn} />;
     case 'role':
       return <RoleStep choose={chooseRole} />;
     case 'grade':

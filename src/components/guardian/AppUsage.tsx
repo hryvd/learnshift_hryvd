@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { DeviceMobile, GameController, GraduationCap, Play, Sparkle, UsersThree } from 'phosphor-react-native';
+import { ChatsCircle, DeviceMobile, EyeSlash, GameController, GraduationCap, Play, Sparkle, UsersThree } from 'phosphor-react-native';
 
 import { Card, Chip, EmptyState, SegmentedControl, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
@@ -15,8 +15,13 @@ import { appIcon } from './appIcons';
 
 const DAY_MS = 24 * 3600 * 1000;
 
+export function isLearnShiftApp(pkg?: string | null, label?: string | null): boolean {
+  if (pkg === 'com.learnshift.app' || pkg === 'com.learnshift.pitch') return true;
+  return label?.trim().toLowerCase() === 'learnshift';
+}
+
 function useCatColor() {
-  const { c } = useTheme();
+  const { c, isNight } = useTheme();
   return (cat: AppCategory | null): string =>
     cat === 'video'
       ? c.accent
@@ -24,9 +29,11 @@ function useCatColor() {
         ? c.indigo
         : cat === 'games'
           ? c.tabInsights
-          : cat === 'study'
-            ? c.success
-            : c.textTertiary;
+          : cat === 'messaging'
+            ? isNight ? '#56C2C0' : '#0EA5A4'
+            : cat === 'study'
+              ? c.success
+              : c.textTertiary;
 }
 
 function CatIcon({ cat, size = 18, color }: { cat: AppCategory | null; size?: number; color: string }) {
@@ -34,19 +41,22 @@ function CatIcon({ cat, size = 18, color }: { cat: AppCategory | null; size?: nu
   if (cat === 'video') return <Play {...p} />;
   if (cat === 'social') return <UsersThree {...p} />;
   if (cat === 'games') return <GameController {...p} />;
+  if (cat === 'messaging') return <ChatsCircle {...p} />;
   if (cat === 'study') return <GraduationCap {...p} />;
   if (cat === 'other') return <Sparkle {...p} />;
   return <DeviceMobile {...p} />;
 }
 
-/** What the child has open right now, how long, and when the next break is due. */
+/** What the child has open right now, how long it is active, and when the next break is due. */
 export function NowCard({
   live,
+  apps = [],
   childName,
   scrollLimit,
   gamesLimit,
 }: {
   live: LiveNow | null;
+  apps?: AppDay[];
   childName: string;
   scrollLimit: number | null;
   gamesLimit: number | null;
@@ -54,11 +64,25 @@ export function NowCard({
   const { c } = useTheme();
   const g = useGuardianT();
   const color = useCatColor();
-  const now = useNow(20_000);
+  const now = useNow(10_000);
   const updated = live ? Date.parse(live.updatedAt) : 0;
-  // The phone reports a new app within seconds and long sessions every 2 minutes.
+  // The phone reports a new app within seconds and active sessions every minute.
   const fresh = !!live && live.screenOn && !!live.label && now - updated < 4 * 60_000;
-  const minutes = fresh ? live!.sessionMin + Math.max(0, Math.floor((now - updated) / 60_000)) : 0;
+  const sessionMin = fresh ? live!.sessionMin + Math.max(0, Math.floor((now - updated) / 60_000)) : 0;
+  const today = todayKey(new Date(now));
+  const recordedTodayMin =
+    fresh && live!.package
+      ? apps.reduce((sum, a) => (a.day === today && a.package === live!.package ? sum + a.minutes : sum), 0)
+      : 0;
+  const appTodayMin = fresh ? Math.max(sessionMin, recordedTodayMin) : 0;
+  const isStudying = fresh && live!.category === 'study';
+  const isLearnShiftLive = fresh && isLearnShiftApp(live!.package, live!.label);
+  const learnShiftRecordedToday = apps.reduce(
+    (sum, a) => (a.day === today && isLearnShiftApp(a.package, a.label) ? sum + a.minutes : sum),
+    0,
+  );
+  const learnShiftTodayMin = Math.max(learnShiftRecordedToday, isLearnShiftLive ? sessionMin : 0);
+  const learnShiftIcon = appIcon('com.learnshift.app', 'LearnShift', 'study');
   const limit =
     fresh && (live!.category === 'video' || live!.category === 'social')
       ? scrollLimit
@@ -71,14 +95,28 @@ export function NowCard({
     <Card style={styles.gap}>
       <View style={styles.rowBetween}>
         <Text variant="overline">{g.nowTitle}</Text>
-        {fresh ? (
-          <View style={styles.liveDot}>
+        {isStudying ? (
+          <View style={[styles.liveBadge, { backgroundColor: c.success + '1F' }]}>
+            <GraduationCap size={12} weight="fill" color={c.success} />
+            <Text variant="caption" color="success" style={styles.badgeLabel}>
+              {g.liveStudying}
+            </Text>
+          </View>
+        ) : fresh ? (
+          <View style={[styles.liveBadge, { backgroundColor: c.success + '1F' }]}>
             <View style={[styles.dot, { backgroundColor: c.success }]} />
-            <Text variant="caption" color="success">
+            <Text variant="caption" color="success" style={styles.badgeLabel}>
               LIVE
             </Text>
           </View>
-        ) : null}
+        ) : (
+          <View style={[styles.liveBadge, { backgroundColor: c.inset }]}>
+            <View style={[styles.dot, { backgroundColor: c.textTertiary }]} />
+            <Text variant="caption" color="textTertiary" style={styles.badgeLabel}>
+              {g.liveIdle}
+            </Text>
+          </View>
+        )}
       </View>
       {fresh ? (
         <View style={styles.nowRow}>
@@ -94,11 +132,14 @@ export function NowCard({
               {live!.label}
             </Text>
             <Text variant="subhead">
-              {g.cats[live!.category ?? 'other']}
-              {minutes > 0 ? ` · ${g.straight(minutes)}` : ''}
+              {isStudying ? g.studyingIn(live!.label!) : g.cats[live!.category ?? 'other']} ·{' '}
+              {sessionMin === 0 ? g.justStarted : g.activeFor(formatDuration(sessionMin))}
             </Text>
           </View>
-          {limit ? <Chip label={g.breakIn(limit - minutes)} kind={limit - minutes <= 2 ? 'accent' : 'tinted'} /> : null}
+          <View style={styles.nowPills}>
+            {appTodayMin > 0 ? <Chip label={g.appToday(formatDuration(appTodayMin))} kind="neutral" /> : null}
+            {limit ? <Chip label={g.breakIn(limit - sessionMin)} kind={limit - sessionMin <= 2 ? 'accent' : 'tinted'} /> : null}
+          </View>
         </View>
       ) : (
         <View style={styles.nowRow}>
@@ -113,6 +154,47 @@ export function NowCard({
           </View>
         </View>
       )}
+      <View
+        style={[
+          styles.studyStrip,
+          {
+            backgroundColor: isLearnShiftLive ? c.success + '14' : c.inset,
+            borderColor: isLearnShiftLive ? c.success + '44' : c.hairline,
+          },
+        ]}
+      >
+        {learnShiftIcon ? (
+          <Image source={learnShiftIcon} style={styles.studyMiniIcon} accessibilityIgnoresInvertColors />
+        ) : (
+          <GraduationCap
+            size={16}
+            weight="fill"
+            color={isLearnShiftLive || learnShiftTodayMin > 0 ? c.success : c.textTertiary}
+          />
+        )}
+        <Text variant="caption" color={isLearnShiftLive || learnShiftTodayMin > 0 ? 'text' : 'textSecondary'} style={styles.flex}>
+          {isLearnShiftLive
+            ? g.learnShiftStudyingNow
+            : learnShiftTodayMin > 0
+              ? g.learnShiftStudyToday(formatDuration(learnShiftTodayMin))
+              : g.learnShiftNotUsedToday}
+        </Text>
+        {isLearnShiftLive ? (
+          <View style={[styles.studyTimePill, { backgroundColor: c.success + '1F' }]}>
+            <Text variant="caption" color="success" style={styles.studyTimeLabel}>
+              {learnShiftTodayMin > 0 ? formatDuration(learnShiftTodayMin) : '< 1m'}
+            </Text>
+          </View>
+        ) : learnShiftTodayMin > 0 ? (
+          <GraduationCap size={15} weight="fill" color={c.success} />
+        ) : null}
+      </View>
+      <View style={[styles.privacyStrip, { backgroundColor: c.inset, borderColor: c.hairline }]}>
+        <EyeSlash size={15} weight="fill" color={c.success} />
+        <Text variant="caption" color="textSecondary" style={styles.flex}>
+          {g.note}
+        </Text>
+      </View>
     </Card>
   );
 }
@@ -147,7 +229,7 @@ export function AppsCard({ apps, childName }: { apps: AppDay[]; childName: strin
 
   const total = rows.reduce((s, r) => s + r.minutes, 0);
   const max = Math.max(1, ...rows.map((r) => r.minutes));
-  const byCat = (['video', 'social', 'games', 'study', 'other'] as AppCategory[])
+  const byCat = (['video', 'social', 'games', 'messaging', 'study', 'other'] as AppCategory[])
     .map((cat) => ({ cat, minutes: rows.filter((r) => r.category === cat).reduce((s, r) => s + r.minutes, 0) }))
     .filter((x) => x.minutes > 0);
 
@@ -228,9 +310,32 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   gap: { gap: 12 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  liveDot: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  badgeLabel: { fontSize: 11, letterSpacing: 0.6, fontWeight: '700' },
   dot: { width: 8, height: 8, borderRadius: 4 },
+  privacyStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  studyStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  studyMiniIcon: { width: 18, height: 18, borderRadius: 5 },
+  studyTimePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.pill },
+  studyTimeLabel: { fontSize: 11, fontWeight: '700' },
   nowRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  nowPills: { alignItems: 'flex-end', gap: 6 },
   appIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   smallIcon: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   stack: { flexDirection: 'row', height: 12, borderRadius: radius.sm, overflow: 'hidden' },

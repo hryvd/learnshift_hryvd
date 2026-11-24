@@ -1,12 +1,18 @@
 import { requireOptionalNativeModule } from 'expo';
 
-export type LiveSession = { category: 'video' | 'social' | 'games' | 'study' | 'other'; sessionMinutes: number; unlocksLastHour: number };
+export type LiveSession = {
+  category: 'video' | 'social' | 'games' | 'messaging' | 'study' | 'other';
+  sessionMinutes: number;
+  unlocksLastHour: number;
+};
 export type NativeDay = {
   day: string;
   total: number;
   video: number;
   social: number;
   games: number;
+  study?: number;
+  breaks?: number;
   late: number;
   sessions: number;
   unlocks: number;
@@ -48,6 +54,8 @@ type UsageMonitorNative = {
   returnToLastApp?(): boolean;
   lastUsedApp?(): string;
   openHomeSettings?(): void;
+  pickModuleFile?(): Promise<{ name: string; text: string; error?: string } | null>;
+  addListener?(eventName: 'onWakeRefresh', listener: () => void): { remove(): void };
   lastConfig(): string;
 };
 

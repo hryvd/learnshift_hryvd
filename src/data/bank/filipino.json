@@ -4,7 +4,7 @@
     "subject": "filipino",
     "grade": 1,
     "topic": "Tunog at titik",
-    "prompt": "Aling salita ang nagsisimula sa tunog /m/?",
+    "prompt": "Tingnan ang larawan. Aling salita ang nagsisimula sa tunog /m/?",
     "options": [
       "bata",
       "sako",
@@ -12,7 +12,8 @@
       "pusa"
     ],
     "answer": 2,
-    "explanation": "Nagsisimula sa titik m at tunog /m/ ang mata."
+    "explanation": "Nagsisimula sa titik m at tunog /m/ ang mata.",
+    "visual": { "kind": "scene", "id": "eye" }
   },
   {
     "id": "filipino-g1-02",
@@ -49,7 +50,7 @@
     "subject": "filipino",
     "grade": 1,
     "topic": "Pangngalan",
-    "prompt": "Alin ang pangalan ng isang hayop?",
+    "prompt": "Tingnan ang larawan. Alin ang pangalan ng hayop na ito?",
     "options": [
       "takbo",
       "pusa",
@@ -57,7 +58,8 @@
       "asul"
     ],
     "answer": 1,
-    "explanation": "Ang pusa ay isang hayop. Ang pangngalan ay ngalan ng tao, hayop, bagay, lugar, o pangyayari."
+    "explanation": "Ang pusa ay isang hayop. Ang pangngalan ay ngalan ng tao, hayop, bagay, lugar, o pangyayari.",
+    "visual": { "kind": "scene", "id": "cat" }
   },
   {
     "id": "filipino-g1-05",
@@ -87,7 +89,8 @@
       "pula"
     ],
     "answer": 3,
-    "explanation": "Pula ang salitang nagsasabi ng kulay ng bola."
+    "explanation": "Pula ang salitang nagsasabi ng kulay ng bola.",
+    "visual": { "kind": "scene", "id": "ball" }
   },
   {
     "id": "filipino-g1-07",
@@ -117,7 +120,8 @@
       "sapatos"
     ],
     "answer": 1,
-    "explanation": "Tuwirang sinabi sa pangungusap na payong ang dala ni Aya."
+    "explanation": "Tuwirang sinabi sa pangungusap na payong ang dala ni Aya.",
+    "visual": { "kind": "scene", "id": "rain_cloud" }
   },
   {
     "id": "filipino-g1-09",
@@ -147,7 +151,8 @@
       "sa ibaba ng upuan"
     ],
     "answer": 3,
-    "explanation": "Ang ilalim ay tumutukoy sa bahaging nasa ibaba."
+    "explanation": "Ang ilalim ay tumutukoy sa bahaging nasa ibaba.",
+    "visual": { "kind": "scene", "id": "ball_under_table" }
   },
   {
     "id": "filipino-g2-01",
@@ -252,7 +257,8 @@
       "Matulog."
     ],
     "answer": 1,
-    "explanation": "Ipinapakita ng salitang una ang hakbang na dapat gawin bago kumain."
+    "explanation": "Ipinapakita ng salitang una ang hakbang na dapat gawin bago kumain.",
+    "visual": { "kind": "scene", "id": "wash_hands" }
   },
   {
     "id": "filipino-g2-08",
@@ -297,7 +303,8 @@
       "Gabi na."
     ],
     "answer": 0,
-    "explanation": "Ang dahilan sa pangungusap ay ang pagkatuyo ng lupa."
+    "explanation": "Ang dahilan sa pangungusap ay ang pagkatuyo ng lupa.",
+    "visual": { "kind": "scene", "id": "plant" }
   },
   {
     "id": "filipino-g3-01",

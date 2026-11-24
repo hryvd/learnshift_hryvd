@@ -57,26 +57,81 @@ serve(async (req) => {
         .eq('student_id', studentId)
         .maybeSingle();
       if (!link) throw new HttpError(404, 'Student not found');
-      const { data: c } = await admin.from('guardian_controls').select('lock_enabled').eq('student_id', studentId).maybeSingle();
+      const { data: c } = await admin.from('guardian_controls').select('lock_enabled, lock_now').eq('student_id', studentId).maybeSingle();
       const { name } = await nameOf(user.id);
       const { lang } = await nameOf(studentId);
-      const on = !!c?.lock_enabled;
+      const lockedNow = !!c?.lock_now;
+      const on = !!c?.lock_enabled || lockedNow;
       const sent = await pushTo([studentId], {
-        title: on
+        title: lockedNow
           ? lang === 'fil'
-            ? `Binuksan ni ${name} ang night lock`
-            : `${name} turned on the night lock`
-          : lang === 'fil'
-            ? `Pinatay ni ${name} ang night lock`
-            : `${name} turned off the night lock`,
-        body: on
+            ? `Naka-total lockdown mula kay ${name}`
+            : `${name} turned on total lockdown`
+          : on
+            ? lang === 'fil'
+              ? `Binuksan ni ${name} ang night lock`
+              : `${name} turned on the night lock`
+            : lang === 'fil'
+              ? `Pinatay ni ${name} ang lock`
+              : `${name} turned off the lock`,
+        body: lockedNow
           ? lang === 'fil'
-            ? 'Matutulog ang mga app sa oras ng tulog. Laging bukas ang emergency call.'
-            : 'Apps rest during bedtime. Emergency calls always work.'
+            ? 'Naka-lock ang phone hanggang i-unlock ito ng guardian mo. Emergency call lang ang puwede.'
+            : 'Apps and navigation are locked offline until your guardian turns it off. Emergency calls always work.'
+          : on
+            ? lang === 'fil'
+              ? 'Matutulog ang mga app sa oras ng tulog. Laging bukas ang emergency call.'
+              : 'Apps rest during bedtime. Emergency calls always work.'
+            : lang === 'fil'
+              ? 'Naka-off ang lock.'
+              : 'No lock right now.',
+        data: { url: lockedNow ? '/lock' : '/home' },
+      });
+      return json({ sent });
+    }
+    case 'account_request': {
+      const { data: r } = await admin.from('account_requests').select('*').eq('id', body.id).maybeSingle();
+      if (!r || r.student_id !== user.id) throw new HttpError(404, 'Request not found');
+      const { name } = await nameOf(user.id);
+      const isDelete = r.kind === 'delete_account';
+      const sent = await pushTo(await guardiansOf(user.id), {
+        title: isDelete ? `${name} requested to remove their account` : `${name} requested to sign out`,
+        body: 'Open LearnShift to approve or decline.',
+        data: { url: '/guardian', accountRequestId: r.id },
+      });
+      return json({ sent });
+    }
+    case 'account_request_decided': {
+      const { data: r } = await admin.from('account_requests').select('*').eq('id', body.id).maybeSingle();
+      if (!r || r.decided_by !== user.id) throw new HttpError(404, 'Request not found');
+      const { name } = await nameOf(user.id);
+      const { lang } = await nameOf(r.student_id);
+      const approved = r.status === 'approved';
+      const isDelete = r.kind === 'delete_account';
+      const sent = await pushTo([r.student_id], {
+        title: approved
+          ? lang === 'fil'
+            ? isDelete
+              ? `Pinayagan ni ${name} ang pagbura ng account`
+              : `Pinayagan ni ${name} ang pag-sign out`
+            : isDelete
+              ? `${name} approved removing your account`
+              : `${name} approved signing out`
           : lang === 'fil'
-            ? 'Wala nang lock ngayong gabi.'
-            : 'No lock tonight.',
-        data: { url: '/home' },
+            ? isDelete
+              ? `Hindi pinayagan ni ${name} ang pagbura ng account`
+              : `Hindi pinayagan ni ${name} ang pag-sign out`
+            : isDelete
+              ? `${name} declined the remove-account request`
+              : `${name} declined the sign-out request`,
+        body: approved
+          ? lang === 'fil'
+            ? 'Buksan ang LearnShift para magpatuloy.'
+            : 'Open LearnShift to continue.'
+          : lang === 'fil'
+            ? 'Mananatiling naka-sign in ang account mo.'
+            : 'Your account remains signed in.',
+        data: { url: '/account' },
       });
       return json({ sent });
     }

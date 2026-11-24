@@ -20,30 +20,55 @@ object Reporter {
     val queue = Store.queue(ctx)
     val usage = JSONArray()
     val apps = JSONArray()
-    if (withUsage && Perms.hasUsageAccess(ctx)) {
-      for (d in 0..1) {
-        val s = runCatching { Days.summary(ctx, d, cfg) }.getOrNull() ?: continue
-        usage.put(
-          JSONObject()
-            .put("day", s.day)
-            .put("total_min", s.total)
-            .put("video_min", s.video)
-            .put("social_min", s.social)
-            .put("games_min", s.games)
-            .put("late_min", s.late)
-            .put("sessions", s.sessions)
-            .put("unlocks", s.unlocks)
-            .put("off_at", s.offAt ?: JSONObject.NULL),
-        )
-        // The 25 apps used most that day, at least a minute each.
-        s.apps.entries.sortedByDescending { it.value }.filter { it.value >= 60_000L }.take(25).forEach { (pkg, ms) ->
-          apps.put(
+    if (withUsage) {
+      if (Perms.hasUsageAccess(ctx)) {
+        for (d in 0..1) {
+          val s = runCatching { Days.summary(ctx, d, cfg) }.getOrNull() ?: continue
+          usage.put(
             JSONObject()
               .put("day", s.day)
-              .put("package", pkg)
-              .put("label", Categories.label(ctx, pkg))
-              .put("category", Categories.of(ctx, pkg).js)
-              .put("minutes", (ms / 60_000L).toInt()),
+              .put("total_min", s.total)
+              .put("video_min", s.video)
+              .put("social_min", s.social)
+              .put("games_min", s.games)
+              .put("learning_min", s.study + Store.studyBonusForDay(ctx, s.day))
+              .put("breaks", Store.breaksForDay(ctx, s.day))
+              .put("late_min", s.late)
+              .put("sessions", s.sessions)
+              .put("unlocks", s.unlocks)
+              .put("off_at", s.offAt ?: JSONObject.NULL),
+          )
+          // The 25 apps used most that day (study apps from 30s+, other apps 1m+).
+          s.apps.entries
+            .sortedByDescending { it.value }
+            .filter { (pkg, ms) ->
+              if (Categories.of(ctx, pkg) == Cat.STUDY) ms >= 30_000L else ms >= 60_000L
+            }
+            .take(25)
+            .forEach { (pkg, ms) ->
+              val cat = Categories.of(ctx, pkg)
+              val mins = if (cat == Cat.STUDY) maxOf(1, (ms / 60_000L).toInt()) else (ms / 60_000L).toInt()
+              apps.put(
+                JSONObject()
+                  .put("day", s.day)
+                  .put("package", pkg)
+                  .put("label", if (pkg == ctx.packageName) "LearnShift" else Categories.label(ctx, pkg))
+                  .put("category", cat.js)
+                  .put("minutes", mins),
+              )
+            }
+        }
+      } else {
+        val todayDay = Days.key(java.util.Calendar.getInstance())
+        val todayBreaks = Store.breaksForDay(ctx, todayDay)
+        val todayBonus = Store.studyBonusForDay(ctx, todayDay)
+        if (todayBreaks > 0 || todayBonus > 0) {
+          usage.put(
+            JSONObject()
+              .put("day", todayDay)
+              .put("total_min", 0)
+              .put("breaks", todayBreaks)
+              .put("learning_min", todayBonus),
           )
         }
       }
@@ -56,7 +81,7 @@ object Reporter {
       sent[e.optString("client_id")] = e.toString()
     }
     val body = JSONObject().put("platform", "android").put("events", queue).put("usage", usage).put("apps", apps)
-    val ok = post(cfg, body)
+    val ok = post(ctx, cfg, body)
     if (ok) {
       Store.removeSent(ctx, sent)
       Store.putLong(ctx, "lastReport", System.currentTimeMillis())
@@ -67,10 +92,10 @@ object Reporter {
   /** The app in front right now, for the guardian's "Using now". */
   fun live(ctx: Context, cfg: Config, live: JSONObject): Boolean {
     if (cfg.url.isEmpty() || cfg.deviceToken.isEmpty()) return false
-    return post(cfg, JSONObject().put("platform", "android").put("live", live))
+    return post(ctx, cfg, JSONObject().put("platform", "android").put("live", live))
   }
 
-  private fun post(cfg: Config, body: JSONObject): Boolean {
+  private fun post(ctx: Context, cfg: Config, body: JSONObject): Boolean {
     return try {
       val endpoint = URL("${cfg.url.trimEnd('/')}/functions/v1/ingest")
       if (endpoint.protocol != "https" || endpoint.userInfo != null) return false
@@ -87,8 +112,18 @@ object Reporter {
       }
       conn.outputStream.use { it.write(body.toString().toByteArray()) }
       val code = conn.responseCode
+      val respText = if (code in 200..299) {
+        runCatching { conn.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+      } else null
       conn.disconnect()
       if (code in 200..299) {
+        if (!respText.isNullOrBlank()) {
+          runCatching {
+            JSONObject(respText).optJSONObject("controls")?.let { controls ->
+              Store.mergeRemoteControls(ctx, controls)
+            }
+          }
+        }
         true
       } else {
         Log.w(TAG, "ingest returned $code")

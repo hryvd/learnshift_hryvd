@@ -4,7 +4,7 @@
     "subject": "english",
     "grade": 1,
     "topic": "Letter sounds",
-    "prompt": "Which word starts with the /b/ sound?",
+    "prompt": "Look at the picture. Which word names it and starts with the /b/ sound?",
     "options": [
       "cat",
       "sun",
@@ -12,7 +12,11 @@
       "map"
     ],
     "answer": 2,
-    "explanation": "Ball starts with the /b/ sound made by the letter b."
+    "explanation": "Ball starts with the /b/ sound made by the letter b.",
+    "visual": {
+      "kind": "scene",
+      "id": "ball"
+    }
   },
   {
     "id": "english-g1-02",
@@ -27,14 +31,18 @@
       "hat"
     ],
     "answer": 3,
-    "explanation": "Cat and hat end with the same /at/ sound."
+    "explanation": "Cat and hat end with the same /at/ sound.",
+    "visual": {
+      "kind": "scene",
+      "id": "cat"
+    }
   },
   {
     "id": "english-g1-03",
     "subject": "english",
     "grade": 1,
     "topic": "Naming words",
-    "prompt": "Which word names an animal?",
+    "prompt": "Look at the picture. Which word names this animal?",
     "options": [
       "dog",
       "run",
@@ -42,7 +50,11 @@
       "soft"
     ],
     "answer": 0,
-    "explanation": "A dog is an animal. The other words describe actions or qualities."
+    "explanation": "A dog is an animal. The other words describe actions or qualities.",
+    "visual": {
+      "kind": "scene",
+      "id": "dog"
+    }
   },
   {
     "id": "english-g1-04",
@@ -72,7 +84,11 @@
       "dry"
     ],
     "answer": 2,
-    "explanation": "Cold and hot describe opposite temperatures."
+    "explanation": "Cold and hot describe opposite temperatures.",
+    "visual": {
+      "kind": "scene",
+      "id": "sun"
+    }
   },
   {
     "id": "english-g1-06",
@@ -87,7 +103,11 @@
       "red"
     ],
     "answer": 3,
-    "explanation": "Red is the color word describing the bag."
+    "explanation": "Red is the color word describing the bag.",
+    "visual": {
+      "kind": "scene",
+      "id": "red_bag"
+    }
   },
   {
     "id": "english-g1-07",
@@ -117,14 +137,18 @@
       "a dog"
     ],
     "answer": 1,
-    "explanation": "The sentence directly says that Lina has a pet fish."
+    "explanation": "The sentence directly says that Lina has a pet fish.",
+    "visual": {
+      "kind": "scene",
+      "id": "fish"
+    }
   },
   {
     "id": "english-g1-09",
     "subject": "english",
     "grade": 1,
     "topic": "Position words",
-    "prompt": "The ball is under the table. Where is the ball?",
+    "prompt": "Look at the picture. Where is the ball?",
     "options": [
       "on the table",
       "inside a bag",
@@ -132,14 +156,18 @@
       "above the table"
     ],
     "answer": 2,
-    "explanation": "Under means below something."
+    "explanation": "Under means below something.",
+    "visual": {
+      "kind": "scene",
+      "id": "ball_under_table"
+    }
   },
   {
     "id": "english-g1-10",
     "subject": "english",
     "grade": 1,
     "topic": "Plural nouns",
-    "prompt": "Which word means more than one book?",
+    "prompt": "Look at the picture. Which word means more than one book?",
     "options": [
       "book",
       "booked",
@@ -147,14 +175,18 @@
       "books"
     ],
     "answer": 3,
-    "explanation": "Adding s to book makes the plural books."
+    "explanation": "Adding s to book makes the plural books.",
+    "visual": {
+      "kind": "scene",
+      "id": "books"
+    }
   },
   {
     "id": "english-g2-01",
     "subject": "english",
     "grade": 2,
     "topic": "Nouns",
-    "prompt": "Which word names a place?",
+    "prompt": "Look at the picture. Which word names this place?",
     "options": [
       "happy",
       "jump",
@@ -162,7 +194,11 @@
       "school"
     ],
     "answer": 3,
-    "explanation": "School names a place where people learn."
+    "explanation": "School names a place where people learn.",
+    "visual": {
+      "kind": "scene",
+      "id": "school"
+    }
   },
   {
     "id": "english-g2-02",
@@ -192,7 +228,11 @@
       "to bark"
     ],
     "answer": 1,
-    "explanation": "A single dog takes the present-tense verb barks."
+    "explanation": "A single dog takes the present-tense verb barks.",
+    "visual": {
+      "kind": "scene",
+      "id": "dog"
+    }
   },
   {
     "id": "english-g2-04",
@@ -252,7 +292,11 @@
       "Brush your teeth."
     ],
     "answer": 1,
-    "explanation": "The word first tells us to wash our hands before eating."
+    "explanation": "The word first tells us to wash our hands before eating.",
+    "visual": {
+      "kind": "scene",
+      "id": "wash_hands"
+    }
   },
   {
     "id": "english-g2-08",
@@ -297,7 +341,11 @@
       "a very dry day"
     ],
     "answer": 0,
-    "explanation": "Dark clouds can signal rain, and an umbrella can keep Ben dry."
+    "explanation": "Dark clouds can signal rain, and an umbrella can keep Ben dry.",
+    "visual": {
+      "kind": "scene",
+      "id": "rain_cloud"
+    }
   },
   {
     "id": "english-g3-01",

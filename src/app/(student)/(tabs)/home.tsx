@@ -13,10 +13,12 @@ import {
   WarningCircle,
 } from 'phosphor-react-native';
 
+import { IslaScene } from '@/components/isla/IslaScene';
 import { Paty } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
-import { AnimatedNumber, Card, Chip, PillButton, PressableScale, ProgressBar, Stagger, Text, TickGauge } from '@/components/ui';
+import { AnimatedNumber, Card, Chip, CoinCounter, PillButton, PressableScale, ProgressBar, Stagger, Text, TickGauge } from '@/components/ui';
 import { SUBJECTS } from '@/data/localQuestions';
+import { BUILDINGS } from '@/data/seed';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
@@ -49,6 +51,8 @@ export default function Home() {
   const lang = useAppStore((s) => s.lang);
   const usage = useAppStore((s) => s.usage);
   const breaksToday = useAppStore((s) => s.breaksToday);
+  const built = useAppStore((s) => s.built);
+  const coins = useAppStore((s) => s.coins);
   const fil = lang === 'fil';
   const dev = useDevice((s) => s.status);
   const live = useLive();
@@ -56,6 +60,9 @@ export default function Home() {
 
   const cardW = Math.min(width, 560) - space.screen * 2;
   const gaugeW = Math.min(300, cardW - space.card * 2);
+  const islaW = Math.min(340, Math.max(220, cardW - space.card * 2));
+  const nextBuilding = BUILDINGS.find((b) => b.unlockAt > coins) ?? null;
+  const prevUnlock = [...BUILDINGS].reverse().find((b) => b.unlockAt <= coins)?.unlockAt ?? 0;
 
   const summary = useMemo(() => {
     const todayRow = usage.find((u) => u.day === todayKey());
@@ -63,9 +70,11 @@ export default function Home() {
     const socialMin = todayRow?.social ?? 0;
     const gamesMin = todayRow?.games ?? 0;
     const trackedLeisure = videoMin + socialMin + gamesMin;
-    const entertainmentMinutes = trackedLeisure > 0 ? trackedLeisure : live.usedMinutes;
-    const learningMinutes = (todayRow?.learning ?? 0) + breaksToday * 2;
-    const otherMinutes = Math.max(0, live.usedMinutes - entertainmentMinutes) + learningMinutes;
+    const hasTrackedUsage = todayRow != null && (todayRow.total > 0 || trackedLeisure > 0 || (todayRow.learning ?? 0) > 0);
+    const entertainmentMinutes = hasTrackedUsage ? trackedLeisure : live.usedMinutes;
+    const learningMinutes = Math.max(todayRow?.learning ?? 0, breaksToday * 2);
+    const nonLeisureTotal = Math.max(0, live.usedMinutes - entertainmentMinutes);
+    const otherMinutes = Math.max(nonLeisureTotal, learningMinutes);
     const [num, unit] = splitDuration(entertainmentMinutes);
     const cap = formatDuration(live.capMinutes);
     const leisureProgress = live.capMinutes > 0 ? Math.min(1, entertainmentMinutes / live.capMinutes) : 0;
@@ -77,6 +86,7 @@ export default function Home() {
       videoMin,
       socialMin,
       gamesMin,
+      learningMinutes,
       entertainmentMinutes,
       otherMinutes,
       num,
@@ -190,7 +200,9 @@ export default function Home() {
               </Text>
               <Text variant="title">{formatDuration(summary.otherMinutes)}</Text>
               <Text variant="caption" color="textSecondary" numberOfLines={1}>
-                {breaksToday} {fil ? 'pahingang aral' : 'learning breaks'}
+                {summary.learningMinutes > 0
+                  ? `${formatDuration(summary.learningMinutes)} ${fil ? 'pag-aaral' : 'study'} · ${breaksToday} ${fil ? 'pahinga' : 'breaks'}`
+                  : `${breaksToday} ${fil ? 'pahingang aral' : 'learning breaks'}`}
               </Text>
             </View>
           </View>
@@ -243,7 +255,44 @@ export default function Home() {
         </Card>
       </Stagger>
 
-      <Stagger index={2} style={styles.row}>
+      <Stagger index={2}>
+        <Card style={styles.gap} onPress={() => router.push('/isla')} accessibilityLabel="Visit your little isla">
+          <View style={styles.islaHead}>
+            <View style={styles.flex}>
+              <Text variant="overline">{fil ? 'IYONG ISLA' : 'YOUR LITTLE ISLA'}</Text>
+              <Text variant="title">{fil ? 'Tingnan ang isla mo' : 'Grow your isla'}</Text>
+            </View>
+            <CoinCounter value={coins} />
+          </View>
+          <View style={styles.center}>
+            <IslaScene built={built} width={islaW} interactive={false} />
+          </View>
+          {nextBuilding ? (
+            <View style={styles.islaProgress}>
+              <View style={styles.islaHead}>
+                <Text variant="caption" color="textSecondary">
+                  {fil ? `Susunod: ${nextBuilding.name.fil}` : `Next: ${nextBuilding.name.en}`}
+                </Text>
+                <Text variant="caption" tabular>
+                  {coins.toLocaleString('en-US')} / {nextBuilding.unlockAt.toLocaleString('en-US')}
+                </Text>
+              </View>
+              <ProgressBar
+                progress={(coins - prevUnlock) / Math.max(1, nextBuilding.unlockAt - prevUnlock)}
+                color={c.spark}
+              />
+            </View>
+          ) : null}
+          <PillButton
+            label={fil ? 'Pumunta sa Isla' : 'Visit & build Isla'}
+            kind="secondary"
+            block
+            onPress={() => router.push('/isla')}
+          />
+        </Card>
+      </Stagger>
+
+      <Stagger index={3} style={styles.row}>
         <Card style={styles.flex} onPress={() => router.push('/focus')} accessibilityLabel="Start a focus break">
           <Clock size={25} color={c.accent} />
           <Text variant="title" style={styles.mt}>
@@ -251,16 +300,16 @@ export default function Home() {
           </Text>
           <Text variant="subhead">{fil ? 'Magpahinga sa pag-scroll.' : 'Take a break from scrolling.'}</Text>
         </Card>
-        <Card style={styles.flex} onPress={() => router.push('/isla')} accessibilityLabel="Visit your island">
-          <Text variant="title">🏝️</Text>
+        <Card style={styles.flex} onPress={() => router.push('/insights')} accessibilityLabel="Total screen time">
+          <MoonStars size={25} color={c.indigo} />
           <Text variant="title" style={styles.mt}>
-            {fil ? 'Iyong isla' : 'Your little isla'}
+            {formatDuration(live.usedMinutes)}
           </Text>
-          <Text variant="subhead">{fil ? 'Tingnan ang iyong nagawa.' : 'See what you’ve grown.'}</Text>
+          <Text variant="subhead">{fil ? 'Kabuuang oras sa screen' : 'Total screen time today'}</Text>
         </Card>
       </Stagger>
 
-      <Stagger index={3}>
+      <Stagger index={4}>
         <Card style={styles.gap}>
           <View style={styles.row}>
             <ShieldCheck size={24} color={protectedApps ? c.success : c.accent} />
@@ -276,17 +325,6 @@ export default function Home() {
           <PillButton label={fil ? 'Mga setting ng pahinga' : 'Break settings'} kind="secondary" onPress={() => router.push('/profile')} />
         </Card>
       </Stagger>
-
-      <Stagger index={4}>
-        <Card style={styles.today} onPress={() => router.push('/insights')}>
-          <View style={styles.flex}>
-            <Text variant="overline">{fil ? 'NGAYON' : 'TODAY'}</Text>
-            <Text variant="title">{formatDuration(live.usedMinutes)}</Text>
-            <Text variant="subhead">{fil ? 'Kabuuang oras sa screen' : 'Total screen time'}</Text>
-          </View>
-          <MoonStars size={32} color={c.indigo} />
-        </Card>
-      </Stagger>
     </Screen>
   );
 }
@@ -299,6 +337,8 @@ const styles = StyleSheet.create({
   leisureTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   leisureTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   center: { alignItems: 'center' },
+  islaHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  islaProgress: { gap: 6 },
   heroNum: { flexDirection: 'row', alignItems: 'flex-end' },
   unit: { marginBottom: 8, marginLeft: 2 },
   compareBox: { flex: 1, borderRadius: radius.inset, padding: 12, gap: 4 },
@@ -310,5 +350,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.gap },
   mt: { marginTop: 12, marginBottom: 6 },
   gap: { gap: 14 },
-  today: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

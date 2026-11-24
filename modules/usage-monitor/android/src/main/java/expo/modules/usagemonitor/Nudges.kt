@@ -23,6 +23,7 @@ object Risk {
     Cat.VIDEO -> 0.7
     Cat.SOCIAL -> 0.5
     Cat.GAMES -> 0.6
+    Cat.MESSAGING -> 0.05
     Cat.OTHER -> 0.1
     Cat.STUDY -> -1.4
   }

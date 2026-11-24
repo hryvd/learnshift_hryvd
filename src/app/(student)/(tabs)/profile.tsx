@@ -14,9 +14,11 @@ import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { formatClock, useT } from '@/i18n/useT';
 import { IS_PITCH } from '@/lib/config';
+import * as api from '@/services/backend/api';
+import { flushStudent } from '@/services/backend/sync';
 import { openBatterySettings, openOverlaySettings, openScrollSettings, platform, requestAccess } from '@/services/monitor';
 import { useDevice } from '@/services/monitor/bridge';
-import { useAuth } from '@/store/useAuth';
+import { patchProfile, useAuth } from '@/store/useAuth';
 import { DEFAULT_SENTINEL, useAppStore, type ThemePref } from '@/store/useAppStore';
 import { useSession } from '@/store/useSession';
 
@@ -42,14 +44,21 @@ export default function Profile() {
   const [cleared, setCleared] = useState(false);
   const name = useAppStore((s) => s.studentName);
   const classes = useAppStore((s) => s.classes);
+  const userId = useAuth((s) => s.profile?.id ?? null);
   const grade = useAuth((s) => s.profile?.grade ?? null);
   const overlayIntervalSec = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
+  const guardianBreakSec = useAppStore((s) => (s.guardian.linked ? s.limits.breakIntervalSec : null));
+  const effectiveIntervalSec = guardianBreakSec ?? overlayIntervalSec;
   const monitorAllApps = useAppStore((s) => s.sentinel?.monitorAllApps ?? DEFAULT_SENTINEL.monitorAllApps);
   const learningGrade = useAppStore((s) => s.learningGrade);
   const learningSubject = useAppStore((s) => s.learningSubject);
   const fil = lang === 'fil';
   const devStatus = useDevice((s) => s.status);
   const pitchGrade = IS_PITCH ? 8 : grade;
+  const syncSettingNow = () => {
+    void useDevice.getState().refresh();
+    if (!IS_PITCH && userId) void flushStudent(userId).catch(() => {});
+  };
 
   let i = 0;
   return (
@@ -78,7 +87,15 @@ export default function Profile() {
           title={t.profile.language}
           status={lang === 'en' ? t.common.english : t.common.filipino}
           style={styles.tile}
-          onPress={() => useAppStore.getState().setLang(lang === 'en' ? 'fil' : 'en')}
+          onPress={() => {
+            const nextLang = lang === 'en' ? 'fil' : 'en';
+            useAppStore.getState().setLang(nextLang);
+            if (!IS_PITCH && userId) {
+              patchProfile({ lang: nextLang });
+              void api.updateProfile({ lang: nextLang }).catch(() => {});
+            }
+            syncSettingNow();
+          }}
           art={<LanguageArt />}
         />
         <DarkTile
@@ -105,7 +122,20 @@ export default function Profile() {
           <Text variant="body">{fil ? 'Baitang' : 'Grade'}</Text>
           <View style={styles.freqRow}>
             {Array.from({ length: 10 }, (_, i) => i + 1).map((grade) => (
-              <PressableScale key={grade} accessibilityLabel={`Grade ${grade}`} accessibilityState={{ selected: learningGrade === grade }} onPress={() => useAppStore.getState().setLearningGrade(grade)} style={[styles.freqPill, { backgroundColor: learningGrade === grade ? c.accent : c.inset }]}>
+              <PressableScale
+                key={grade}
+                accessibilityLabel={`Grade ${grade}`}
+                accessibilityState={{ selected: learningGrade === grade }}
+                onPress={() => {
+                  useAppStore.getState().setLearningGrade(grade);
+                  if (!IS_PITCH && userId) {
+                    patchProfile({ grade });
+                    void api.updateProfile({ grade }).catch(() => {});
+                  }
+                  syncSettingNow();
+                }}
+                style={[styles.freqPill, { backgroundColor: learningGrade === grade ? c.accent : c.inset }]}
+              >
                 <Text color={learningGrade === grade ? c.onAccent : c.text}>{grade}</Text>
               </PressableScale>
             ))}
@@ -113,7 +143,16 @@ export default function Profile() {
           <Text variant="body">{fil ? 'Paksa' : 'Subject'}</Text>
           <View style={styles.freqRow}>
             {[{ id: 'mixed' as const, label: fil ? 'Lahat' : 'All subjects' }, ...SUBJECTS].map((subject) => (
-              <PressableScale key={subject.id} accessibilityLabel={subject.label} accessibilityState={{ selected: learningSubject === subject.id }} onPress={() => useAppStore.getState().setLearningSubject(subject.id)} style={[styles.freqPill, { backgroundColor: learningSubject === subject.id ? c.accent : c.inset }]}>
+              <PressableScale
+                key={subject.id}
+                accessibilityLabel={subject.label}
+                accessibilityState={{ selected: learningSubject === subject.id }}
+                onPress={() => {
+                  useAppStore.getState().setLearningSubject(subject.id);
+                  syncSettingNow();
+                }}
+                style={[styles.freqPill, { backgroundColor: learningSubject === subject.id ? c.accent : c.inset }]}
+              >
                 <Text color={learningSubject === subject.id ? c.onAccent : c.text}>{subject.label}</Text>
               </PressableScale>
             ))}
@@ -132,7 +171,10 @@ export default function Profile() {
               { value: 'night', label: t.profile.night },
             ]}
             value={themePref}
-            onChange={(p) => useAppStore.getState().setThemePref(p)}
+            onChange={(p) => {
+              useAppStore.getState().setThemePref(p);
+              syncSettingNow();
+            }}
           />
         </Card>
       </Stagger>
@@ -142,23 +184,36 @@ export default function Profile() {
           <View style={styles.rowBetween}>
             <View style={styles.flex}>
               <Text variant="headline">{fil ? 'Kailan ka magpapahinga?' : 'When should a break be ready?'}</Text>
-              <Text variant="subhead">{fil ? 'Pagkatapos ng timer, maghihintay kami sa susunod mong pag-swipe pataas.' : 'When the timer ends, we wait for your next upward scroll.'}</Text>
+              <Text variant="subhead">
+                {guardianBreakSec != null
+                  ? fil
+                    ? `Itinakda ni ${guardian.name || 'Guardian mo'}. Umiikli ito kapag tuloy-tuloy ka sa libangan.`
+                    : `Set by ${guardian.name || 'your guardian'}. Shortens automatically if entertainment scrolling persists.`
+                  : fil
+                    ? 'Pagkatapos ng timer, maghihintay kami sa susunod mong pag-swipe pataas.'
+                    : 'When the timer ends, we wait for your next upward scroll.'}
+              </Text>
             </View>
             <Clock size={20} weight="fill" color={c.accent} />
           </View>
           <View style={styles.freqRow}>
             {FREQ_OPTIONS.map((opt) => {
-              const active = overlayIntervalSec === opt.sec;
+              const active = effectiveIntervalSec === opt.sec;
               return (
                 <PressableScale
                   key={opt.sec}
+                  disabled={guardianBreakSec != null}
                   accessibilityLabel={`Break ready after ${opt.label}`}
-                  accessibilityState={{ selected: active }}
+                  accessibilityState={{ selected: active, disabled: guardianBreakSec != null }}
                   onPress={() => {
                     haptic.select();
                     useAppStore.getState().setOverlayInterval(opt.sec);
+                    syncSettingNow();
                   }}
-                  style={[styles.freqPill, { backgroundColor: active ? c.accent : c.inset }]}
+                  style={[
+                    styles.freqPill,
+                    { backgroundColor: active ? c.accent : c.inset, opacity: guardianBreakSec != null && !active ? 0.45 : 1 },
+                  ]}
                 >
                   <Text variant="caption" color={active ? c.onAccent : c.text} style={fontFor(700)}>
                     {opt.label}
@@ -176,7 +231,10 @@ export default function Profile() {
             </View>
             <Toggle
               value={monitorAllApps}
-              onChange={(v) => useAppStore.getState().setMonitorAllApps(v)}
+              onChange={(v) => {
+                useAppStore.getState().setMonitorAllApps(v);
+                syncSettingNow();
+              }}
               accessibilityLabel="Include other apps"
             />
           </View>

@@ -13,33 +13,54 @@ import java.util.Calendar
 import java.util.Locale
 
 enum class Cat(val js: String) {
-  VIDEO("video"), SOCIAL("social"), GAMES("games"), STUDY("study"), OTHER("other");
+  VIDEO("video"), SOCIAL("social"), GAMES("games"), MESSAGING("messaging"), STUDY("study"), OTHER("other");
 
   val distracting get() = this == VIDEO || this == SOCIAL || this == GAMES
 }
 
-/** App → category. Android's own category first, then a curated list. Names are shared only through the configured guardian reporting path. */
+/** App → category. Curated messaging/study/social lists plus Android's category. Names are shared only through the configured guardian reporting path. */
 object Categories {
   private val VIDEO = setOf(
     "com.google.android.youtube", "com.google.android.apps.youtube.kids", "com.google.android.apps.youtube.music",
     "com.zhiliaoapp.musically", "com.zhiliaoapp.musically.go", "com.ss.android.ugc.trill", "com.ss.android.ugc.aweme",
     "com.netflix.mediaclient", "tv.twitch.android.app", "com.amazon.avod.thirdpartyclient", "com.disney.disneyplus",
-    "com.iqiyi.i18n", "com.viu.phone", "com.vivamax.app", "com.kwai.video", "com.snackvideo.app", "com.lemon.lvoverseas",
+    "com.iqiyi.i18n", "com.viu.phone", "com.vivamax.app", "com.kwai.video", "com.snackvideo.app",
     "com.bilibili.app.in", "com.tubitv", "com.hbo.hbonow", "com.wbd.stream",
   )
   private val SOCIAL = setOf(
-    "com.facebook.katana", "com.facebook.lite", "com.facebook.orca", "com.facebook.mlite",
+    "com.facebook.katana", "com.facebook.lite",
     "com.instagram.android", "com.instagram.lite", "com.instagram.barcelona",
     "com.twitter.android", "com.snapchat.android", "com.reddit.frontpage", "com.pinterest", "com.tumblr",
     "com.bereal.ft", "com.lemon8.android",
-    "org.telegram.messenger", "org.thunderdog.challegram", "com.whatsapp", "com.discord",
+  )
+  private val MESSAGING = setOf(
+    "com.facebook.orca", "com.facebook.mlite",
+    "com.whatsapp", "com.whatsapp.w4b",
+    "org.telegram.messenger", "org.telegram.messenger.web", "org.thunderdog.challegram",
+    "com.viber.voip", "jp.naver.line.android", "org.thoughtcrime.securesms",
+    "com.discord", "com.tencent.mm", "com.kakao.talk", "com.imo.android.imoim",
+    "com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms",
+    "com.google.android.dialer", "com.samsung.android.dialer", "com.android.dialer",
+    "com.android.contacts", "com.samsung.android.app.contacts",
+    "com.google.android.gm", "com.microsoft.office.outlook", "com.skype.raider",
+  )
+  private val UTILITY = setOf(
     "com.android.chrome", "com.sec.android.app.sbrowser", "com.brave.browser", "org.mozilla.firefox", "com.microsoft.emmx",
-    "com.shopee.ph", "com.lazada.android",
+    "com.opera.browser",
+    "com.globe.gcash.android", "com.paymaya", "com.grabtaxi.passenger",
+    "com.google.android.apps.maps", "com.google.android.calendar",
+    "com.android.deskclock", "com.google.android.deskclock",
+    "com.android.calculator", "com.sec.android.app.popupcalculator",
+    "com.android.camera", "com.android.camera2", "com.sec.android.app.camera",
+    "com.google.android.apps.photos", "com.sec.android.gallery3d",
+    "com.google.android.apps.nbu.files", "com.sec.android.app.myfiles",
+    "com.lemon.lvoverseas",
   )
   private val SYSTEM_IGNORE = setOf(
     "com.android.settings",
     "com.android.systemui",
     "com.google.android.packageinstaller",
+    "com.android.packageinstaller",
     "com.android.permissioncontroller",
     "com.google.android.permissioncontroller",
   )
@@ -52,13 +73,28 @@ object Categories {
   private val STUDY = setOf(
     "com.google.android.apps.classroom", "com.microblink.photomath", "org.khanacademy.android", "com.duolingo",
     "com.quizlet.quizletandroid", "com.google.android.apps.docs", "com.google.android.apps.docs.editors.docs",
-    "com.microsoft.teams", "us.zoom.videomeetings", "com.brainly",
+    "com.google.android.apps.docs.editors.slides", "com.google.android.apps.docs.editors.sheets",
+    "com.google.android.apps.meetings", "com.microsoft.teams", "us.zoom.videomeetings", "com.brainly",
+    "com.microsoft.office.word", "com.microsoft.office.powerpoint", "com.microsoft.office.excel", "com.microsoft.office.onenote",
+    "com.canva.editor", "notion.id", "org.wikipedia", "no.mobitroll.kahoot.android", "com.grammarly.android.keyboard",
+  )
+
+  private val MESSAGING_HINTS = listOf(
+    "messenger", "message", "sms", "mms", "chat", "mail", "dialer", "phone",
+    "call", "contacts", "viber", "whatsapp", "telegram", "signal", "wechat", "line", "imo", "meet", "zoom",
   )
 
   private val cache = HashMap<String, Cat>()
   private val labels = HashMap<String, String>()
 
+  @Synchronized
+  fun clearCache() {
+    cache.clear()
+    labels.clear()
+  }
+
   /** The app's name as shown on the home screen (e.g. "TikTok"). */
+  @Synchronized
   fun label(ctx: Context, pkg: String): String = labels.getOrPut(pkg) {
     try {
       val pm = ctx.packageManager
@@ -68,21 +104,31 @@ object Categories {
     }
   }
 
+  @Synchronized
   fun of(ctx: Context, pkg: String): Cat = cache.getOrPut(pkg) { lookup(ctx, pkg) }
 
   private fun lookup(ctx: Context, pkg: String): Cat {
     if (pkg == ctx.packageName) return Cat.STUDY
+    if (pkg in MESSAGING) return Cat.MESSAGING
+    if (pkg in STUDY) return Cat.STUDY
     if (pkg in VIDEO) return Cat.VIDEO
     if (pkg in SOCIAL) return Cat.SOCIAL
     if (pkg in GAMES) return Cat.GAMES
-    if (pkg in STUDY) return Cat.STUDY
+    if (pkg in UTILITY) return Cat.OTHER
     return try {
       val info = ctx.packageManager.getApplicationInfo(pkg, 0)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         when (info.category) {
           ApplicationInfo.CATEGORY_VIDEO -> Cat.VIDEO
-          ApplicationInfo.CATEGORY_SOCIAL -> Cat.SOCIAL
+          ApplicationInfo.CATEGORY_SOCIAL -> {
+            val lowerPkg = pkg.lowercase(Locale.US)
+            val lowerLabel = label(ctx, pkg).lowercase(Locale.US)
+            if (MESSAGING_HINTS.any { it in lowerPkg || it in lowerLabel }) Cat.MESSAGING else Cat.SOCIAL
+          }
           ApplicationInfo.CATEGORY_GAME -> Cat.GAMES
+          ApplicationInfo.CATEGORY_PRODUCTIVITY,
+          ApplicationInfo.CATEGORY_MAPS,
+          ApplicationInfo.CATEGORY_AUDIO -> Cat.OTHER
           else -> if (info.flags and ApplicationInfo.FLAG_IS_GAME != 0) Cat.GAMES else Cat.OTHER
         }
       } else if (info.flags and ApplicationInfo.FLAG_IS_GAME != 0) Cat.GAMES else Cat.OTHER
@@ -101,9 +147,9 @@ object Categories {
   /** Whether an open foreground app should trigger scheduled learning overlays. */
   fun isTargetApp(ctx: Context, pkg: String?, monitorAll: Boolean): Boolean {
     if (pkg.isNullOrBlank() || pkg == ctx.packageName) return false
-    if (pkg in launchers(ctx) || pkg in SYSTEM_IGNORE) return false
+    if (pkg in launchers(ctx) || pkg in SYSTEM_IGNORE || pkg in UTILITY) return false
     val c = of(ctx, pkg)
-    if (c == Cat.STUDY) return false
+    if (c == Cat.STUDY || c == Cat.MESSAGING) return false
     if (c.distracting) return true
     if (!monitorAll) return false
     return runCatching { ctx.packageManager.getLaunchIntentForPackage(pkg) != null }.getOrDefault(false)
@@ -132,8 +178,16 @@ private const val UNLOCKED = 18 // KEYGUARD_HIDDEN
 
 /** Leaving a distracting app for less than this keeps the same session going. */
 private const val GAP_MS = 2 * 60 * 1000L
+/** Brief screen flickers under this keep the same per-app session timer running. */
+private const val APP_GAP_MS = 60 * 1000L
 
-data class Live(val pkg: String?, val cat: Cat, val sessionMin: Double, val unlocksLastHour: Int)
+data class Live(
+  val pkg: String?,
+  val cat: Cat,
+  val sessionMin: Double,
+  val unlocksLastHour: Int,
+  val appMin: Double = 0.0,
+)
 
 /** Follows the foreground app incrementally, so each tick reads only new events. */
 class Tracker(private val ctx: Context) {
@@ -142,6 +196,9 @@ class Tracker(private val ctx: Context) {
   private var fgPkg: String? = null
   private var sessionStart = 0L
   private var lastDistracting = 0L
+  private var appPkg: String? = null
+  private var appStart = 0L
+  private var lastAppAt = 0L
   private val unlocks = ArrayDeque<Long>()
 
   fun update(now: Long): Live {
@@ -159,14 +216,21 @@ class Tracker(private val ctx: Context) {
             if (sessionStart == 0L || t - lastDistracting > GAP_MS) sessionStart = t
             lastDistracting = t
           }
+          if (pkg != appPkg || t - lastAppAt > APP_GAP_MS || appStart == 0L) {
+            appPkg = pkg
+            appStart = t
+          }
+          lastAppAt = t
           fgPkg = pkg
         }
         PAUSED -> if (e.packageName == fgPkg) {
           if (fgPkg?.let { Categories.of(ctx, it).distracting } == true) lastDistracting = t
+          lastAppAt = t
           fgPkg = null
         }
         SCREEN_OFF -> {
           if (fgPkg?.let { Categories.of(ctx, it).distracting } == true) lastDistracting = t
+          lastAppAt = t
           fgPkg = null
         }
         SCREEN_ON -> {}
@@ -177,7 +241,7 @@ class Tracker(private val ctx: Context) {
     if (fgPkg == null) {
       val recent = runCatching {
         val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 60_000L, now)
-        val ignore = Categories.launchers(ctx) + ctx.packageName
+        val ignore = Categories.launchers(ctx)
         stats
           ?.filter { it.packageName != null && it.packageName !in ignore && it.lastTimeUsed >= now - 30_000L }
           ?.maxByOrNull { it.lastTimeUsed }
@@ -189,14 +253,21 @@ class Tracker(private val ctx: Context) {
           if (sessionStart == 0L) sessionStart = now
           lastDistracting = now
         }
+        if (recent != appPkg || now - lastAppAt > APP_GAP_MS || appStart == 0L) {
+          appPkg = recent
+          appStart = now
+        }
+        lastAppAt = now
       }
     }
     val cat = fgPkg?.let { Categories.of(ctx, it) } ?: Cat.OTHER
     if (cat.distracting) lastDistracting = now
+    if (fgPkg != null && fgPkg == appPkg) lastAppAt = now
     if (now - lastDistracting > GAP_MS) sessionStart = 0L
     while (unlocks.isNotEmpty() && unlocks.first() < now - 3600 * 1000L) unlocks.removeFirst()
     val minutes = if (cat.distracting && sessionStart > 0L) (now - sessionStart) / 60000.0 else 0.0
-    return Live(fgPkg, cat, minutes, unlocks.size)
+    val appMinutes = if (fgPkg != null && fgPkg == appPkg && appStart > 0L) maxOf(0.0, (now - appStart) / 60000.0) else 0.0
+    return Live(fgPkg, cat, minutes, unlocks.size, appMinutes)
   }
 }
 
@@ -212,6 +283,7 @@ data class DaySummary(
   val offAt: Int?,
   /** Package → foreground milliseconds that day. */
   val apps: Map<String, Long> = emptyMap(),
+  val study: Int = 0,
 )
 
 object Days {
@@ -231,7 +303,7 @@ object Days {
     }
     val from = start.timeInMillis
     val to = minOf(System.currentTimeMillis(), from + 24 * 3600 * 1000L)
-    val ignore = Categories.launchers(ctx) + ctx.packageName
+    val ignore = Categories.launchers(ctx)
     val ms = LongArray(Cat.values().size)
     val perApp = HashMap<String, Long>()
     var lateMs = 0L
@@ -248,7 +320,7 @@ object Days {
         val cat = Categories.of(ctx, pkg)
         ms[cat.ordinal] += t - fgSince
         perApp[pkg] = (perApp[pkg] ?: 0L) + (t - fgSince)
-        lateMs += lateOverlap(fgSince, t, cfg)
+        if (cat != Cat.STUDY) lateMs += lateOverlap(fgSince, t, cfg)
         if (cat.distracting) lastDistracting = t
       }
       fg = null
@@ -293,6 +365,7 @@ object Days {
       unlocks = unlocks,
       offAt = offAt,
       apps = perApp,
+      study = min(ms[Cat.STUDY.ordinal]),
     )
   }
 

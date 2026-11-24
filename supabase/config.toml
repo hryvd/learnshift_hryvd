@@ -434,3 +434,6 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = false
+
+[functions.generate-module]
+verify_jwt = false

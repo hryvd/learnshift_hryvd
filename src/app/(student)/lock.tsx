@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { BackHandler, Linking, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle, HourglassMedium, Phone } from 'phosphor-react-native';
@@ -31,6 +31,7 @@ function Lock() {
   const pitchWindow = useAppStore((s) => s.bedtime);
   const lock = useAppStore((s) => s.lock);
   const guardian = useAppStore((s) => s.guardian);
+  const fil = useAppStore((s) => s.lang === 'fil');
   const studentName = useAppStore((s) => s.studentName);
   const locked = useAppStore((s) => lockActive(s, live.clock));
   const lockRequestId = useSession((s) => s.lockRequestId);
@@ -40,6 +41,12 @@ function Lock() {
   const logged = useRef(false);
   // The guardian's lock hours in real builds; the demo uses bedtime.
   const bedtime = IS_PITCH ? pitchWindow : { start: lock.start, end: lock.end };
+  const free = !IS_PITCH && !locked;
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => !free);
+    return () => sub.remove();
+  }, [free]);
 
   useEffect(() => {
     // The phone monitor logs real locks itself; only the demo logs here.
@@ -66,10 +73,7 @@ function Lock() {
       setSending(false);
     }
   };
-  // Not locked (window over, or the guardian approved): let the student go.
-  const free = !IS_PITCH && !locked;
-
-  // Minutes from now until the lock window ends.
+  // Total seconds/minutes from now until the lock window ends.
   const total = (bedtime.end - bedtime.start + 1440) % 1440 || 1440;
   const leftMin = (bedtime.end - live.clock + 1440) % 1440;
   const progress = Math.max(0, Math.min(1, leftMin / total));
@@ -95,10 +99,19 @@ function Lock() {
           </Text>
         </Ring>
         <Text variant="largeTitle" align="center" style={styles.until}>
-          {t.lock.until(formatClock(bedtime.end))}
+          {guardian.lockNow
+            ? fil
+              ? 'Total Lockdown'
+              : 'Total Lockdown'
+            : t.lock.until(formatClock(bedtime.end))}
         </Text>
         <Text variant="subhead" align="center">
-          {t.lock.setBy(guardian.name)} · {t.lock.rest(studentName.split(' ')[0])}
+          {t.lock.setBy(guardian.name)} ·{' '}
+          {guardian.lockNow
+            ? fil
+              ? 'Offline na lockdown. Emergency call lang ang puwede.'
+              : 'All apps & navigation locked offline. Emergency calls only.'
+            : t.lock.rest(studentName.split(' ')[0])}
         </Text>
       </View>
 

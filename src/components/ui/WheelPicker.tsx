@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedReaction,
@@ -76,6 +76,7 @@ export function WheelPicker({ items, index, onChange, width = 64, accessibilityL
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
         snapToInterval={ITEM}
         decelerationRate="fast"
         // Start on the saved value even if the wheel mounts off-screen (paged onboarding):
@@ -87,14 +88,30 @@ export function WheelPicker({ items, index, onChange, width = 64, accessibilityL
         contentContainerStyle={{ paddingVertical: ITEM * ((VISIBLE - 1) / 2) }}
       >
         {items.map((label, i) => (
-          <WheelItem key={label + i} label={label} i={i} y={y} />
+          <WheelItem
+            key={label + i}
+            label={label}
+            i={i}
+            y={y}
+            onPress={() => ref.current?.scrollTo({ y: i * ITEM, animated: true })}
+          />
         ))}
       </Animated.ScrollView>
     </View>
   );
 }
 
-function WheelItem({ label, i, y }: { label: string; i: number; y: SharedValue<number> }) {
+function WheelItem({
+  label,
+  i,
+  y,
+  onPress,
+}: {
+  label: string;
+  i: number;
+  y: SharedValue<number>;
+  onPress: () => void;
+}) {
   const style = useAnimatedStyle(() => {
     const d = Math.abs(y.get() / ITEM - i);
     return {
@@ -103,11 +120,13 @@ function WheelItem({ label, i, y }: { label: string; i: number; y: SharedValue<n
     };
   });
   return (
-    <Animated.View style={[styles.item, style]}>
-      <Text variant="title" style={styles.itemText}>
-        {label}
-      </Text>
-    </Animated.View>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+      <Animated.View style={[styles.item, style]}>
+        <Text variant="title" style={styles.itemText}>
+          {label}
+        </Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 

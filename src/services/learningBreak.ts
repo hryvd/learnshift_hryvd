@@ -17,3 +17,16 @@ export function breakTransition(state: BreakState, event: BreakEvent): BreakStat
   }
   return state;
 }
+
+const STREAK_FACTORS = [1.0, 0.75, 0.55, 0.4, 0.3] as const;
+
+/**
+ * Shortens the next break timer each time the student persists on distracting
+ * entertainment apps instead of studying, floored safely to avoid instant loops.
+ */
+export function adaptiveBreakIntervalSec(baseSec: number, persistentStreak: number): number {
+  const safeBase = Math.max(10, Math.min(3600, Math.round(baseSec)));
+  const idx = Math.max(0, Math.min(STREAK_FACTORS.length - 1, Math.floor(persistentStreak)));
+  const floor = Math.min(safeBase, Math.max(10, Math.round(safeBase * 0.25)));
+  return Math.max(floor, Math.round(safeBase * STREAK_FACTORS[idx]));
+}

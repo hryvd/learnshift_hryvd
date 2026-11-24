@@ -9,7 +9,11 @@ import { space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { formatClock, useT } from '@/i18n/useT';
 import { BEDTIME_STARTS, bedtimeStartIndex, clampBedtimeStart } from '@/lib/bedtime';
+import { IS_PITCH } from '@/lib/config';
+import { flushStudent } from '@/services/backend/sync';
+import { useDevice } from '@/services/monitor/bridge';
 import { useAppStore, type BedtimeDays } from '@/store/useAppStore';
+import { useAuth } from '@/store/useAuth';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
@@ -135,6 +139,9 @@ export default function BedtimeEditor() {
           block
           onPress={() => {
             useAppStore.getState().setBedtime(times, days);
+            void useDevice.getState().refresh();
+            const uid = useAuth.getState().profile?.id;
+            if (!IS_PITCH && uid) void flushStudent(uid).catch(() => {});
             router.back();
           }}
         />

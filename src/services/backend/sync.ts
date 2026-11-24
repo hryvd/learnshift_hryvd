@@ -12,11 +12,13 @@ import type { NudgeEntry } from '@/data/seed';
 import { SKILLS, type SkillId } from '@/data/skills';
 import { supabase } from '@/lib/supabase';
 import { clampBedtimeStart } from '@/lib/bedtime';
+import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import type { ArmStats } from '@/services/types';
 import {
   PRIOR_MASTERY,
   todayKey,
   useAppStore,
+  type AccountRequest,
   type BedtimeDays,
   type TimeRequest,
   type UsageDay,
@@ -36,7 +38,7 @@ export function onPulled(fn: Listener) {
 // ── Pull ─────────────────────────────────────────────────────────────────
 
 export async function pullStudent(userId: string) {
-  const [prog, mastery, daily, settings, controls, links, classes, nudges, requests, usage, attempts, profile] =
+  const [prog, mastery, daily, settings, controls, links, classes, nudges, requests, accountReqs, usage, attempts, profile] =
     await Promise.all([
       supabase.from('progress').select('*').eq('student_id', userId).maybeSingle(),
       supabase.from('mastery').select('skill_id, p').eq('student_id', userId),
@@ -56,6 +58,12 @@ export async function pullStudent(userId: string) {
       supabase.from('nudge_events').select('*').eq('student_id', userId).order('at', { ascending: false }).limit(60),
       supabase
         .from('time_requests')
+        .select('*')
+        .eq('student_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase
+        .from('account_requests')
         .select('*')
         .eq('student_id', userId)
         .order('created_at', { ascending: false })
@@ -129,11 +137,13 @@ export async function pullStudent(userId: string) {
     name: guardians[0]?.name ?? '',
     linked: guardians.length > 0,
     lockEnabled: !!controls.data?.lock_enabled && guardians.length > 0,
+    lockNow: !!controls.data?.lock_now && guardians.length > 0,
     lateNightAlerts: controls.data?.late_alerts ?? true,
   };
   patch.limits = {
     scroll: controls.data?.scroll_limit ?? null,
     games: controls.data?.games_limit ?? null,
+    breakIntervalSec: guardians.length > 0 ? (controls.data?.break_interval_sec ?? null) : null,
   };
   if (controls.data)
     patch.lock = {
@@ -142,9 +152,41 @@ export async function pullStudent(userId: string) {
       unlockUntil: controls.data.unlock_until,
     };
 
-  patch.classes = (classes.data ?? [])
+  const joinedClasses = (classes.data ?? [])
     .map((c) => c.classes as unknown as { id: string; name: string; grade: number } | null)
     .filter((c): c is { id: string; name: string; grade: number } => !!c);
+  patch.classes = joinedClasses;
+
+  if (joinedClasses.length > 0) {
+    const { data: modRows } = await supabase
+      .from('class_modules')
+      .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+      .in(
+        'class_id',
+        joinedClasses.map((c) => c.id),
+      )
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (modRows) {
+      patch.classModules = modRows.map(
+        (m): ClassModule => ({
+          id: m.id,
+          classId: m.class_id,
+          title: m.title,
+          subject: m.subject,
+          sourceName: m.source_name,
+          summary: m.summary ?? '',
+          flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+          questions: (m.questions ?? []) as ModuleQuestion[],
+          published: !!m.published,
+          createdAt: m.created_at,
+        }),
+      );
+    }
+  } else {
+    patch.classModules = [];
+  }
 
   if (nudges.data) {
     const server: NudgeEntry[] = nudges.data.map((n) => ({
@@ -168,6 +210,14 @@ export async function pullStudent(userId: string) {
       status: r.status,
     }));
 
+  if (accountReqs.data)
+    patch.accountRequests = accountReqs.data.map((r): AccountRequest => ({
+      id: r.id,
+      at: r.created_at,
+      kind: r.kind,
+      status: r.status,
+    }));
+
   if (usage.data) {
     const server: UsageDay[] = usage.data.map((u) => ({
       day: u.day,
@@ -182,17 +232,44 @@ export async function pullStudent(userId: string) {
       sessions: u.sessions,
       unlocks: u.unlocks,
     }));
-    // Keep today's local break count if it hasn't landed yet.
-    const today = s.usage.find((u) => u.day === todayKey());
+    // Keep today's higher local break/learning counts until the server reflects them.
+    const todayStr = todayKey();
+    const today = s.usage.find((u) => u.day === todayStr);
+    const localTodayBreaks = Math.max(today?.breaks ?? 0, s.breaksDay === todayStr ? s.breaksToday : 0);
+    const localTodayLearning = today?.learning ?? 0;
+    const serverToday = server.find((u) => u.day === todayStr);
     patch.usage = server.map((u) =>
-      u.day === todayKey() && today && dirty.usageToday
-        ? { ...u, breaks: Math.max(u.breaks, today.breaks), learning: Math.max(u.learning, today.learning) }
+      u.day === todayStr
+        ? {
+            ...u,
+            breaks: Math.max(u.breaks, localTodayBreaks),
+            learning: Math.max(u.learning, localTodayLearning),
+          }
         : u,
     );
-    if (dirty.usageToday && today && !server.some((u) => u.day === todayKey())) patch.usage.push(today);
-    const t = patch.usage.find((u) => u.day === todayKey());
-    patch.breaksToday = Math.max(t?.breaks ?? 0, s.breaksDay === todayKey() ? s.breaksToday : 0);
-    patch.breaksDay = todayKey();
+    if (!serverToday && (today || localTodayBreaks > 0)) {
+      patch.usage.push(
+        today ?? {
+          day: todayStr,
+          total: 0,
+          video: 0,
+          social: 0,
+          games: 0,
+          late: 0,
+          offAt: null,
+          breaks: localTodayBreaks,
+          learning: localTodayLearning,
+          sessions: 0,
+          unlocks: 0,
+        },
+      );
+    }
+    const t = patch.usage.find((u) => u.day === todayStr);
+    patch.breaksToday = Math.max(t?.breaks ?? 0, localTodayBreaks);
+    patch.breaksDay = todayStr;
+    if (localTodayBreaks > (serverToday?.breaks ?? 0)) {
+      patch.dirty = { ...dirty, usageToday: true };
+    }
   }
 
   if (attempts.data) {
@@ -217,9 +294,13 @@ export async function pullStudent(userId: string) {
 // ── Push ─────────────────────────────────────────────────────────────────
 
 let flushing = false;
+let flushPending = false;
 
 export async function flushStudent(userId: string) {
-  if (flushing) return;
+  if (flushing) {
+    flushPending = true;
+    return;
+  }
   flushing = true;
   try {
     const s = useAppStore.getState();
@@ -331,6 +412,10 @@ export async function flushStudent(userId: string) {
     }
   } finally {
     flushing = false;
+    if (flushPending) {
+      flushPending = false;
+      if (hasPending()) flushStudent(userId).catch(() => {});
+    }
   }
 }
 
@@ -353,7 +438,7 @@ export function startStudentSync(userId: string): () => void {
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const pushSoon = (ms = 1500) => {
+  const pushSoon = (ms = 400) => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       if (!stopped && hasPending()) flushStudent(userId).catch(() => {});
@@ -391,7 +476,7 @@ export function startStudentSync(userId: string): () => void {
       return;
     }
     // A long sleep usually kills the realtime socket: rebuild the channel.
-    if (hiddenAt != null && Date.now() - hiddenAt > 30_000) {
+    if (hiddenAt != null && Date.now() - hiddenAt > 5_000) {
       supabase.removeChannel(channel);
       channel = subscribe();
     }
@@ -421,6 +506,11 @@ export function startStudentSync(userId: string): () => void {
       )
       .on(
         'postgres_changes',
+        { event: '*', schema: 'public', table: 'account_requests', filter: `student_id=eq.${userId}` },
+        pull,
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'guardian_links', filter: `student_id=eq.${userId}` },
         pull,
       )
@@ -429,6 +519,7 @@ export function startStudentSync(userId: string): () => void {
         { event: '*', schema: 'public', table: 'class_members', filter: `student_id=eq.${userId}` },
         pull,
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'class_modules' }, pull)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'usage_daily', filter: `student_id=eq.${userId}` },

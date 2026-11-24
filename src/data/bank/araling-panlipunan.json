@@ -42,7 +42,8 @@
       "Magsasaka"
     ],
     "answer": 0,
-    "explanation": "Ang guro ang nagtuturo at gumagabay sa mga mag-aaral."
+    "explanation": "Ang guro ang nagtuturo at gumagabay sa mga mag-aaral.",
+    "visual": { "kind": "scene", "id": "school" }
   },
   {
     "id": "araling-panlipunan-g1-04",
@@ -132,7 +133,8 @@
       "Punitin ang mga pahina"
     ],
     "answer": 2,
-    "explanation": "Ang hiniram na gamit ay dapat alagaan at ibalik upang magamit din ng iba."
+    "explanation": "Ang hiniram na gamit ay dapat alagaan at ibalik upang magamit din ng iba.",
+    "visual": { "kind": "scene", "id": "books" }
   },
   {
     "id": "araling-panlipunan-g1-10",
@@ -147,7 +149,8 @@
       "Itapon ang kutsara"
     ],
     "answer": 1,
-    "explanation": "Ang paghuhugas ng kamay bago kumain ay tumutulong maiwasan ang pagkalat ng mikrobyo."
+    "explanation": "Ang paghuhugas ng kamay bago kumain ay tumutulong maiwasan ang pagkalat ng mikrobyo.",
+    "visual": { "kind": "scene", "id": "wash_hands" }
   },
   {
     "id": "araling-panlipunan-g2-01",
@@ -169,7 +172,7 @@
     "subject": "araling-panlipunan",
     "grade": 2,
     "topic": "Mga lingkod",
-    "prompt": "Sino ang tumutulong sa pag-apula ng sunog?",
+    "prompt": "Tingnan ang larawan. Sino ang tumutulong sa pag-apula ng sunog?",
     "options": [
       "Bumbero",
       "Mananahi",
@@ -177,7 +180,8 @@
       "Mangingisda"
     ],
     "answer": 0,
-    "explanation": "May kagamitan at pagsasanay ang mga bumbero upang tumugon sa sunog."
+    "explanation": "May kagamitan at pagsasanay ang mga bumbero upang tumugon sa sunog.",
+    "visual": { "kind": "scene", "id": "firefighter" }
   },
   {
     "id": "araling-panlipunan-g2-03",
@@ -192,14 +196,15 @@
       "Aklatan"
     ],
     "answer": 3,
-    "explanation": "Ang aklatan ay lugar para sa pagbabasa at paghiram ng mga aklat."
+    "explanation": "Ang aklatan ay lugar para sa pagbabasa at paghiram ng mga aklat.",
+    "visual": { "kind": "scene", "id": "books" }
   },
   {
     "id": "araling-panlipunan-g2-04",
     "subject": "araling-panlipunan",
     "grade": 2,
     "topic": "Direksiyon",
-    "prompt": "Sa karaniwang mapa na may hilaga sa itaas, anong direksiyon ang nasa kanan?",
+    "prompt": "Tingnan ang mapa na may hilaga (N) sa itaas. Anong direksiyon ang nasa kanan (?)?",
     "options": [
       "Timog",
       "Hilaga",
@@ -207,7 +212,8 @@
       "Kanluran"
     ],
     "answer": 2,
-    "explanation": "Kapag nakaharap sa hilaga sa mapa, nasa kanan ang silangan at nasa kaliwa ang kanluran."
+    "explanation": "Kapag nakaharap sa hilaga sa mapa, nasa kanan ang silangan at nasa kaliwa ang kanluran.",
+    "visual": { "kind": "scene", "id": "compass", "hideEast": true }
   },
   {
     "id": "araling-panlipunan-g2-05",
@@ -237,7 +243,8 @@
       "Lalagyan para sa basag na salamin"
     ],
     "answer": 0,
-    "explanation": "Nabubulok ang balat ng saging at maaari itong gawing compost kung may angkop na sistema."
+    "explanation": "Nabubulok ang balat ng saging at maaari itong gawing compost kung may angkop na sistema.",
+    "visual": { "kind": "scene", "id": "banana" }
   },
   {
     "id": "araling-panlipunan-g2-07",
@@ -274,7 +281,7 @@
     "subject": "araling-panlipunan",
     "grade": 2,
     "topic": "Hanapbuhay",
-    "prompt": "Sino ang nagtatanim ng palay upang makagawa ng bigas?",
+    "prompt": "Tingnan ang larawan. Sino ang nagtatanim ng palay upang makagawa ng bigas?",
     "options": [
       "Karpintero",
       "Magsasaka",
@@ -282,7 +289,8 @@
       "Drayber"
     ],
     "answer": 1,
-    "explanation": "Ang magsasaka ay nagtatanim at nag-aani ng palay na pinagmumulan ng bigas."
+    "explanation": "Ang magsasaka ay nagtatanim at nag-aani ng palay na pinagmumulan ng bigas.",
+    "visual": { "kind": "scene", "id": "rice_field" }
   },
   {
     "id": "araling-panlipunan-g2-10",

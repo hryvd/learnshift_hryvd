@@ -56,8 +56,33 @@ function ForYou() {
   const { c } = useTheme();
   const grade = useAppStore((s) => s.learningGrade);
   const fil = useAppStore((s) => s.lang === 'fil');
+  const classModules = useAppStore((s) => s.classModules);
   return (
     <View style={{ gap: 14 }}>
+      {classModules.length > 0 ? (
+        <Card style={{ gap: 12 }}>
+          <Text variant="overline" color="accent">
+            {fil ? 'MULA SA GURO MO' : 'FROM YOUR TEACHER'}
+          </Text>
+          {classModules.map((m) => (
+            <Card
+              key={m.id}
+              onPress={() => router.push({ pathname: '/module/[id]', params: { id: m.id } })}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: c.inset }}
+            >
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text variant="headline" numberOfLines={1}>
+                  {m.title}
+                </Text>
+                <Text variant="caption" numberOfLines={1}>
+                  {m.subject} · {m.flashcards.length} flashcards · {m.questions.length} quiz Qs
+                </Text>
+              </View>
+              <Play size={18} color={c.accent} weight="fill" />
+            </Card>
+          ))}
+        </Card>
+      ) : null}
       <Card style={{ gap: 12 }}>
         <Text variant="overline">{fil ? 'ANG IYONG PRACTICE' : 'YOUR PRACTICE'}</Text>
         <Text variant="title">Grade {grade} · {fil ? 'Piliin ang paksa' : 'Pick a subject'}</Text>

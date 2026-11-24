@@ -8,13 +8,29 @@ import { AppState } from 'react-native';
 import { create } from 'zustand';
 
 import type { NudgeEntry } from '@/data/seed';
+import { SKILL_BY_ID, type SkillId } from '@/data/skills';
 import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
 import { supabase } from '@/lib/supabase';
-import { todayKey, type BedtimeDays, type TimeRequest, type UsageDay } from '@/store/useAppStore';
+import { todayKey, type AccountRequest, type BedtimeDays, type TimeRequest, type UsageDay } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
+export type LearnerStyle =
+  | 'visual_paced'
+  | 'quick_solver'
+  | 'reflective_deep'
+  | 'consistent_builder'
+  | 'getting_started';
+
+export type LearningProfile = {
+  learnerStyle: LearnerStyle;
+  strongSkills: SkillId[];
+  growingSkills: SkillId[];
+  bestContext: string | null;
+  totalAttempts: number;
+};
+
 export type Child = { id: string; name: string; grade: number | null };
-export type AppCategory = 'video' | 'social' | 'games' | 'study' | 'other';
+export type AppCategory = 'video' | 'social' | 'games' | 'messaging' | 'study' | 'other';
 export type AppDay = { day: string; package: string; label: string; category: AppCategory; minutes: number };
 export type LiveNow = {
   package: string | null;
@@ -28,16 +44,20 @@ export type ChildData = {
   usage: UsageDay[];
   apps: AppDay[];
   live: LiveNow | null;
+  learningProfile: LearningProfile | null;
   nudges: NudgeEntry[];
   requests: TimeRequest[];
+  accountRequests: AccountRequest[];
   controls: {
     lockEnabled: boolean;
+    lockNow: boolean;
     lockStart: number;
     lockEnd: number;
     lateAlerts: boolean;
     unlockUntil: string | null;
     scrollLimit: number | null;
     gamesLimit: number | null;
+    breakIntervalSec: number | null;
   };
   settings: { bedtimeStart: number; bedtimeEnd: number; bedtimeDays: BedtimeDays; limitStyle: 'adaptive' | 'fixed' };
 };
@@ -59,6 +79,16 @@ export const useGuardian = create<GuardianState>()((set) => ({
   data: {},
   select: (selected) => set({ selected }),
 }));
+
+export function resetGuardian() {
+  useGuardian.setState({
+    loading: true,
+    error: null,
+    children: [],
+    selected: null,
+    data: {},
+  });
+}
 
 const DAY_MS = 24 * 3600 * 1000;
 
@@ -87,12 +117,42 @@ export async function loadChildren() {
   });
 }
 
+const LEARNER_STYLES = new Set<LearnerStyle>([
+  'visual_paced',
+  'quick_solver',
+  'reflective_deep',
+  'consistent_builder',
+  'getting_started',
+]);
+
+function parseSkillList(raw: unknown): SkillId[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((s): s is SkillId => typeof s === 'string' && s in SKILL_BY_ID);
+}
+
+function parseLearningProfile(raw: unknown): LearningProfile | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const style =
+    typeof r.learner_style === 'string' && LEARNER_STYLES.has(r.learner_style as LearnerStyle)
+      ? (r.learner_style as LearnerStyle)
+      : 'getting_started';
+  return {
+    learnerStyle: style,
+    strongSkills: parseSkillList(r.strong_skills),
+    growingSkills: parseSkillList(r.growing_skills),
+    bestContext: typeof r.best_context === 'string' ? r.best_context : null,
+    totalAttempts: typeof r.total_attempts === 'number' ? r.total_attempts : 0,
+  };
+}
+
 export async function loadChild(id: string) {
   const since = todayKey(new Date(Date.now() - 13 * DAY_MS));
-  const [usage, nudges, requests, controls, settings, apps, live] = await Promise.all([
+  const [usage, nudges, requests, accountReqs, controls, settings, apps, live, profileRes] = await Promise.all([
     supabase.from('usage_daily').select('*').eq('student_id', id).gte('day', since).order('day'),
     supabase.from('nudge_events').select('*').eq('student_id', id).order('at', { ascending: false }).limit(40),
     supabase.from('time_requests').select('*').eq('student_id', id).order('created_at', { ascending: false }).limit(20),
+    supabase.from('account_requests').select('*').eq('student_id', id).order('created_at', { ascending: false }).limit(20),
     supabase.from('guardian_controls').select('*').eq('student_id', id).maybeSingle(),
     supabase.from('student_settings').select('*').eq('student_id', id).maybeSingle(),
     supabase
@@ -103,6 +163,7 @@ export async function loadChild(id: string) {
       .order('minutes', { ascending: false })
       .limit(400),
     supabase.from('live_status').select('*').eq('student_id', id).maybeSingle(),
+    supabase.rpc('guardian_learning_profile', { p_student_id: id }),
   ]);
   const err = [usage, nudges, requests, controls, settings, apps, live].find((r) => r.error)?.error;
   if (err) {
@@ -136,6 +197,7 @@ export async function loadChild(id: string) {
           updatedAt: live.data.updated_at,
         }
       : null,
+    learningProfile: profileRes.error ? null : parseLearningProfile(profileRes.data),
     nudges: (nudges.data ?? []).map((n) => ({
       id: n.client_id,
       at: n.at,
@@ -144,14 +206,17 @@ export async function loadChild(id: string) {
       response: n.response,
     })),
     requests: (requests.data ?? []).map((r) => ({ id: r.id, at: r.created_at, minutes: r.minutes, status: r.status })),
+    accountRequests: (accountReqs.data ?? []).map((r) => ({ id: r.id, at: r.created_at, kind: r.kind, status: r.status })),
     controls: {
       lockEnabled: c?.lock_enabled ?? false,
+      lockNow: c?.lock_now ?? false,
       lockStart: c?.lock_start ?? st?.bedtime_start ?? 1320,
       lockEnd: c?.lock_end ?? st?.bedtime_end ?? 360,
       lateAlerts: c?.late_alerts ?? true,
       unlockUntil: c?.unlock_until ?? null,
       scrollLimit: c?.scroll_limit ?? null,
       gamesLimit: c?.games_limit ?? null,
+      breakIntervalSec: c?.break_interval_sec ?? null,
     },
     settings: {
       bedtimeStart: st?.bedtime_start ?? 1320,
@@ -213,6 +278,7 @@ export function useGuardianLive() {
     const ch = supabase
       .channel(`guardian-child-${selected}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'time_requests', filter: f }, reload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'account_requests', filter: f }, reload)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'usage_daily', filter: f }, reload)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'nudge_events', filter: f }, reload)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'guardian_controls', filter: f }, reload)

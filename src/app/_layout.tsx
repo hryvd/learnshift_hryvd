@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,7 +15,10 @@ import {
 
 import { ease, timing, useReducedMotion } from '@/design/motion';
 import { ThemeProvider, useTheme } from '@/design/theme';
+import { Paty } from '@/components/mascot/Paty';
+import { SplashTransition } from '@/components/mascot/SplashTransition';
 import { PhoneFrame, SHOW_FRAME } from '@/components/web/PhoneFrame';
+import * as api from '@/services/backend/api';
 import { SessionEffects } from '@/services/backend/session';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
@@ -41,18 +44,55 @@ function App() {
     return useAppStore.persist.onFinishHydration(() => setHydrated(true));
   }, [hydrated]);
 
-  useEffect(() => {
-    if ((loaded || error) && hydrated && authReady) SplashScreen.hideAsync().catch(() => {});
-  }, [loaded, error, hydrated, authReady]);
-
   if ((!loaded && !error) || !hydrated) return null;
 
   return (
     <GestureHandlerRootView style={styles.root}>
       <SessionEffects />
-      <ThemeProvider>{authReady ? <Shell /> : null}</ThemeProvider>
+      <ThemeProvider>
+        <ErrorBoundary>{authReady ? <Shell /> : null}</ErrorBoundary>
+        <SplashTransition ready={authReady} />
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <View style={styles.errRoot}>
+        <Paty expression="concerned" size={110} alive={false} interactive={false} />
+        <RNText style={styles.errTitle}>Something went wrong</RNText>
+        <RNText style={styles.errSub}>LearnShift hit an unexpected screen error. Reload or sign out to continue.</RNText>
+        <Pressable
+          onPress={() => {
+            this.setState({ error: null });
+            router.replace('/');
+          }}
+          style={styles.errBtn}
+        >
+          <RNText style={styles.errBtnText}>Reload app</RNText>
+        </Pressable>
+        <Pressable
+          onPress={async () => {
+            await api.signOut().catch(() => {});
+            this.setState({ error: null });
+            router.replace('/onboarding');
+          }}
+          style={[styles.errBtn, styles.errSecondary]}
+        >
+          <RNText style={styles.errSecondaryText}>Sign out</RNText>
+        </Pressable>
+      </View>
+    );
+  }
 }
 
 function Shell() {
@@ -126,4 +166,28 @@ function ThemeCrossfade() {
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: from }, s]} />;
 }
 
-const styles = StyleSheet.create({ root: { flex: 1 } });
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  errRoot: {
+    flex: 1,
+    backgroundColor: '#F6F5F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    gap: 14,
+  },
+  errTitle: { fontSize: 22, fontWeight: '800', color: '#111111', textAlign: 'center' },
+  errSub: { fontSize: 15, color: '#62666C', textAlign: 'center', lineHeight: 22 },
+  errBtn: {
+    minWidth: 220,
+    minHeight: 48,
+    borderRadius: 999,
+    backgroundColor: '#C8400F',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  errBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  errSecondary: { backgroundColor: '#EAE8E2' },
+  errSecondaryText: { color: '#111111', fontSize: 15, fontWeight: '600' },
+});
