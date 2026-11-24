@@ -12,6 +12,8 @@ type UsageDay = {
   video_min?: number;
   social_min?: number;
   games_min?: number;
+  learning_min?: number;
+  breaks?: number;
   late_min?: number;
   sessions?: number;
   unlocks?: number;
@@ -21,7 +23,7 @@ type UsageDay = {
 type AppRow = { day: string; package: string; label: string; category: string; minutes: number };
 type Live = { package?: string | null; label?: string | null; category?: string | null; session_min?: number; screen_on?: boolean };
 
-const CATS = new Set(['video', 'social', 'games', 'study', 'other']);
+const CATS = new Set(['video', 'social', 'games', 'messaging', 'study', 'other']);
 const LEVELS = new Set(['checkin', 'break', 'winddown', 'lock']);
 const RESPONSES = new Set(['took', 'snoozed', 'followed', 'locked', 'requested', 'quiet']);
 const int = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
@@ -72,22 +74,45 @@ serve(async (req) => {
     if (error) throw error;
   }
 
-  const usageRows = usage
-    .filter((u) => /^\d{4}-\d{2}-\d{2}$/.test(u.day))
-    .map((u) => ({
-      student_id: studentId,
-      day: u.day,
-      total_min: int(u.total_min, 1440),
-      video_min: int(u.video_min, 1440),
-      social_min: int(u.social_min, 1440),
-      games_min: int(u.games_min, 1440),
-      late_min: int(u.late_min, 1440),
-      sessions: int(u.sessions, 2000),
-      unlocks: int(u.unlocks, 2000),
-      off_at: u.off_at == null ? null : int(u.off_at, 1439),
-      source,
-      updated_at: new Date().toISOString(),
-    }));
+  const validUsage = usage.filter((u) => /^\d{4}-\d{2}-\d{2}$/.test(u.day));
+  const existingLearning = new Map<string, number>();
+  const existingBreaks = new Map<string, number>();
+  if (validUsage.length) {
+    const { data: existingUsage } = await admin
+      .from('usage_daily')
+      .select('day, learning_min, breaks')
+      .eq('student_id', studentId)
+      .in(
+        'day',
+        validUsage.map((u) => u.day),
+      );
+    for (const r of existingUsage ?? []) {
+      existingLearning.set(r.day, r.learning_min ?? 0);
+      existingBreaks.set(r.day, r.breaks ?? 0);
+    }
+  }
+  const usageRows = validUsage.map((u) => ({
+    student_id: studentId,
+    day: u.day,
+    total_min: int(u.total_min, 1440),
+    video_min: int(u.video_min, 1440),
+    social_min: int(u.social_min, 1440),
+    games_min: int(u.games_min, 1440),
+    learning_min:
+      u.learning_min == null
+        ? (existingLearning.get(u.day) ?? 0)
+        : Math.max(existingLearning.get(u.day) ?? 0, int(u.learning_min, 1440)),
+    breaks:
+      u.breaks == null
+        ? (existingBreaks.get(u.day) ?? 0)
+        : Math.max(existingBreaks.get(u.day) ?? 0, int(u.breaks, 10000)),
+    late_min: int(u.late_min, 1440),
+    sessions: int(u.sessions, 2000),
+    unlocks: int(u.unlocks, 2000),
+    off_at: u.off_at == null ? null : int(u.off_at, 1439),
+    source,
+    updated_at: new Date().toISOString(),
+  }));
   if (usageRows.length) {
     const { error } = await admin.from('usage_daily').upsert(usageRows, { onConflict: 'student_id,day' });
     if (error) throw error;
@@ -133,5 +158,28 @@ serve(async (req) => {
   );
   if (late) alerted = await lateNightAlert(studentId, int(late.clock, 1439), int(late.late, 600));
 
-  return json({ events: nudgeRows.length, usage: usageRows.length, apps: appRows.length, live: !!live, alerted });
+  // Return fresh parent & student controls so background monitors stay synced on phone wake-up.
+  const [{ data: gc }, { data: st }, { data: links }] = await Promise.all([
+    admin.from('guardian_controls').select('*').eq('student_id', studentId).maybeSingle(),
+    admin.from('student_settings').select('*').eq('student_id', studentId).maybeSingle(),
+    admin.from('guardian_links').select('guardian_id').eq('student_id', studentId).limit(1),
+  ]);
+  const hasGuardian = (links?.length ?? 0) > 0;
+  const controls = {
+    linked: hasGuardian,
+    lockEnabled: hasGuardian && !!gc?.lock_enabled,
+    lockNow: hasGuardian && !!gc?.lock_now,
+    lockStart: gc?.lock_start ?? st?.bedtime_start ?? 1320,
+    lockEnd: gc?.lock_end ?? st?.bedtime_end ?? 360,
+    unlockUntil: gc?.unlock_until ? Date.parse(gc.unlock_until) || 0 : 0,
+    paused: !!st?.paused,
+    bedtimeStart: st?.bedtime_start ?? 1320,
+    bedtimeEnd: st?.bedtime_end ?? 360,
+    bedtimeDays: st?.bedtime_days ?? 'school',
+    scrollLimit: hasGuardian ? (gc?.scroll_limit ?? 0) : 0,
+    gamesLimit: hasGuardian ? (gc?.games_limit ?? 0) : 0,
+    parentBreakIntervalSec: hasGuardian ? (gc?.break_interval_sec ?? 0) : 0,
+  };
+
+  return json({ events: nudgeRows.length, usage: usageRows.length, apps: appRows.length, live: !!live, alerted, controls });
 });

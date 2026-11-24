@@ -53,3 +53,8 @@ modules/**/build/
 modules/**/.gradle/
 .env
 dist-app/
+
+# local CMake staging & downloaded iOS IPA artifacts
+/.c/
+*.ipa
+/artifacts/

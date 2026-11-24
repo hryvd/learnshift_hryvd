@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { ChatsCircle, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from 'phosphor-react-native';
+import { ChatsCircle, HouseLine, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from 'phosphor-react-native';
 
 import { BottomSheet, DarkTile, Text } from '@/components/ui';
 import { useLive } from '@/hooks/useLive';
@@ -91,6 +91,13 @@ export function ShiftSheet({ visible, onClose }: { visible: boolean; onClose: ()
           style={styles.tile}
           onPress={() => go('/focus')}
           art={<Timer size={70} weight="fill" color={c.tabProfile} />}
+        />
+        <DarkTile
+          title={t.isla.title}
+          status={t.isla.how}
+          style={styles.wide}
+          onPress={() => go('/isla')}
+          art={<HouseLine size={66} weight="fill" color={c.success} />}
         />
       </View>
     </BottomSheet>

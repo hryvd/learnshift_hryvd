@@ -3,6 +3,7 @@
  * user-facing message on failure.
  */
 import { errorText, functionError, supabase } from '@/lib/supabase';
+import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import type { Lang, Role } from '@/store/useAppStore';
 import { refreshProfile, useAuth } from '@/store/useAuth';
 import type { TutorAnswer, TutorVariant } from '@/services/types';
@@ -129,6 +130,52 @@ export async function removeStudent(classId: string, studentId: string) {
   if (error) fail(error);
 }
 
+export async function saveClassModule(input: {
+  classId: string;
+  title: string;
+  subject: string;
+  sourceName: string | null;
+  sourceExcerpt: string;
+  summary: string;
+  flashcards: ModuleFlashcard[];
+  questions: ModuleQuestion[];
+}): Promise<ClassModule> {
+  const { data, error } = await supabase
+    .from('class_modules')
+    .insert({
+      class_id: input.classId,
+      title: input.title.trim().slice(0, 120),
+      subject: input.subject.trim().slice(0, 40) || 'general',
+      source_name: input.sourceName,
+      source_excerpt: input.sourceExcerpt.slice(0, 12000),
+      summary: input.summary,
+      flashcards: input.flashcards,
+      questions: input.questions,
+      published: true,
+    })
+    .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+    .single();
+  if (error) fail(error);
+  if (!data) throw new Error('Failed to save module.');
+  return {
+    id: data.id,
+    classId: data.class_id,
+    title: data.title,
+    subject: data.subject,
+    sourceName: data.source_name,
+    summary: data.summary ?? '',
+    flashcards: (data.flashcards ?? []) as ModuleFlashcard[],
+    questions: (data.questions ?? []) as ModuleQuestion[],
+    published: !!data.published,
+    createdAt: data.created_at,
+  };
+}
+
+export async function deleteClassModule(id: string) {
+  const { error } = await supabase.from('class_modules').delete().eq('id', id);
+  if (error) fail(error);
+}
+
 // ── Time requests and controls ───────────────────────────────────────────
 
 export async function requestTime(minutes = 15) {
@@ -145,15 +192,44 @@ export async function decideRequest(id: string, approve: boolean) {
   return data;
 }
 
+export async function requestAccountAction(kind: 'sign_out' | 'delete_account') {
+  const { data, error } = await supabase.from('account_requests').insert({ kind }).select().single();
+  if (error) fail(error);
+  notify({ type: 'account_request', id: data.id });
+  return data as { id: string; created_at: string; kind: 'sign_out' | 'delete_account'; status: 'pending' };
+}
+
+export async function decideAccountRequest(id: string, approve: boolean) {
+  const { data, error } = await supabase.rpc('decide_account_request', { p_id: id, p_approve: approve });
+  if (error) fail(error);
+  notify({ type: 'account_request_decided', id });
+  return data;
+}
+
+export async function completeAccountRequest(id: string) {
+  const { data, error } = await supabase.rpc('complete_account_request', { p_id: id });
+  if (error) fail(error);
+  return data;
+}
+
+export async function approveDeleteStudentAccount(requestId: string) {
+  const { data, error } = await supabase.functions.invoke('delete-account', { body: { requestId } });
+  if (error) throw new Error(await functionError(error));
+  return data as { deleted: boolean; studentId: string };
+}
+
 export async function setControls(
   studentId: string,
   patch: Partial<{
     lock_enabled: boolean;
+    lock_now: boolean;
     lock_start: number;
     lock_end: number;
+    unlock_until: string | null;
     late_alerts: boolean;
     scroll_limit: number | null;
     games_limit: number | null;
+    break_interval_sec: number | null;
   }>,
 ) {
   const me = useAuth.getState().profile?.id;
@@ -161,7 +237,7 @@ export async function setControls(
     .from('guardian_controls')
     .upsert({ student_id: studentId, ...patch, updated_by: me, updated_at: new Date().toISOString() });
   if (error) fail(error);
-  if ('lock_enabled' in patch) notify({ type: 'lock_changed', studentId });
+  if ('lock_enabled' in patch || 'lock_now' in patch) notify({ type: 'lock_changed', studentId });
 }
 
 export async function setStudentSettings(

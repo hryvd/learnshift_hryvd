@@ -1,29 +1,26 @@
 import { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChalkboardTeacher, Copy, Plus, TrendDown, Warning } from 'phosphor-react-native';
+import { ArrowRight, BookOpenText, ChalkboardTeacher, Plus, TrendDown, Warning } from 'phosphor-react-native';
 
+import { Paty } from '@/components/mascot/Paty';
 import { ClassHeatmap, MasteryLegend, masteryColor } from '@/components/teacher/ClassHeatmap';
+import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
+import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import {
   BottomSheet,
   Card,
   Chip,
   DevChip,
   EmptyState,
-  ListGroup,
-  ListRow,
   Notice,
   PillButton,
-  PressableScale,
   SegmentedControl,
   Stagger,
   Text,
-  TextField,
 } from '@/components/ui';
 import { buildSections, needsSupport, type Section, type Student } from '@/data/class';
-import { QUESTION_BY_ID } from '@/data/questions';
 import { SKILL_BY_ID, SKILLS, type SkillId } from '@/data/skills';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
@@ -32,18 +29,13 @@ import { usePullRefresh } from '@/hooks/useAutoRefresh';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
-import * as api from '@/services/backend/api';
-import {
-  asSection,
-  loadClasses,
-  reviewAnswer,
-  useTeacher,
-  refreshTeacher,
-  useTeacherLive,
-  type ReviewRow,
-} from '@/services/backend/teacher';
+import type { ClassModule } from '@/services/ai/moduleGenerator';
+import { asSection, refreshTeacher, useTeacher, type LiveStudent } from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
+
+const EMPTY_MODULES: ClassModule[] = [];
+const EMPTY_STUDENTS: LiveStudent[] = [];
 
 export default function TeacherHome() {
   return IS_PITCH ? <PitchTeacher /> : <RealTeacher />;
@@ -51,6 +43,7 @@ export default function TeacherHome() {
 
 function PitchTeacher() {
   const mika = useAppStore((s) => s.mastery);
+  const pitchModules = useAppStore((s) => s.classModules);
   const sections = useMemo(() => buildSections(mika), [mika]);
   const [sectionId, setSectionId] = useState(sections[0].id);
   const section = sections.find((s) => s.id === sectionId) ?? sections[0];
@@ -59,7 +52,7 @@ function PitchTeacher() {
       sections={sections}
       section={section}
       onSection={setSectionId}
-      review={<PitchReviewQueue />}
+      moduleCount={pitchModules.length}
       title="Grade 8 – Sampaguita"
       subtitle={`${T.teacher} · ${T.learningOnly}`}
     />
@@ -67,32 +60,67 @@ function PitchTeacher() {
 }
 
 function RealTeacher() {
-  useTeacherLive();
+  const { c } = useTheme();
   const loading = useTeacher((s) => s.loading);
+  const error = useTeacher((s) => s.error);
   const classes = useTeacher((s) => s.classes);
   const selected = useTeacher((s) => s.selected);
   const students = useTeacher((s) => (s.selected ? s.students[s.selected] : undefined));
+  const selectedModules = useTeacher((s) => (s.selected ? s.modules[s.selected] : undefined));
+  const modules = selectedModules ?? EMPTY_MODULES;
   const me = useAuth((s) => s.profile);
   const [creating, setCreating] = useState(false);
-  const cls = classes.find((c) => c.id === selected) ?? null;
+  const cls = classes.find((x) => x.id === selected) ?? null;
   const sections = useMemo(
-    () => classes.map((c) => asSection(c, c.id === selected ? (students ?? []) : [])),
+    () => classes.map((x) => asSection(x, x.id === selected ? (students ?? EMPTY_STUDENTS) : EMPTY_STUDENTS)),
     [classes, selected, students],
   );
 
-  if (!loading && (classes.length === 0 || creating)) {
+  if (loading && classes.length === 0) {
     return (
-      <Frame title={T.createTitle} subtitle={me?.display_name ?? ''}>
-        <CreateClass
+      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs>
+        <Card style={styles.loadingCard}>
+          <ActivityIndicator size="small" color={c.accent} />
+          <Text variant="subhead">Loading your classes…</Text>
+        </Card>
+      </Frame>
+    );
+  }
+
+  if (error && classes.length === 0) {
+    return (
+      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs>
+        <Notice text={error} />
+        <PillButton label="Try again" block onPress={() => void refreshTeacher()} />
+        <TeacherAccountCard />
+      </Frame>
+    );
+  }
+
+  if (classes.length === 0 || creating) {
+    return (
+      <Frame title={classes.length === 0 ? T.createTitle : T.newClass} subtitle={me?.display_name ?? T.teacher} showTabs>
+        {classes.length === 0 ? (
+          <Card style={styles.welcomeCard}>
+            <Paty expression="waving" size={72} />
+            <View style={styles.flex}>
+              <Text variant="headline">Welcome{me?.display_name ? `, ${me.display_name.split(' ')[0]}` : ''}!</Text>
+              <Text variant="subhead">
+                Create a class to get a student join code, upload lesson modules for AI quizzes, and review class mastery.
+              </Text>
+            </View>
+          </Card>
+        ) : null}
+        <CreateClassCard
           first={classes.length === 0}
           onDone={() => setCreating(false)}
           onCancel={classes.length ? () => setCreating(false) : undefined}
         />
-        <AccountCard />
+        <TeacherAccountCard />
       </Frame>
     );
   }
-  if (!cls) return <Frame title={T.classes} subtitle={me?.display_name ?? ''} />;
+  if (!cls) return <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs />;
 
   const section = sections.find((s) => s.id === cls.id)!;
   return (
@@ -103,22 +131,40 @@ function RealTeacher() {
       title={cls.name}
       subtitle={`${me?.display_name ?? ''} · ${T.learningOnly}`}
       joinCode={cls.join_code}
+      moduleCount={modules.length}
       onNewClass={() => setCreating(true)}
       empty={students !== undefined && students.length === 0}
-      review={<RealReviewQueue />}
-      footer={<AccountCard classId={cls.id} />}
     />
   );
 }
 
-function Frame({ title, subtitle, children }: { title: string; subtitle: string; children?: React.ReactNode }) {
+function Frame({
+  title,
+  subtitle,
+  showTabs,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  showTabs?: boolean;
+  children?: React.ReactNode;
+}) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const pull = usePullRefresh(refreshTeacher);
   return (
-    <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
+    >
       <ScrollView
-        contentContainerStyle={[styles.body, { maxWidth: 560, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, { maxWidth: 560, paddingBottom: insets.bottom + 110 }]}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          IS_PITCH ? undefined : (
+            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
+          )
+        }
       >
         <View style={styles.header}>
           <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
@@ -133,81 +179,8 @@ function Frame({ title, subtitle, children }: { title: string; subtitle: string;
         </View>
         {children}
       </ScrollView>
-    </View>
-  );
-}
-
-function CreateClass({ first, onDone, onCancel }: { first: boolean; onDone: () => void; onCancel?: () => void }) {
-  const { c } = useTheme();
-  const [name, setName] = useState('');
-  const [grade, setGrade] = useState('8');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const create = async () => {
-    if (!name.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const c = await api.createClass(name, Number(grade));
-      await loadClasses();
-      useTeacher.getState().select(c.id);
-      onDone();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <Card style={styles.gap}>
-      {!first ? <Text variant="title">{T.newClass}</Text> : null}
-      <Text variant="subhead">{T.createSub}</Text>
-      {error ? <Notice text={error} /> : null}
-      <TextField label={T.className} placeholder={T.classNamePh} value={name} onChangeText={setName} maxLength={60} />
-      <Text variant="subhead" color="text">
-        {T.grade}
-      </Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {Array.from({ length: 10 }, (_, i) => String(i + 1)).map((g) => (
-          <PressableScale
-            key={g}
-            accessibilityLabel={`Grade ${g}`}
-            accessibilityState={{ selected: grade === g }}
-            onPress={() => setGrade(g)}
-            style={{ minWidth: 48, minHeight: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: grade === g ? c.accent : c.inset }}
-          >
-            <Text color={grade === g ? c.onAccent : c.text}>{g}</Text>
-          </PressableScale>
-        ))}
-      </View>
-      <PillButton label={busy ? '…' : T.create} block disabled={busy || !name.trim()} onPress={create} />
-      {onCancel ? <PillButton label="Cancel" kind="neutral" block onPress={onCancel} /> : null}
-    </Card>
-  );
-}
-
-function JoinCode({ code }: { code: string }) {
-  const { c } = useTheme();
-  const [copied, setCopied] = useState(false);
-  return (
-    <Card style={styles.joinCard}>
-      <View style={styles.flex}>
-        <Text variant="overline">{T.joinCode}</Text>
-        <Text variant="title" style={[fontFor(800), styles.codeText]} selectable>
-          {code}
-        </Text>
-        <Text variant="caption">{T.joinCodeSub}</Text>
-      </View>
-      <PillButton
-        label={copied ? '✓' : 'Copy'}
-        kind="secondary"
-        size="sm"
-        icon={copied ? undefined : <Copy size={15} weight="bold" color={c.accent} />}
-        onPress={() => {
-          Clipboard.setStringAsync(code).then(() => setCopied(true));
-        }}
-      />
-    </Card>
+      {showTabs ? <TeacherTabBar active="classes" /> : null}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -218,10 +191,9 @@ function Dashboard({
   title,
   subtitle,
   joinCode,
+  moduleCount,
   onNewClass,
   empty,
-  review,
-  footer,
 }: {
   sections: Section[];
   section: Section;
@@ -229,10 +201,9 @@ function Dashboard({
   title: string;
   subtitle: string;
   joinCode?: string;
+  moduleCount: number;
   onNewClass?: () => void;
   empty?: boolean;
-  review: React.ReactNode;
-  footer?: React.ReactNode;
 }) {
   const { c, isNight } = useTheme();
   const insets = useSafeAreaInsets();
@@ -240,7 +211,7 @@ function Dashboard({
   const { width } = useWindowDimensions();
   const wide = width >= 900;
   const [cell, setCell] = useState<{ s: Student; skill: SkillId } | null>(null);
-  // Students with no answers yet don't count toward gaps or support.
+
   const active = useMemo(
     () => section.students.filter((s) => (s as { answered?: number }).answered !== 0),
     [section],
@@ -250,7 +221,6 @@ function Dashboard({
     [section, active],
   );
 
-  // Most common root gap across the section.
   const rootCounts = useMemo(() => {
     const counts = new Map<SkillId, number>();
     for (const st of active) {
@@ -301,7 +271,21 @@ function Dashboard({
 
   const side = (
     <View style={styles.sideCol}>
-      {joinCode ? <JoinCode code={joinCode} /> : null}
+      {joinCode ? <JoinCodeCard code={joinCode} /> : null}
+      <Card style={styles.gap} onPress={() => router.replace('/teacher/modules')}>
+        <View style={styles.rowBetween}>
+          <View style={[styles.modBadge, { backgroundColor: c.accentTint }]}>
+            <BookOpenText size={20} weight="fill" color={c.accent} />
+          </View>
+          <View style={styles.flex}>
+            <Text variant="headline">{T.manageModules}</Text>
+            <Text variant="caption">
+              {moduleCount > 0 ? `${moduleCount} ${moduleCount === 1 ? 'module' : 'modules'} published` : T.modulesSub}
+            </Text>
+          </View>
+          <ArrowRight size={18} weight="bold" color={c.accent} />
+        </View>
+      </Card>
       <Card style={styles.gap}>
         <Text variant="title">{T.needs}</Text>
         {support.length === 0 ? <Text variant="subhead">{T.never}</Text> : null}
@@ -337,15 +321,13 @@ function Dashboard({
           </Card>
         ))}
       </Card>
-      {review}
-      {footer}
     </View>
   );
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
       <ScrollView
-        contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 110 }]}
         refreshControl={
           IS_PITCH ? undefined : (
             <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
@@ -434,242 +416,8 @@ function Dashboard({
           </View>
         ) : null}
       </BottomSheet>
-    </View>
-  );
-}
 
-/** Tutor answers that failed the math check (or came from the bank unsure), for review. */
-function RealReviewQueue() {
-  const { c } = useTheme();
-  const review = useTeacher((s) => s.review);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
-  const open = review.filter((r) => r.status === 'needs_review');
-  const done = review.filter((r) => r.status === 'approved' || r.status === 'edited').slice(0, 3);
-
-  const text = (r: ReviewRow) =>
-    r.teacherNote ??
-    [r.content.what, ...(r.content.steps ?? [])].filter(Boolean).join(' ') ??
-    '';
-
-  return (
-    <Card style={styles.gap}>
-      <View>
-        <Text variant="title">{T.review}</Text>
-        <Text variant="subhead">{T.reviewSub}</Text>
-      </View>
-      {error ? <Notice text={error} /> : null}
-      {open.length === 0 ? <EmptyState title={T.empty} subtitle={T.emptySub} expression="proud" /> : null}
-      {open.map((r) => {
-        const q = QUESTION_BY_ID[r.questionId];
-        const draft = drafts[r.id] ?? text(r);
-        return (
-          <View key={r.id} style={[styles.reviewItem, { backgroundColor: c.inset }]}>
-            <View style={styles.rowBetween}>
-              <Text variant="subhead" color="text" style={styles.flex} numberOfLines={1}>
-                {r.student}
-              </Text>
-              <Chip label={T.confidence(Math.round(r.confidence * 100))} kind="tinted" style={styles.smallChip} />
-            </View>
-            {q ? <Text variant="headline">{q.prompt.en}</Text> : null}
-            {q ? (
-              <Text variant="subhead">
-                {T.wrong}:{' '}
-                <Text variant="subhead" color="danger">
-                  {q.options[r.wrongIndex]}
-                </Text>
-                {'  ·  '}
-                {q.options[q.answer]} ✓
-              </Text>
-            ) : null}
-            <Text variant="overline">
-              {T.draft} · {r.source === 'generated' ? T.generated : T.bank} · {r.lang.toUpperCase()}
-            </Text>
-            {editing === r.id ? (
-              <TextInput
-                value={draft}
-                onChangeText={(v) => setDrafts((d) => ({ ...d, [r.id]: v }))}
-                multiline
-                style={[styles.input, { color: c.text, backgroundColor: c.card, borderColor: c.hairline }]}
-                accessibilityLabel={T.draft}
-              />
-            ) : (
-              <Text variant="body">{draft}</Text>
-            )}
-            {r.content.problems?.length ? (
-              <Text variant="caption">
-                {T.problems}: {r.content.problems.join('; ')}
-              </Text>
-            ) : null}
-            <View style={styles.actions}>
-              {editing === r.id ? (
-                <PillButton
-                  label={T.save}
-                  size="sm"
-                  onPress={() => {
-                    setEditing(null);
-                    reviewAnswer(r.id, 'edited', draft).catch((e: Error) => setError(e.message));
-                  }}
-                />
-              ) : (
-                <>
-                  <PillButton
-                    label={T.approve}
-                    size="sm"
-                    onPress={() => reviewAnswer(r.id, 'approved').catch((e: Error) => setError(e.message))}
-                  />
-                  <PillButton label={T.edit} kind="secondary" size="sm" onPress={() => setEditing(r.id)} />
-                </>
-              )}
-            </View>
-          </View>
-        );
-      })}
-      {done.map((r) => (
-        <View key={r.id} style={styles.rowBetween}>
-          <Text variant="subhead" style={styles.flex} numberOfLines={1}>
-            {r.student} · {QUESTION_BY_ID[r.questionId]?.prompt.en ?? r.questionId}
-          </Text>
-          <Chip label={r.status === 'approved' ? T.approved : T.edited} kind="outline" style={styles.smallChip} />
-        </View>
-      ))}
-    </Card>
-  );
-}
-
-function PitchReviewQueue() {
-  const { c } = useTheme();
-  const review = useAppStore((s) => s.review);
-  const reviewed = useAppStore((s) => s.reviewed);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const open = review.filter((r) => !reviewed[r.id]);
-  const done = review.filter((r) => reviewed[r.id]).slice(0, 2);
-
-  return (
-    <Card style={styles.gap}>
-      <View>
-        <Text variant="title">{T.review}</Text>
-        <Text variant="subhead">{T.reviewSub}</Text>
-      </View>
-      {open.length === 0 ? <EmptyState title={T.empty} subtitle={T.emptySub} expression="proud" /> : null}
-      {open.map((r) => {
-        const q = QUESTION_BY_ID[r.questionId];
-        const draft = drafts[r.id] ?? `${q.hint.en} The right answer is ${q.options[q.answer]}.`;
-        return (
-          <View key={r.id} style={[styles.reviewItem, { backgroundColor: c.inset }]}>
-            <View style={styles.rowBetween}>
-              <Text variant="subhead" color="text" style={styles.flex} numberOfLines={1}>
-                {r.student}
-              </Text>
-              <Chip label={T.confidence(Math.round(r.confidence * 100))} kind="tinted" style={styles.smallChip} />
-            </View>
-            <Text variant="headline">{q.prompt.en}</Text>
-            <Text variant="subhead">
-              {T.wrong}:{' '}
-              <Text variant="subhead" color="danger">
-                {q.options[r.wrongIndex]}
-              </Text>
-            </Text>
-            <Text variant="overline">{T.draft}</Text>
-            {editing === r.id ? (
-              <TextInput
-                value={draft}
-                onChangeText={(v) => setDrafts((d) => ({ ...d, [r.id]: v }))}
-                multiline
-                style={[styles.input, { color: c.text, backgroundColor: c.card, borderColor: c.hairline }]}
-                accessibilityLabel={T.draft}
-              />
-            ) : (
-              <Text variant="body">{draft}</Text>
-            )}
-            <View style={styles.actions}>
-              {editing === r.id ? (
-                <PillButton
-                  label={T.save}
-                  size="sm"
-                  onPress={() => {
-                    setEditing(null);
-                    useAppStore.getState().setReviewed(r.id, 'edited');
-                  }}
-                />
-              ) : (
-                <>
-                  <PillButton
-                    label={T.approve}
-                    size="sm"
-                    onPress={() => useAppStore.getState().setReviewed(r.id, 'approved')}
-                  />
-                  <PillButton label={T.edit} kind="secondary" size="sm" onPress={() => setEditing(r.id)} />
-                </>
-              )}
-            </View>
-          </View>
-        );
-      })}
-      {done.map((r) => (
-        <View key={r.id} style={styles.rowBetween}>
-          <Text variant="subhead" style={styles.flex} numberOfLines={1}>
-            {r.student} · {QUESTION_BY_ID[r.questionId].prompt.en}
-          </Text>
-          <Chip label={reviewed[r.id] === 'approved' ? T.approved : T.edited} kind="outline" style={styles.smallChip} />
-        </View>
-      ))}
-    </Card>
-  );
-}
-
-function AccountCard({ classId }: { classId?: string }) {
-  const me = useAuth((s) => s.profile);
-  const [confirm, setConfirm] = useState<'class' | 'account' | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  if (!me) return null;
-  return (
-    <View style={styles.gap}>
-      <Text variant="overline" style={styles.label}>
-        {T.account} · {me.email}
-      </Text>
-      {error ? <Notice text={error} /> : null}
-      <ListGroup>
-        {classId ? (
-          <ListRow
-            title={confirm === 'class' ? T.deleteConfirm : T.deleteClass}
-            destructive
-            chevron={false}
-            onPress={() => {
-              if (confirm !== 'class') return setConfirm('class');
-              setConfirm(null);
-              api
-                .deleteClass(classId)
-                .then(() => loadClasses())
-                .catch((e: Error) => setError(e.message));
-            }}
-          />
-        ) : null}
-        <ListRow
-          title={T.signOut}
-          chevron={false}
-          onPress={async () => {
-            await api.signOut();
-            router.replace('/onboarding');
-          }}
-        />
-        <ListRow
-          title={confirm === 'account' ? T.deleteAccountConfirm : T.deleteAccount}
-          destructive
-          chevron={false}
-          onPress={async () => {
-            if (confirm !== 'account') return setConfirm('account');
-            try {
-              await api.deleteAccount();
-              router.replace('/onboarding');
-            } catch (e) {
-              setError((e as Error).message);
-            }
-          }}
-        />
-      </ListGroup>
+      <TeacherTabBar active="classes" />
     </View>
   );
 }
@@ -680,6 +428,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
   badge: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  modBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   segRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   seg: { maxWidth: 420, flexGrow: 1 },
   columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
@@ -697,14 +446,10 @@ const styles = StyleSheet.create({
   },
   supportRow: { borderRadius: radius.inset },
   supportInner: { padding: 14, gap: 8 },
+  loadingCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  welcomeCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   smallChip: { height: 26, paddingHorizontal: 10 },
-  reviewItem: { borderRadius: radius.inset, padding: 14, gap: 8 },
-  input: { minHeight: 72, borderRadius: 12, borderWidth: 1, padding: 10, fontSize: 15, textAlignVertical: 'top' },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 4 },
   sheet: { gap: 14, paddingBottom: 8 },
   bigCell: { width: 76, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  joinCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  codeText: { letterSpacing: 4, fontSize: 30, lineHeight: 36 },
-  label: { paddingHorizontal: 4, marginTop: 8 },
 });

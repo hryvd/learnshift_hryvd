@@ -26,8 +26,16 @@ export default function Account() {
   const insets = useSafeAreaInsets();
   const profile = useAuth((s) => s.profile);
   const guardians = useAppStore((s) => s.guardians);
+  const guardianName = useAppStore((s) => s.guardian.name);
+  const accountRequests = useAppStore((s) => s.accountRequests);
   const classes = useAppStore((s) => s.classes);
   const running = useDevice((s) => s.status.running);
+  const hasGuardian = guardians.length > 0;
+  const pendingSignOut = accountRequests.find((r) => r.kind === 'sign_out' && r.status === 'pending');
+  const approvedSignOut = accountRequests.find((r) => r.kind === 'sign_out' && r.status === 'approved');
+  const declinedSignOut = !pendingSignOut && !approvedSignOut ? accountRequests.find((r) => r.kind === 'sign_out' && r.status === 'declined') : undefined;
+  const pendingDelete = accountRequests.find((r) => r.kind === 'delete_account' && r.status === 'pending');
+  const declinedDelete = !pendingDelete ? accountRequests.find((r) => r.kind === 'delete_account' && r.status === 'declined') : undefined;
   const [code, setCode] = useState<string | null>(null);
   const [classCode, setClassCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -72,6 +80,32 @@ export default function Account() {
   };
 
   const signOut = async () => {
+    if (hasGuardian) {
+      if (approvedSignOut) {
+        await api.completeAccountRequest(approvedSignOut.id).catch(() => {});
+        await forgetDevice().catch(() => {});
+        await api.signOut();
+        router.replace('/onboarding');
+        return;
+      }
+      if (pendingSignOut) {
+        setInfo(t.acct.signOutReqPending);
+        return;
+      }
+      await run(async () => {
+        const req = await api.requestAccountAction('sign_out');
+        const cur = useAppStore.getState();
+        cur.hydrate({
+          accountRequests: [
+            { id: req.id, at: req.created_at, kind: req.kind, status: req.status },
+            ...cur.accountRequests.filter((x) => x.id !== req.id),
+          ],
+        });
+        setInfo(t.acct.signOutReqSent(guardianName));
+        haptic.success();
+      });
+      return;
+    }
     await forgetDevice().catch(() => {});
     await api.signOut();
     router.replace('/onboarding');
@@ -79,6 +113,24 @@ export default function Account() {
 
   const deleteAccount = () =>
     run(async () => {
+      if (hasGuardian) {
+        if (pendingDelete) {
+          setInfo(t.acct.delReqPending);
+          return;
+        }
+        const req = await api.requestAccountAction('delete_account');
+        const cur = useAppStore.getState();
+        cur.hydrate({
+          accountRequests: [
+            { id: req.id, at: req.created_at, kind: req.kind, status: req.status },
+            ...cur.accountRequests.filter((x) => x.id !== req.id),
+          ],
+        });
+        setConfirmDelete(false);
+        setInfo(t.acct.delReqSent(guardianName));
+        haptic.success();
+        return;
+      }
       await forgetDevice().catch(() => {});
       await api.deleteAccount();
       router.replace('/onboarding');
@@ -212,17 +264,43 @@ export default function Account() {
 
         <ListGroup style={styles.spaced}>
           <ListRow
-            title={t.acct.signOut}
+            title={
+              !hasGuardian
+                ? t.acct.signOut
+                : approvedSignOut
+                  ? t.acct.signOutApproved
+                  : pendingSignOut
+                    ? t.acct.signOutReqPending
+                    : t.acct.signOutReq
+            }
+            value={declinedSignOut && !pendingSignOut ? t.lock.declined : undefined}
             icon={<SignOut size={20} weight="bold" color={c.text} />}
             chevron={false}
-            onPress={signOut}
+            onPress={() => {
+              void signOut();
+            }}
           />
           <ListRow
-            title={confirmDelete ? t.profile.delConfirm : t.profile.del}
+            title={
+              !hasGuardian
+                ? confirmDelete
+                  ? t.profile.delConfirm
+                  : t.profile.del
+                : pendingDelete
+                  ? t.acct.delReqPending
+                  : confirmDelete
+                    ? t.acct.delReqConfirm
+                    : t.acct.delReq
+            }
+            value={declinedDelete && !pendingDelete ? t.lock.declined : undefined}
             icon={<Trash size={20} weight="bold" color={c.danger} />}
             destructive
             chevron={false}
             onPress={() => {
+              if (hasGuardian && pendingDelete) {
+                setInfo(t.acct.delReqPending);
+                return;
+              }
               if (!confirmDelete) return setConfirmDelete(true);
               deleteAccount();
             }}

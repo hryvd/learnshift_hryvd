@@ -67,7 +67,12 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
               accessibilityLabel={st.name}
             >
               <Text variant="subhead" color="text" numberOfLines={1}>
-                {width < 520 ? st.name.split(' ')[0] + ' ' + st.name.split(' ').slice(-1)[0][0] + '.' : st.name}
+                {width < 520
+                  ? (() => {
+                      const parts = st.name.trim().split(/\s+/);
+                      return parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0];
+                    })()
+                  : st.name}
               </Text>
             </Pressable>
             {SKILLS.map((s) => (

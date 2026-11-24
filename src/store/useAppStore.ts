@@ -10,6 +10,7 @@ import { MIKA_HISTORY, MIKA_MASTERY, SKILLS, type SkillId } from '@/data/skills'
 import { clampBedtimeStart } from '@/lib/bedtime';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
+import { SAMPLE_PITCH_MODULES, type ClassModule } from '@/services/ai/moduleGenerator';
 import type { AnswerEvidence, ArmStats, Mastery, NudgeAction } from '@/services/types';
 
 export type Role = 'student' | 'guardian' | 'teacher';
@@ -35,20 +36,28 @@ export type GuardianSettings = {
   name: string;
   linked: boolean;
   lockEnabled: boolean;
+  lockNow: boolean;
   lateNightAlerts: boolean;
   limitStyle: 'adaptive' | 'fixed';
 };
 
 export type LockWindow = { start: number; end: number; unlockUntil: string | null };
 
-/** Guardian-set minutes of non-stop use before a break nudge (null = off). */
-export type Limits = { scroll: number | null; games: number | null };
+/** Guardian-set minutes of non-stop use before a break nudge (null = off) plus parent break timer (sec). */
+export type Limits = { scroll: number | null; games: number | null; breakIntervalSec: number | null };
 
 export type TimeRequest = {
   id: string;
   at: string;
   minutes: number;
   status: 'pending' | 'approved' | 'declined';
+};
+
+export type AccountRequest = {
+  id: string;
+  at: string;
+  kind: 'sign_out' | 'delete_account';
+  status: 'pending' | 'approved' | 'declined' | 'completed';
 };
 
 /** One day of habits, from the usage monitor and the app itself. */
@@ -136,6 +145,7 @@ type State = {
   lock: LockWindow;
   limits: Limits;
   requests: TimeRequest[];
+  accountRequests: AccountRequest[];
   offline: SkillId[];
   built: BuildingId[];
   stats: ArmStats;
@@ -150,6 +160,7 @@ type State = {
   studentName: string;
   guardians: { id: string; name: string }[];
   classes: { id: string; name: string; grade: number }[];
+  classModules: ClassModule[];
   usage: UsageDay[];
   /** YYYY-MM-DD → answers that day, for the learning heatmap. */
   learnDays: Record<string, number>;
@@ -180,6 +191,8 @@ type Actions = {
   setGuardian: (patch: Partial<GuardianSettings>) => void;
   requestTime: () => string;
   resolveRequest: (id: string, status: 'approved' | 'declined') => void;
+  requestAccountAction: (kind: AccountRequest['kind']) => string;
+  resolveAccountRequest: (id: string, status: AccountRequest['status']) => void;
   toggleOffline: (skill: SkillId) => void;
   build: (id: BuildingId) => void;
   reward: (arm: keyof ArmStats, accepted: boolean) => void;
@@ -197,6 +210,8 @@ type Actions = {
   setDeckLang: (lang: DeckLang) => void;
   setOverlayInterval: (sec: number) => void;
   setMonitorAllApps: (v: boolean) => void;
+  addPitchModule: (mod: ClassModule) => void;
+  deletePitchModule: (id: string) => void;
   /** Server → store, without marking anything dirty. */
   hydrate: (patch: Partial<State>) => void;
   /** Called by the sync engine once writes have landed. */
@@ -252,7 +267,7 @@ const shared = () => ({
   breaksDay: todayKey(),
   feed: { day: todayKey(), minutes: 0, saved: [] as string[] },
   lock: { start: 22 * 60, end: 6 * 60, unlockUntil: null },
-  limits: { scroll: null, games: null } as Limits,
+  limits: { scroll: null, games: null, breakIntervalSec: null } as Limits,
   reviewed: {},
   paused: false,
   lastMiss: null,
@@ -280,8 +295,9 @@ const pitchState = (): State => ({
   answers: 142,
   nudges: seedNudges(),
   feed: { day: todayKey(), minutes: 6, saved: [] },
-  guardian: { name: PITCH_NAMES.guardian, linked: true, lockEnabled: false, lateNightAlerts: true, limitStyle: 'adaptive' },
+  guardian: { name: PITCH_NAMES.guardian, linked: true, lockEnabled: false, lockNow: false, lateNightAlerts: true, limitStyle: 'adaptive' },
   requests: [seedRequest()],
+  accountRequests: [],
   offline: ['fractions', 'algebraic'],
   built: [...SEED_BUILT],
   // Mika has accepted check-ins about half the time and breaks more often.
@@ -291,6 +307,7 @@ const pitchState = (): State => ({
   studentName: PITCH_NAMES.student,
   guardians: [{ id: 'mom', name: PITCH_NAMES.guardian }],
   classes: [{ id: 'sampaguita', name: PITCH_NAMES.section, grade: 8 }],
+  classModules: [...SAMPLE_PITCH_MODULES],
   usage: [],
   learnDays: {},
   history: MIKA_HISTORY,
@@ -305,8 +322,9 @@ const realState = (): State => ({
   mastery: { ...PRIOR_MASTERY },
   answers: 0,
   nudges: [],
-  guardian: { name: '', linked: false, lockEnabled: false, lateNightAlerts: true, limitStyle: 'adaptive' },
+  guardian: { name: '', linked: false, lockEnabled: false, lockNow: false, lateNightAlerts: true, limitStyle: 'adaptive' },
   requests: [],
+  accountRequests: [],
   offline: [],
   built: ['bahay'],
   stats: { checkin: { a: 1, b: 1 }, break: { a: 1, b: 1 }, winddown: { a: 1, b: 1 } },
@@ -315,6 +333,7 @@ const realState = (): State => ({
   studentName: '',
   guardians: [],
   classes: [],
+  classModules: [],
   usage: [],
   learnDays: {},
   history: EMPTY_HISTORY,
@@ -398,7 +417,6 @@ export const useAppStore = create<State & Actions>()(
       recordBreak: (learningMinutes = 1) =>
         set((s) => {
           const day = todayKey();
-          const breaksToday = (s.breaksDay === day ? s.breaksToday : 0) + 1;
           const usage = [...s.usage];
           const i = usage.findIndex((u) => u.day === day);
           const base: UsageDay =
@@ -417,6 +435,8 @@ export const useAppStore = create<State & Actions>()(
                   sessions: 0,
                   unlocks: 0,
                 };
+          const prevBreaks = Math.max(s.breaksDay === day ? s.breaksToday : 0, base.breaks);
+          const breaksToday = prevBreaks + 1;
           const row = { ...base, breaks: breaksToday, learning: base.learning + learningMinutes };
           if (i >= 0) usage[i] = row;
           else usage.push(row);
@@ -455,6 +475,15 @@ export const useAppStore = create<State & Actions>()(
       },
       resolveRequest: (id, status) =>
         set((s) => ({ requests: s.requests.map((r) => (r.id === id ? { ...r, status } : r)) })),
+      requestAccountAction: (kind) => {
+        const id = uid('ar');
+        set((s) => ({
+          accountRequests: [{ id, at: new Date().toISOString(), kind, status: 'pending' as const }, ...s.accountRequests],
+        }));
+        return id;
+      },
+      resolveAccountRequest: (id, status) =>
+        set((s) => ({ accountRequests: s.accountRequests.map((r) => (r.id === id ? { ...r, status } : r)) })),
       toggleOffline: (skill) =>
         set((s) => ({
           offline: s.offline.includes(skill) ? s.offline.filter((x) => x !== skill) : [...s.offline, skill],
@@ -566,6 +595,10 @@ export const useAppStore = create<State & Actions>()(
             dirty: { ...s.dirty, settings: true },
           };
         }),
+      addPitchModule: (mod) =>
+        set((s) => ({ classModules: [mod, ...(s.classModules ?? []).filter((x) => x.id !== mod.id)] })),
+      deletePitchModule: (id) =>
+        set((s) => ({ classModules: (s.classModules ?? []).filter((x) => x.id !== id) })),
       hydrate: (patch) => set(patch),
       clean: ({ outbox, ...flags }) =>
         set((s) => ({
@@ -607,6 +640,18 @@ export const useAppStore = create<State & Actions>()(
             },
           });
         }
+        if (!Array.isArray(s.classModules)) {
+          s.hydrate({ classModules: IS_PITCH ? [...SAMPLE_PITCH_MODULES] : [] });
+        }
+        if (!Array.isArray(s.accountRequests)) {
+          s.hydrate({ accountRequests: [] });
+        }
+        if (s.limits.breakIntervalSec === undefined || s.guardian.lockNow === undefined) {
+          s.hydrate({
+            limits: { ...s.limits, breakIntervalSec: s.limits.breakIntervalSec ?? null },
+            guardian: { ...s.guardian, lockNow: !!s.guardian.lockNow },
+          });
+        }
       },
     },
   ),
@@ -631,6 +676,7 @@ export function bedtimeApplies(days: BedtimeDays, schoolNight: boolean): boolean
 
 /** Whether the guardian lock is in force right now. */
 export function lockActive(s: Pick<State, 'guardian' | 'lock'>, clock: number, now = Date.now()): boolean {
+  if (s.guardian.lockNow) return !(s.lock.unlockUntil && Date.parse(s.lock.unlockUntil) > now);
   if (!s.guardian.lockEnabled) return false;
   if (!inWindow(clock, { start: s.lock.start, end: s.lock.end })) return false;
   return !(s.lock.unlockUntil && Date.parse(s.lock.unlockUntil) > now);

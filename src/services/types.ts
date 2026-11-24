@@ -10,7 +10,7 @@ import type { RiskLevel } from '@/design/tokens';
 
 // ── 1. Session risk model (on-device) ────────────────────────────────────────
 
-export type AppCategory = 'video' | 'social' | 'games' | 'study' | 'other';
+export type AppCategory = 'video' | 'social' | 'games' | 'messaging' | 'study' | 'other';
 
 /** Usage metadata only. Never content, messages or screens. */
 export type UsageFeatures = {

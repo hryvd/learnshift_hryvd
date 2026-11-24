@@ -11,6 +11,7 @@ import type { Section, Student } from '@/data/class';
 import { SKILLS, type SkillId } from '@/data/skills';
 import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
 import { supabase } from '@/lib/supabase';
+import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import { PRIOR_MASTERY, todayKey } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
@@ -37,6 +38,7 @@ type TeacherState = {
   classes: TeacherClass[];
   selected: string | null;
   students: Record<string, LiveStudent[]>;
+  modules: Record<string, ClassModule[]>;
   review: ReviewRow[];
   select: (id: string) => void;
 };
@@ -47,9 +49,22 @@ export const useTeacher = create<TeacherState>()((set) => ({
   classes: [],
   selected: null,
   students: {},
+  modules: {},
   review: [],
   select: (selected) => set({ selected }),
 }));
+
+export function resetTeacher() {
+  useTeacher.setState({
+    loading: true,
+    error: null,
+    classes: [],
+    selected: null,
+    students: {},
+    modules: {},
+    review: [],
+  });
+}
 
 const DAY_MS = 24 * 3600 * 1000;
 
@@ -87,19 +102,19 @@ export async function loadRoster(classId: string) {
   const ids = (members ?? []).map((m) => m.student_id as string);
   const [mastery, daily, attempts] = ids.length
     ? await Promise.all([
-        supabase.from('mastery').select('student_id, skill_id, p, updated_at').in('student_id', ids),
-        supabase
-          .from('mastery_daily')
-          .select('student_id, day, skill_id, p')
-          .in('student_id', ids)
-          .gte('day', todayKey(new Date(Date.now() - 35 * DAY_MS))),
-        supabase
-          .from('attempts')
-          .select('student_id, created_at')
-          .in('student_id', ids)
-          .gte('created_at', new Date(Date.now() - 30 * DAY_MS).toISOString())
-          .limit(10000),
-      ])
+      supabase.from('mastery').select('student_id, skill_id, p, updated_at').in('student_id', ids),
+      supabase
+        .from('mastery_daily')
+        .select('student_id, day, skill_id, p')
+        .in('student_id', ids)
+        .gte('day', todayKey(new Date(Date.now() - 35 * DAY_MS))),
+      supabase
+        .from('attempts')
+        .select('student_id, created_at')
+        .in('student_id', ids)
+        .gte('created_at', new Date(Date.now() - 30 * DAY_MS).toISOString())
+        .limit(10000),
+    ])
     : [{ data: [] }, { data: [] }, { data: [] }];
 
   const students: LiveStudent[] = (members ?? []).map((m) => {
@@ -164,6 +179,47 @@ export async function loadReview() {
   });
 }
 
+export async function loadModules(classId: string) {
+  const { data, error } = await supabase
+    .from('class_modules')
+    .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+    .eq('class_id', classId)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (error) return;
+  const rows: ClassModule[] = (data ?? []).map((m) => ({
+    id: m.id,
+    classId: m.class_id,
+    title: m.title,
+    subject: m.subject,
+    sourceName: m.source_name,
+    summary: m.summary ?? '',
+    flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+    questions: (m.questions ?? []) as ModuleQuestion[],
+    published: !!m.published,
+    createdAt: m.created_at,
+  }));
+  useTeacher.setState((s) => ({ modules: { ...s.modules, [classId]: rows } }));
+}
+
+export function addLocalModule(mod: ClassModule) {
+  useTeacher.setState((s) => ({
+    modules: {
+      ...s.modules,
+      [mod.classId]: [mod, ...(s.modules[mod.classId] ?? []).filter((x) => x.id !== mod.id)],
+    },
+  }));
+}
+
+export function removeLocalModule(classId: string, id: string) {
+  useTeacher.setState((s) => ({
+    modules: {
+      ...s.modules,
+      [classId]: (s.modules[classId] ?? []).filter((x) => x.id !== id),
+    },
+  }));
+}
+
 export async function reviewAnswer(id: string, status: 'approved' | 'edited', note?: string) {
   const me = useAuth.getState().profile?.id;
   useTeacher.setState((s) => ({
@@ -188,26 +244,27 @@ export function asSection(c: TeacherClass, students: LiveStudent[]): Section {
 export async function refreshTeacher() {
   await Promise.all([loadClasses(), loadReview()]);
   const id = useTeacher.getState().selected;
-  if (id) await loadRoster(id);
+  if (id) await Promise.all([loadRoster(id), loadModules(id)]);
 }
 
-/** Loads and keeps the teacher view live. Mount once on the teacher screens. */
-export function useTeacherLive() {
+/** Loads and keeps the teacher view live. Mount once in the teacher layout. */
+export function useTeacherLive(enabled = true) {
   const me = useAuth((s) => s.profile?.id);
   const selected = useTeacher((s) => s.selected);
+  const activeId = enabled ? me : undefined;
   // Rebuild realtime channels after a long sleep; poll as a safety net while open.
   const resume = useResumeKey();
   useInterval(() => {
-    if (!me) return;
-    refreshTeacher().catch(() => {});
-  }, AUTO_REFRESH_MS, !!me);
+    if (!activeId) return;
+    refreshTeacher().catch(() => { });
+  }, AUTO_REFRESH_MS, !!activeId);
 
   useEffect(() => {
-    if (!me) return;
+    if (!activeId) return;
     loadClasses();
     loadReview();
     const ch = supabase
-      .channel(`teacher-${me}`)
+      .channel(`teacher-${activeId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tutor_answers' }, () => loadReview())
       .subscribe();
     const app = AppState.addEventListener('change', (st) => {
@@ -220,10 +277,10 @@ export function useTeacherLive() {
       supabase.removeChannel(ch);
       app.remove();
     };
-  }, [me, resume]);
+  }, [activeId, resume]);
 
   useEffect(() => {
-    if (!selected) return;
+    if (!enabled || !selected) return;
     let t: ReturnType<typeof setTimeout> | null = null;
     // Mastery events arrive per skill; batch them into one reload.
     const reload = () => {
@@ -231,14 +288,18 @@ export function useTeacherLive() {
       t = setTimeout(() => loadRoster(selected), 400);
     };
     loadRoster(selected);
+    loadModules(selected);
     const ch = supabase
       .channel(`teacher-class-${selected}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'class_members', filter: `class_id=eq.${selected}` }, reload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'class_modules', filter: `class_id=eq.${selected}` }, () =>
+        loadModules(selected),
+      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mastery' }, reload)
       .subscribe();
     return () => {
       if (t) clearTimeout(t);
       supabase.removeChannel(ch);
     };
-  }, [selected, resume]);
+  }, [enabled, selected, resume]);
 }

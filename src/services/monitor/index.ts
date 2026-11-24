@@ -169,6 +169,15 @@ export function openHomeSettings() {
   if (platform === 'android') UsageMonitor?.openHomeSettings?.();
 }
 
+export async function pickModuleFile(): Promise<{ name: string; text: string; error?: string } | null> {
+  if (platform !== 'android' || !UsageMonitor?.pickModuleFile) return null;
+  try {
+    return await UsageMonitor.pickModuleFile();
+  } catch {
+    return null;
+  }
+}
+
 // ── Configuration ────────────────────────────────────────────────────────
 
 const TOKEN_KEY = 'learnshift-device-token';
@@ -209,6 +218,7 @@ export type MonitorConfig = {
   bedtimeEnd: number;
   bedtimeDays: string;
   lockEnabled: boolean;
+  lockNow?: boolean;
   lockStart: number;
   lockEnd: number;
   unlockUntil: number;
@@ -218,6 +228,7 @@ export type MonitorConfig = {
   guardianName: string;
   scrollLimit: number | null;
   gamesLimit: number | null;
+  parentBreakIntervalSec?: number | null;
   overlayIntervalSec?: number;
   monitorAllApps?: boolean;
   grade?: number;

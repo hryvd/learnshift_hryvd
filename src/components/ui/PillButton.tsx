@@ -13,6 +13,8 @@ type Size = 'sm' | 'md' | 'lg';
 type Props = {
   label: string;
   onPress?: () => void;
+  onLongPress?: () => void;
+  delayLongPress?: number;
   kind?: Kind;
   size?: Size;
   icon?: ReactNode;
@@ -22,6 +24,7 @@ type Props = {
   block?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
 };
 
 const heights: Record<Size, number> = { sm: 32, md: 44, lg: 54 };
@@ -30,6 +33,8 @@ const pads: Record<Size, number> = { sm: 14, md: 20, lg: 24 };
 export function PillButton({
   label,
   onPress,
+  onLongPress,
+  delayLongPress,
   kind = 'primary',
   size = 'md',
   icon,
@@ -38,6 +43,7 @@ export function PillButton({
   block,
   style,
   accessibilityLabel,
+  accessibilityHint,
 }: Props) {
   const { c } = useTheme();
   const palette: Record<Kind, { bg: string; fg: string }> = {
@@ -50,8 +56,11 @@ export function PillButton({
   return (
     <PressableScale
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={delayLongPress}
       disabled={disabled}
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       style={[
         styles.base,
         {

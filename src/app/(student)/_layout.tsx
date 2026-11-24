@@ -15,6 +15,7 @@ export default function StudentLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="simulate" options={{ animation: 'fade', contentStyle: { backgroundColor: '#000' } }} />
       <Stack.Screen name="break/[id]" options={sheet} />
+      <Stack.Screen name="module/[id]" />
       <Stack.Screen name="quiz/[skillId]" />
       <Stack.Screen name="tutor" options={sheet} />
       <Stack.Screen name="skill/[id]" options={sheet} />

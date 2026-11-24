@@ -41,6 +41,8 @@ data class Config(
   val monitorAllApps: Boolean,
   val grade: Int,
   val subject: String,
+  val lockNow: Boolean = false,
+  val parentBreakIntervalSec: Int = 0,
 ) {
   val fil get() = lang == "fil"
 
@@ -69,6 +71,8 @@ data class Config(
       monitorAllApps = o.optBoolean("monitorAllApps", false),
       grade = o.optInt("grade", 1).coerceIn(1, 10),
       subject = o.optString("subject", "mixed"),
+      lockNow = o.optBoolean("lockNow", false),
+      parentBreakIntervalSec = o.optInt("parentBreakIntervalSec", 0).let { if (it > 0) it.coerceIn(10, 3600) else 0 },
     )
   }
 }
@@ -120,6 +124,54 @@ object Store {
     val encrypted = Base64.encodeToString(cipher.iv, Base64.NO_WRAP) + ":" +
       Base64.encodeToString(cipher.doFinal(json.toByteArray(Charsets.UTF_8)), Base64.NO_WRAP)
     check(prefs(ctx).edit().putString(CONFIG_KEY, encrypted).remove("config").commit())
+  }
+
+  @Synchronized
+  fun mergeRemoteControls(ctx: Context, controls: JSONObject): Boolean {
+    return runCatching {
+      val prefs = prefs(ctx)
+      val encoded = prefs.getString(CONFIG_KEY, null) ?: return false
+      val parts = encoded.split(':', limit = 2)
+      if (parts.size != 2) return false
+      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+      cipher.init(Cipher.DECRYPT_MODE, encryptionKey(), GCMParameterSpec(128, Base64.decode(parts[0], Base64.NO_WRAP)))
+      val raw = String(cipher.doFinal(Base64.decode(parts[1], Base64.NO_WRAP)), Charsets.UTF_8)
+      val cur = JSONObject(raw)
+      if (!cur.optBoolean("enabled", false)) return false
+      val keys = listOf(
+        "lockEnabled",
+        "lockNow",
+        "lockStart",
+        "lockEnd",
+        "unlockUntil",
+        "paused",
+        "bedtimeStart",
+        "bedtimeEnd",
+        "bedtimeDays",
+        "scrollLimit",
+        "gamesLimit",
+        "parentBreakIntervalSec",
+      )
+      for (k in keys) {
+        if (controls.has(k) && !controls.isNull(k)) cur.put(k, controls.get(k))
+      }
+      saveConfig(ctx, cur.toString())
+      true
+    }.getOrDefault(false)
+  }
+
+  fun getInt(ctx: Context, key: String, def: Int = 0) = prefs(ctx).getInt(key, def)
+  fun putInt(ctx: Context, key: String, v: Int) = prefs(ctx).edit().putInt(key, v).apply()
+
+  fun breaksForDay(ctx: Context, day: String): Int = getInt(ctx, "breaks_$day", 0)
+  fun studyBonusForDay(ctx: Context, day: String): Int = getInt(ctx, "study_min_$day", 0)
+
+  @Synchronized
+  fun recordBreak(ctx: Context, day: String, studyMin: Int = 1): Int {
+    val next = breaksForDay(ctx, day) + 1
+    putInt(ctx, "breaks_$day", next)
+    if (studyMin > 0) putInt(ctx, "study_min_$day", studyBonusForDay(ctx, day) + studyMin)
+    return next
   }
 
   fun getLong(ctx: Context, key: String, def: Long = 0L) = prefs(ctx).getLong(key, def)

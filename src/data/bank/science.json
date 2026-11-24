@@ -4,7 +4,7 @@
     "subject": "science",
     "grade": 1,
     "topic": "Senses",
-    "prompt": "Which body part helps you see colors?",
+    "prompt": "Look at the picture. Which body part is this that helps you see colors?",
     "options": [
       "Ears",
       "Nose",
@@ -12,14 +12,15 @@
       "Tongue"
     ],
     "answer": 2,
-    "explanation": "Eyes detect light and let us see colors and shapes."
+    "explanation": "Eyes detect light and let us see colors and shapes.",
+    "visual": { "kind": "scene", "id": "eye" }
   },
   {
     "id": "science-g1-02",
     "subject": "science",
     "grade": 1,
     "topic": "Senses",
-    "prompt": "Which body part helps you hear a bell?",
+    "prompt": "Look at the picture. Which body part is this that helps you hear?",
     "options": [
       "Eyes",
       "Fingers",
@@ -27,14 +28,15 @@
       "Ears"
     ],
     "answer": 3,
-    "explanation": "Ears help us hear sounds such as a ringing bell."
+    "explanation": "Ears help us hear sounds such as a ringing bell.",
+    "visual": { "kind": "scene", "id": "ear" }
   },
   {
     "id": "science-g1-03",
     "subject": "science",
     "grade": 1,
     "topic": "Living things",
-    "prompt": "Which one is a living thing?",
+    "prompt": "Look at the living thing in the picture. What is it?",
     "options": [
       "Butterfly",
       "Spoon",
@@ -42,7 +44,8 @@
       "Chair"
     ],
     "answer": 0,
-    "explanation": "A butterfly needs food and grows, so it is a living thing."
+    "explanation": "A butterfly needs food and grows, so it is a living thing.",
+    "visual": { "kind": "scene", "id": "butterfly" }
   },
   {
     "id": "science-g1-04",
@@ -57,7 +60,8 @@
       "Smoke"
     ],
     "answer": 1,
-    "explanation": "Roots take in water from the soil."
+    "explanation": "Roots take in water from the soil.",
+    "visual": { "kind": "scene", "id": "plant" }
   },
   {
     "id": "science-g1-05",
@@ -72,7 +76,8 @@
       "A television"
     ],
     "answer": 2,
-    "explanation": "Dogs need clean water to stay healthy."
+    "explanation": "Dogs need clean water to stay healthy.",
+    "visual": { "kind": "scene", "id": "dog" }
   },
   {
     "id": "science-g1-06",
@@ -102,7 +107,8 @@
       "Swimming goggles only"
     ],
     "answer": 0,
-    "explanation": "A raincoat helps keep rain off your clothes."
+    "explanation": "A raincoat helps keep rain off your clothes.",
+    "visual": { "kind": "scene", "id": "rain_cloud" }
   },
   {
     "id": "science-g1-08",
@@ -117,7 +123,8 @@
       "Cover them with sand"
     ],
     "answer": 1,
-    "explanation": "Soap and water help remove dirt and germs from hands."
+    "explanation": "Soap and water help remove dirt and germs from hands.",
+    "visual": { "kind": "scene", "id": "wash_hands" }
   },
   {
     "id": "science-g1-09",
@@ -139,7 +146,7 @@
     "subject": "science",
     "grade": 1,
     "topic": "Day and night",
-    "prompt": "What is Earth's main natural source of daylight?",
+    "prompt": "Look at the picture. What is Earth's main natural source of daylight?",
     "options": [
       "Moon",
       "Streetlamp",
@@ -147,14 +154,15 @@
       "Sun"
     ],
     "answer": 3,
-    "explanation": "The Sun gives Earth the light we see during the day."
+    "explanation": "The Sun gives Earth the light we see during the day.",
+    "visual": { "kind": "scene", "id": "sun" }
   },
   {
     "id": "science-g2-01",
     "subject": "science",
     "grade": 2,
     "topic": "Plant parts",
-    "prompt": "Which plant part usually makes seeds after flowering?",
+    "prompt": "Look at the picture. Which plant part usually makes seeds after blooming?",
     "options": [
       "Root hair",
       "Stem bark",
@@ -162,7 +170,8 @@
       "Flower"
     ],
     "answer": 3,
-    "explanation": "Flowers are reproductive parts that can develop into fruits with seeds."
+    "explanation": "Flowers are reproductive parts that can develop into fruits with seeds.",
+    "visual": { "kind": "scene", "id": "flower" }
   },
   {
     "id": "science-g2-02",
@@ -177,7 +186,8 @@
       "Spider"
     ],
     "answer": 0,
-    "explanation": "Caterpillars become butterflies or moths after the pupa stage."
+    "explanation": "Caterpillars become butterflies or moths after the pupa stage.",
+    "visual": { "kind": "scene", "id": "butterfly" }
   },
   {
     "id": "science-g2-03",
@@ -192,7 +202,8 @@
       "A hot oven"
     ],
     "answer": 1,
-    "explanation": "Fish use gills to get oxygen from water."
+    "explanation": "Fish use gills to get oxygen from water.",
+    "visual": { "kind": "scene", "id": "fish" }
   },
   {
     "id": "science-g2-04",
@@ -297,7 +308,8 @@
       "Only candy"
     ],
     "answer": 0,
-    "explanation": "Bananas are fruit and provide nutrients as part of a varied diet."
+    "explanation": "Bananas are fruit and provide nutrients as part of a varied diet.",
+    "visual": { "kind": "scene", "id": "banana" }
   },
   {
     "id": "science-g3-01",
@@ -334,7 +346,7 @@
     "subject": "science",
     "grade": 3,
     "topic": "Measurement",
-    "prompt": "Which tool measures temperature?",
+    "prompt": "Look at this tool. What is it called and used to measure temperature?",
     "options": [
       "Ruler",
       "Balance",
@@ -342,14 +354,15 @@
       "Measuring tape"
     ],
     "answer": 2,
-    "explanation": "A thermometer measures how hot or cold something is."
+    "explanation": "A thermometer measures how hot or cold something is.",
+    "visual": { "kind": "scene", "id": "thermometer" }
   },
   {
     "id": "science-g3-04",
     "subject": "science",
     "grade": 3,
     "topic": "Animal groups",
-    "prompt": "Which animal has feathers?",
+    "prompt": "Look at the feathered animal in the picture. Which animal is it?",
     "options": [
       "Cat",
       "Frog",
@@ -357,7 +370,8 @@
       "Chicken"
     ],
     "answer": 3,
-    "explanation": "Birds, including chickens, have feathers."
+    "explanation": "Birds, including chickens, have feathers.",
+    "visual": { "kind": "scene", "id": "chicken" }
   },
   {
     "id": "science-g3-05",
@@ -402,7 +416,8 @@
       "Rubber eraser"
     ],
     "answer": 2,
-    "explanation": "Iron is a magnetic material."
+    "explanation": "Iron is a magnetic material.",
+    "visual": { "kind": "scene", "id": "magnet" }
   },
   {
     "id": "science-g3-08",
@@ -447,7 +462,8 @@
       "Touching hot metal"
     ],
     "answer": 1,
-    "explanation": "Shade reduces direct exposure to sunlight."
+    "explanation": "Shade reduces direct exposure to sunlight.",
+    "visual": { "kind": "scene", "id": "sun" }
   },
   {
     "id": "science-g4-01",

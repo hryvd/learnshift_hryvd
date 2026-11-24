@@ -3,6 +3,7 @@ import type { ImageSourcePropType } from 'react-native';
 import type { AppCategory } from '@/services/backend/guardian';
 
 const I = {
+  learnshift: require('../../../assets/images/icon.png'),
   youtube: require('../../../assets/images/apps/youtube.png'),
   tiktok: require('../../../assets/images/apps/tiktok.png'),
   instagram: require('../../../assets/images/apps/instagram.png'),
@@ -30,6 +31,8 @@ type Key = keyof typeof I;
 
 /** Real app logos for the guardian's app list, keyed by Android package. */
 const BY_PACKAGE: Record<string, Key> = {
+  'com.learnshift.app': 'learnshift',
+  'com.learnshift.pitch': 'learnshift',
   'com.google.android.youtube': 'youtube',
   'com.google.android.apps.youtube.music': 'youtube',
   'com.zhiliaoapp.musically': 'tiktok',
@@ -62,6 +65,7 @@ const BY_PACKAGE: Record<string, Key> = {
 };
 
 const BY_LABEL: Record<string, Key> = {
+  learnshift: 'learnshift',
   youtube: 'youtube',
   'youtube music': 'youtube',
   tiktok: 'tiktok',

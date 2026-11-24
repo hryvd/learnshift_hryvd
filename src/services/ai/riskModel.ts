@@ -6,6 +6,7 @@ const CATEGORY_WEIGHT: Record<UsageFeatures['category'], number> = {
   video: 0.7,
   social: 0.5,
   games: 0.6,
+  messaging: 0.05,
   other: 0.1,
   study: -1.4,
 };
