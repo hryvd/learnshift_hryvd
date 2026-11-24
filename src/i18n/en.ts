@@ -414,6 +414,8 @@ const en = {
     sheetSub: 'Coins come only from healthy days',
     newBuilt: (n: string) => `${n} is up!`,
     hint: 'Pinch and drag to look around',
+    progress: (b: number, n: number) => `${b} of ${n} built · grows every good day`,
+    complete: 'Your isla is complete',
   },
   how: {
     title: 'How your isla grows',
