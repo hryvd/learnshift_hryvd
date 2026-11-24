@@ -301,17 +301,40 @@ object OverlayController {
     mainHandler.postDelayed(task, delayMs.coerceAtLeast(0L))
   }
 
+  /**
+   * Three questions for the student's grade and subject. Reads only that grade's asset, prefers questions not
+   * seen yet (remembered per grade+subject, starting over once all were shown), and shuffles the choices.
+   */
   private fun localBank(ctx: Context, cfg: Config): List<NativeQuizItem> = runCatching {
-    val bank = JSONArray(ctx.assets.open("learnshift-questions.json").bufferedReader().use { it.readText() })
-    (0 until bank.length()).mapNotNull { i ->
+    val bank = JSONArray(ctx.assets.open("learnshift-questions-g${cfg.grade}.json").bufferedReader().use { it.readText() })
+    val pool = (0 until bank.length()).mapNotNull { i ->
       val q = bank.getJSONObject(i)
       if (q.optInt("grade") != cfg.grade || (cfg.subject != "mixed" && q.optString("subject") != cfg.subject)) return@mapNotNull null
       val choices = q.getJSONArray("options")
       val answer = q.getInt("answer")
       if (choices.length() != 4 || answer !in 0..3) return@mapNotNull null
-      NativeQuizItem("", q.getString("prompt"), (0..3).map { choices.getString(it) }, answer,
+      q
+    }
+    val prefs = ctx.applicationContext.getSharedPreferences("learnshift_seen_questions", Context.MODE_PRIVATE)
+    val key = "g${cfg.grade}:${cfg.subject}"
+    val ids = pool.map { it.optString("id") }.toSet()
+    var seen = (prefs.getString(key, "") ?: "").split(',').filter { it in ids }.toMutableSet()
+    val fresh = pool.filter { it.optString("id") !in seen }
+    val picked = if (fresh.size >= 3) {
+      fresh.shuffled().take(3)
+    } else {
+      // Every question was shown: start a new cycle, finishing the unseen ones first.
+      seen = mutableSetOf()
+      (fresh.shuffled() + pool.filter { it !in fresh }.shuffled()).take(3)
+    }
+    seen.addAll(picked.map { it.optString("id") })
+    prefs.edit().putString(key, seen.joinToString(",")).apply()
+    picked.map { q ->
+      val choices = q.getJSONArray("options")
+      val order = (0..3).shuffled()
+      NativeQuizItem("", q.getString("prompt"), order.map { choices.getString(it) }, order.indexOf(q.getInt("answer")),
         q.getString("explanation"), q.getString("topic"))
-    }.shuffled().take(3)
+    }
   }.getOrDefault(emptyList())
 
   /** Vertical swipe-up touch container so taps hit choice buttons while upward swipes drag/advance cards. */
