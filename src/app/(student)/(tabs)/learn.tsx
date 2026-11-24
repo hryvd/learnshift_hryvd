@@ -16,6 +16,7 @@ import {
   Text,
 } from '@/components/ui';
 import { SUBJECTS } from '@/data/localQuestions';
+import { countFor } from '@/data/pickQuestions';
 import { SKILL_BY_ID, SKILLS } from '@/data/skills';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
@@ -66,7 +67,7 @@ function ForYou() {
       {[{ id: 'mixed' as const, label: fil ? 'Surprise me · All subjects' : 'Surprise me · All subjects' }, ...SUBJECTS].map((subject, index) => (
         <Card key={subject.id} onPress={() => { useAppStore.getState().setLearningSubject(subject.id); router.push('/feed'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }} accessibilityLabel={`Practice ${subject.label}, grade ${grade}`}>
           <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: c.accentTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="title" color="accent">{['✦', '＋', 'Aa', 'Ab', '⚗', '◎'][index]}</Text></View>
-          <View style={{ flex: 1, gap: 4 }}><Text variant="headline">{subject.label}</Text><Text variant="subhead">{subject.id === 'mixed' ? '50' : '10'} {fil ? 'tanong sa baitang mo' : 'questions for your grade'}</Text></View>
+          <View style={{ flex: 1, gap: 4 }}><Text variant="headline">{subject.label}</Text><Text variant="subhead">{countFor(grade, subject.id)} {fil ? 'tanong sa baitang mo' : 'questions for your grade'}</Text></View>
           <Play size={20} color={c.accent} weight="fill" />
         </Card>
       ))}
