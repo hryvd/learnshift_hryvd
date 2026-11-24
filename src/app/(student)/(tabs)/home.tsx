@@ -16,15 +16,14 @@ import {
 import { IslaScene } from '@/components/isla/IslaScene';
 import { Paty } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
-import { AnimatedNumber, Card, Chip, CoinCounter, PillButton, PressableScale, ProgressBar, Stagger, Text, TickGauge } from '@/components/ui';
+import { AnimatedNumber, Card, Chip, PillButton, PressableScale, ProgressBar, Stagger, Text, TickGauge } from '@/components/ui';
 import { SUBJECTS } from '@/data/localQuestions';
-import { BUILDINGS } from '@/data/seed';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { useLive } from '@/hooks/useLive';
 import { splitDuration } from '@/hooks/useWeek';
-import { formatDuration } from '@/i18n/useT';
+import { formatDuration, useT } from '@/i18n/useT';
 import { IS_PITCH } from '@/lib/config';
 import { pullStudent } from '@/services/backend/sync';
 import { platform, reportNow } from '@/services/monitor';
@@ -43,6 +42,7 @@ async function refreshHome() {
 
 export default function Home() {
   const { c } = useTheme();
+  const t = useT();
   const { width } = useWindowDimensions();
   const name = useAppStore((s) => s.studentName);
   const grade = useAppStore((s) => s.learningGrade);
@@ -61,8 +61,6 @@ export default function Home() {
   const cardW = Math.min(width, 560) - space.screen * 2;
   const gaugeW = Math.min(300, cardW - space.card * 2);
   const islaW = Math.min(340, Math.max(220, cardW - space.card * 2));
-  const nextBuilding = BUILDINGS.find((b) => b.unlockAt > coins) ?? null;
-  const prevUnlock = [...BUILDINGS].reverse().find((b) => b.unlockAt <= coins)?.unlockAt ?? 0;
 
   const summary = useMemo(() => {
     const todayRow = usage.find((u) => u.day === todayKey());
@@ -256,39 +254,28 @@ export default function Home() {
       </Stagger>
 
       <Stagger index={2}>
-        <Card style={styles.gap} onPress={() => router.push('/isla')} accessibilityLabel="Visit your little isla">
-          <View style={styles.islaHead}>
-            <View style={styles.flex}>
-              <Text variant="overline">{fil ? 'IYONG ISLA' : 'YOUR LITTLE ISLA'}</Text>
-              <Text variant="title">{fil ? 'Tingnan ang isla mo' : 'Grow your isla'}</Text>
-            </View>
-            <CoinCounter value={coins} />
-          </View>
-          <View style={styles.center}>
+        <Card
+          style={[styles.gap, styles.islaCard]}
+          padded={false}
+          onPress={() => router.push('/isla')}
+          accessibilityLabel={t.home.islaTitle}
+        >
+          <View style={styles.islaArt}>
             <IslaScene built={built} width={islaW} interactive={false} />
           </View>
-          {nextBuilding ? (
-            <View style={styles.islaProgress}>
-              <View style={styles.islaHead}>
-                <Text variant="caption" color="textSecondary">
-                  {fil ? `Susunod: ${nextBuilding.name.fil}` : `Next: ${nextBuilding.name.en}`}
-                </Text>
-                <Text variant="caption" tabular>
-                  {coins.toLocaleString('en-US')} / {nextBuilding.unlockAt.toLocaleString('en-US')}
-                </Text>
-              </View>
-              <ProgressBar
-                progress={(coins - prevUnlock) / Math.max(1, nextBuilding.unlockAt - prevUnlock)}
-                color={c.spark}
-              />
+          <View style={styles.islaText}>
+            <View style={styles.flex}>
+              <Text variant="headline">{t.home.islaTitle}</Text>
+              <Text variant="subhead" numberOfLines={1}>
+                {t.home.islaSub(coins.toLocaleString('en-US'))}
+              </Text>
             </View>
-          ) : null}
-          <PillButton
-            label={fil ? 'Pumunta sa Isla' : 'Visit & build Isla'}
-            kind="secondary"
-            block
-            onPress={() => router.push('/isla')}
-          />
+            <View style={[styles.islaPill, { backgroundColor: c.accentFaded }]} importantForAccessibility="no">
+              <Text variant="subhead" color="onAccent" style={{ fontWeight: '700' }}>
+                {t.home.openIsla}
+              </Text>
+            </View>
+          </View>
         </Card>
       </Stagger>
 
@@ -338,7 +325,10 @@ const styles = StyleSheet.create({
   leisureTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   center: { alignItems: 'center' },
   islaHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  islaProgress: { gap: 6 },
+  islaCard: { overflow: 'hidden' },
+  islaArt: { alignItems: 'center', paddingTop: 8 },
+  islaText: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: space.card, paddingTop: 4 },
+  islaPill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
   heroNum: { flexDirection: 'row', alignItems: 'flex-end' },
   unit: { marginBottom: 8, marginLeft: 2 },
   compareBox: { flex: 1, borderRadius: radius.inset, padding: 12, gap: 4 },
