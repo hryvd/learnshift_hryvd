@@ -178,6 +178,21 @@ export async function pickModuleFile(): Promise<{ name: string; text: string; er
   }
 }
 
+export function syncPeerModules(modulesByClassJson: string): string {
+  if (platform === 'android' && UsageMonitor?.syncPeerModules) {
+    try {
+      return UsageMonitor.syncPeerModules(modulesByClassJson);
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
+export function stopPeerModuleServer(): void {
+  if (platform === 'android') UsageMonitor?.stopPeerModuleServer?.();
+}
+
 // ── Configuration ────────────────────────────────────────────────────────
 
 const TOKEN_KEY = 'learnshift-device-token';

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
-import { ChatsCircle, HouseLine, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from 'phosphor-react-native';
+import { router, type Href } from 'expo-router';
+import { ChatsCircle, Eye, HouseLine, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from 'phosphor-react-native';
 
 import { BottomSheet, DarkTile, Text } from '@/components/ui';
 import { useLive } from '@/hooks/useLive';
@@ -91,6 +91,14 @@ export function ShiftSheet({ visible, onClose }: { visible: boolean; onClose: ()
           style={styles.tile}
           onPress={() => go('/focus')}
           art={<Timer size={70} weight="fill" color={c.tabProfile} />}
+        />
+        <DarkTile
+          title="Attention Mirror"
+          status="Neutral Feed & Low-Stim Shift"
+          statusAccent
+          style={styles.wide}
+          onPress={() => go('/mirror' as unknown as Href)}
+          art={<Eye size={66} weight="fill" color={c.accent} />}
         />
         <DarkTile
           title={t.isla.title}

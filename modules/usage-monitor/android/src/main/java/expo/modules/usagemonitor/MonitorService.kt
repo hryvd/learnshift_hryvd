@@ -20,6 +20,13 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import expo.modules.usagemonitor.mirror.InterventionDispatcher
+import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
+import expo.modules.usagemonitor.mirror.OfflineContextCollector
+import expo.modules.usagemonitor.mirror.PilotTelemetryRecorder
+import expo.modules.usagemonitor.mirror.SentinelBus
+import expo.modules.usagemonitor.mirror.SessionRiskScorer
+import expo.modules.usagemonitor.mirror.SmartStudyGuardService
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -47,6 +54,18 @@ class MonitorService : Service() {
         Intent.ACTION_SCREEN_OFF -> {
           ScrollGate.clear()
           if (OverlayController.isGateShowing()) OverlayController.dismiss(this@MonitorService)
+          val elapsed = SystemClock.elapsedRealtime()
+          val lastAt = SentinelBus.lastInterventionTimeMs
+          val delta = elapsed - lastAt
+          if (lastAt > 0L && delta in 1L..60_000L) {
+            SentinelBus.lastInterventionTimeMs = 0L
+            val topic = SentinelBus.lastInterventionTopicTag
+            Thread {
+              val db = LearnShiftOfflineDb.getInstance(applicationContext)
+              db.incrementStoppingPower(topic, 1.5f)
+              PilotTelemetryRecorder(db).logSuccessfulScreenOff(delta)
+            }.start()
+          }
         }
         Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> {
           onWakeCallback?.invoke()
@@ -195,16 +214,20 @@ class MonitorService : Service() {
   private var lastActiveCat: Cat = Cat.OTHER
   private var overlayStudyStartAt: Long = 0L
   private var studySessionStartAt: Long = 0L
-  private var lastEffectiveIntervalSec = 15
+  private var lastEffectiveIntervalSec = 180
   private var lastAdaptiveStreak = 0
+  private val riskScorer = SessionRiskScorer()
+  private val contextCollector by lazy { OfflineContextCollector(this) }
+  private val mirrorDispatcher by lazy { InterventionDispatcher(this) }
+  private var lastMirrorDispatchAt = 0L
 
-  private fun effectiveBreakIntervalSec(cfg: Config, activeCat: Cat, now: Long): Pair<Int, Int> {
+  private fun effectiveBreakIntervalSec(cfg: Config, activeCat: Cat, sessionMin: Double, now: Long): Pair<Int, Int> {
     val baseSec = when {
       cfg.parentBreakIntervalSec > 0 -> cfg.parentBreakIntervalSec
       activeCat == Cat.GAMES && cfg.gamesLimit > 0 -> cfg.gamesLimit * 60
       (activeCat == Cat.SOCIAL || activeCat == Cat.VIDEO) && cfg.scrollLimit > 0 -> cfg.scrollLimit * 60
       else -> cfg.overlayIntervalSec
-    }.coerceIn(10, 3600)
+    }.coerceIn(30, 3600)
 
     val existingStreak = Store.getInt(this, "distractionStreak")
     val lastBreakAt = Store.getLong(this, "lastDistractingBreakAt")
@@ -216,16 +239,33 @@ class MonitorService : Service() {
 
     val streak = Store.getInt(this, "distractionStreak")
     val factors = doubleArrayOf(1.0, 0.75, 0.55, 0.40, 0.30)
-    val (effective, appliedStreak) = if (activeCat.distracting && streak > 0) {
-      val factor = factors[minOf(streak, factors.lastIndex)]
-      val floor = minOf(baseSec, maxOf(10, (baseSec * 0.25).roundToInt()))
-      maxOf(floor, (baseSec * factor).roundToInt()) to streak
-    } else {
-      baseSec to 0
+    val streakFactor = if (activeCat.distracting && streak > 0) factors[minOf(streak, factors.lastIndex)] else 1.0
+
+    // Adaptive shortening based on both continuous use time and recent scroll cadence.
+    val usageFactor = when {
+      sessionMin >= 30.0 -> 0.25
+      sessionMin >= 20.0 -> 0.40
+      sessionMin >= 12.0 -> 0.55
+      sessionMin >= 5.0 -> 0.75
+      else -> 1.0
     }
+    val elapsed = SystemClock.elapsedRealtime()
+    val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
+    val vector = riskScorer.buildVector((sessionMin * 60_000.0).toLong(), swipes)
+    val scrollFactor = when {
+      vector.scrollCadencePerMin >= 25f -> 0.28
+      vector.scrollCadencePerMin >= 18f -> 0.45
+      vector.scrollCadencePerMin >= 12f -> 0.65
+      vector.scrollCadencePerMin >= 8f && vector.dwellVarianceSecSq < 2.0f -> 0.75
+      else -> 1.0
+    }
+
+    val multiplier = minOf(streakFactor, usageFactor, scrollFactor)
+    val floor = minOf(baseSec, if (baseSec <= 45) 30 else 45)
+    val effective = if (multiplier < 1.0) maxOf(floor, (baseSec * multiplier).roundToInt()) else baseSec
     lastEffectiveIntervalSec = effective
-    lastAdaptiveStreak = appliedStreak
-    return effective to appliedStreak
+    lastAdaptiveStreak = if (multiplier < 1.0) maxOf(streak, 1) else 0
+    return effective to lastAdaptiveStreak
   }
 
   /** One detection pass. Returns the delay until the next pass, or -1 to stop. */
@@ -405,7 +445,7 @@ class MonitorService : Service() {
         activeAccumMs += dt
       }
 
-      val (intervalSec, _) = effectiveBreakIntervalSec(cfg, live.cat, now)
+      val (intervalSec, _) = effectiveBreakIntervalSec(cfg, live.cat, live.sessionMin, now)
       val intervalMs = intervalSec * 1000L
       if (activeAccumMs >= intervalMs) {
         activeAccumMs = 0L
@@ -413,6 +453,28 @@ class MonitorService : Service() {
         if (canOverlay()) {
           val mins = maxOf(1, live.sessionMin.roundToInt())
           OverlayController.armSwipeTrigger(this, cfg, label, activePkg, mins)
+        }
+      }
+
+      // Option C Attention Mirror auto-shift when behavioral risk exceeds 0.75.
+      val mirrorAuto = getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+        .getBoolean("mirror_auto_enabled", false)
+      val elapsed = SystemClock.elapsedRealtime()
+      if (mirrorAuto && elapsed - lastMirrorDispatchAt >= 180_000L && activePkg != null) {
+        val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
+        val vec = riskScorer.buildVector((live.sessionMin * 60_000.0).toLong(), swipes)
+        val risk = riskScorer.computeRiskProbability(vec)
+        if (risk >= 0.60f) contextCollector.captureSingleGravityReading()
+        if (risk > 0.75f && !SmartStudyGuardService.evaluateSingleFrameIfEnabledSync(this)) {
+          lastMirrorDispatchAt = elapsed
+          val snap = contextCollector.buildSnapshot(vec.scrollCadencePerMin, vec.sessionMinutes, vec.dwellVarianceSecSq)
+          val capturedPkg = activePkg
+          android.os.Handler(mainLooper).post {
+            val tier = mirrorDispatcher.dispatch(capturedPkg, snap)
+            SentinelBus.lastInterventionTimeMs = elapsed
+            SentinelBus.lastInterventionStrategy = tier
+            SentinelBus.lastActivePackage = capturedPkg
+          }
         }
       }
     } else {

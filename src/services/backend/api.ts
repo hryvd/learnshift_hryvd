@@ -135,7 +135,7 @@ export async function saveClassModule(input: {
   title: string;
   subject: string;
   sourceName: string | null;
-  sourceExcerpt: string;
+  sourceExcerpt?: string;
   summary: string;
   flashcards: ModuleFlashcard[];
   questions: ModuleQuestion[];
@@ -147,7 +147,8 @@ export async function saveClassModule(input: {
       title: input.title.trim().slice(0, 120),
       subject: input.subject.trim().slice(0, 40) || 'general',
       source_name: input.sourceName,
-      source_excerpt: input.sourceExcerpt.slice(0, 12000),
+      // Keep raw source text off cloud tables; full decks stream directly from teacher phones.
+      source_excerpt: '',
       summary: input.summary,
       flashcards: input.flashcards,
       questions: input.questions,

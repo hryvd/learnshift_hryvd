@@ -6,7 +6,7 @@ import { ChalkboardTeacher, HouseLine, SignOut, Trash } from 'phosphor-react-nat
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { MonitorSetup } from '@/components/student/MonitorSetup';
-import { Card, ListGroup, ListRow, Notice, PillButton, SheetHeader, Text, TextField } from '@/components/ui';
+import { Card, IconButton, ListGroup, ListRow, Notice, PillButton, SheetHeader, Text, TextField } from '@/components/ui';
 import { haptic } from '@/design/haptics';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
@@ -171,17 +171,26 @@ export default function Account() {
                 value={confirmUnlink === g.id ? '' : t.profile.linked}
                 chevron={false}
                 right={
-                  <PillButton
-                    label={confirmUnlink === g.id ? t.common.continue : '×'}
-                    kind={confirmUnlink === g.id ? 'destructive' : 'neutral'}
-                    size="sm"
-                    accessibilityLabel={`Unlink ${g.name}`}
-                    onPress={() => {
-                      if (confirmUnlink !== g.id) return setConfirmUnlink(g.id);
-                      setConfirmUnlink(null);
-                      run(() => api.unlink(g.id, profile.id));
-                    }}
-                  />
+                  confirmUnlink === g.id ? (
+                    <PillButton
+                      label={t.common.continue}
+                      kind="destructive"
+                      size="sm"
+                      accessibilityLabel={`Confirm unlink ${g.name}`}
+                      onPress={() => {
+                        setConfirmUnlink(null);
+                        run(() => api.unlink(g.id, profile.id));
+                      }}
+                    />
+                  ) : (
+                    <IconButton
+                      kind="close"
+                      tone="inset"
+                      size={32}
+                      accessibilityLabel={`Unlink ${g.name}`}
+                      onPress={() => setConfirmUnlink(g.id)}
+                    />
+                  )
                 }
               />
             ))}
@@ -213,10 +222,10 @@ export default function Account() {
                 icon={<ChalkboardTeacher size={20} weight="fill" color={c.tabInsights} />}
                 chevron={false}
                 right={
-                  <PillButton
-                    label="×"
-                    kind="neutral"
-                    size="sm"
+                  <IconButton
+                    kind="close"
+                    tone="inset"
+                    size={32}
                     accessibilityLabel={`Leave ${k.name}`}
                     onPress={() => run(() => api.leaveClass(k.id))}
                   />

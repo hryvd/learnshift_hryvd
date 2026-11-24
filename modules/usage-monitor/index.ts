@@ -55,6 +55,26 @@ type UsageMonitorNative = {
   lastUsedApp?(): string;
   openHomeSettings?(): void;
   pickModuleFile?(): Promise<{ name: string; text: string; error?: string } | null>;
+  syncPeerModules?(modulesByClassJson: string): string;
+  stopPeerModuleServer?(): void;
+  getMirrorStatus?(): {
+    workProfileStatus: 'ACTIVE_AND_READY' | 'CAN_PROVISION' | 'BLOCKED_EXISTING_OR_UNSUPPORTED';
+    tierAReady: boolean;
+    studyGuardEnabled: boolean;
+    studyGuardRunning: boolean;
+    mirrorAutoEnabled: boolean;
+    swipesPerMin: number;
+    riskScore: number;
+    batteryExempt: boolean;
+    lastStrategy: string;
+  };
+  provisionMirrorWorkProfile?(): boolean;
+  openOemAutostart?(): void;
+  requestSmartStudyGuard?(enabled: boolean): Promise<boolean>;
+  setMirrorAutoEnabled?(enabled: boolean): boolean;
+  triggerMirrorIntervention?(targetPkg: string): string;
+  openNeutralSeed?(url: string): void;
+  exportMirrorPilotCsv?(): Promise<string>;
   addListener?(eventName: 'onWakeRefresh', listener: () => void): { remove(): void };
   lastConfig(): string;
 };

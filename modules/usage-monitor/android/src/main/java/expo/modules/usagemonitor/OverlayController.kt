@@ -339,18 +339,6 @@ object OverlayController {
       val choices = q.getJSONArray("options")
       val answer = q.getInt("answer")
       if (choices.length() != 4 || answer !in 0..3) return@mapNotNull null
-<<<<<<< HEAD
-      NativeQuizItem(
-        "",
-        q.getString("prompt"),
-        (0..3).map { choices.getString(it) },
-        answer,
-        q.getString("explanation"),
-        q.getString("topic"),
-        q.optJSONObject("visual"),
-      )
-    }.shuffled().take(3)
-=======
       q
     }
     val prefs = ctx.applicationContext.getSharedPreferences("learnshift_seen_questions", Context.MODE_PRIVATE)
@@ -380,7 +368,6 @@ object OverlayController {
         q.optJSONObject("visual"),
       )
     }
->>>>>>> origin/main
   }.getOrDefault(emptyList())
 
   /** Vertical swipe-up touch container so taps hit choice buttons while upward swipes drag/advance cards. */

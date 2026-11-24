@@ -5,6 +5,7 @@
   <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <uses-permission android:name="android.permission.INTERNET" />
@@ -46,5 +47,45 @@
     </receiver>
 
     <receiver android:name="expo.modules.usagemonitor.NudgeActionReceiver" android:exported="false" />
+
+    <!-- Option C Attention Mirror: Work Profile Owner + Translucent Bridge -->
+    <receiver
+      android:name="expo.modules.usagemonitor.mirror.LearnShiftAdminReceiver"
+      android:exported="true"
+      android:permission="android.permission.BIND_DEVICE_ADMIN">
+      <meta-data
+        android:name="android.app.device_admin"
+        android:resource="@xml/ls_device_admin_policy" />
+      <intent-filter>
+        <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+        <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
+      </intent-filter>
+    </receiver>
+
+    <activity
+      android:name="expo.modules.usagemonitor.mirror.WorkBridgeActivity"
+      android:excludeFromRecents="true"
+      android:exported="true"
+      android:launchMode="singleTask"
+      android:noHistory="true"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="com.learnshift.ACTION_LAUNCH_NEUTRAL_APP" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity
+      android:name="expo.modules.usagemonitor.mirror.DecelerationOverlayActivity"
+      android:excludeFromRecents="true"
+      android:exported="false"
+      android:launchMode="singleTop"
+      android:screenOrientation="portrait"
+      android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+    <service
+      android:name="expo.modules.usagemonitor.mirror.SmartStudyGuardService"
+      android:exported="false"
+      android:foregroundServiceType="mediaProjection" />
   </application>
 </manifest>
