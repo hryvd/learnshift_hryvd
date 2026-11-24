@@ -80,7 +80,7 @@ const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 const AMPM = ['AM', 'PM'];
 const DURATION_OPTIONS = [0, 5, 10, 15, 20, 25, 30, 40, 45, 60, 90, 120] as const;
-const BREAK_INTERVAL_OPTIONS = [0, 15, 30, 60, 120, 180, 300, 600, 900, 1200, 1800] as const;
+const BREAK_INTERVAL_OPTIONS = [0, 45, 180, 540, 900] as const;
 
 function formatBreakInterval(sec: number | null, offLabel: string): string {
   if (!sec || sec <= 0) return offLabel;
@@ -554,6 +554,7 @@ function Content({
   const lateNights = v.days.filter((d) => d.lateMinutes > 0).length;
   const now = useNow();
   const unlocked = v.unlockUntil && Date.parse(v.unlockUntil) > now ? new Date(v.unlockUntil) : null;
+  const [showAdvancedPacing, setShowAdvancedPacing] = useState(false);
 
   const summary = (
     <View style={styles.col}>
@@ -823,29 +824,43 @@ function Content({
 
           <PressableScale
             scaleTo={pressScale.card}
-            onPress={() => onEditLimit('breakSec')}
+            onPress={() => setShowAdvancedPacing((x) => !x)}
             accessibilityRole="button"
-            accessibilityLabel={`${g.breakTimer}, ${formatBreakInterval(v.breakIntervalSec, g.off)}`}
-            style={[styles.subControlRow, { backgroundColor: c.inset }]}
+            accessibilityLabel="Advanced pacing"
+            style={styles.advancedPacingToggle}
           >
-            <View style={[styles.ctlBadge, { backgroundColor: c.card }]}>
-              <Clock size={16} weight="fill" color={c.accent} />
-            </View>
-            <View style={styles.flex}>
-              <Text variant="subhead" color="text" style={fontFor(600)}>
-                {g.breakTimer}
-              </Text>
-              <Text variant="caption" numberOfLines={2}>
-                {g.breakTimerSub}
-              </Text>
-            </View>
-            <View style={[styles.valuePill, { backgroundColor: c.card }]}>
-              <Text variant="subhead" color={v.breakIntervalSec ? 'accent' : 'textSecondary'} style={fontFor(700)}>
-                {formatBreakInterval(v.breakIntervalSec, g.off)}
-              </Text>
-            </View>
-            <CaretRight size={15} weight="bold" color={c.textTertiary} />
+            <Text variant="caption" color="textSecondary" style={fontFor(600)}>
+              {showAdvancedPacing ? 'Hide advanced pacing' : `Advanced pacing · ${formatBreakInterval(v.breakIntervalSec, 'Auto')}`}
+            </Text>
           </PressableScale>
+
+          {showAdvancedPacing ? (
+            <PressableScale
+              scaleTo={pressScale.card}
+              onPress={() => onEditLimit('breakSec')}
+              accessibilityRole="button"
+              accessibilityLabel={`${g.breakTimer}, ${formatBreakInterval(v.breakIntervalSec, g.off)}`}
+              style={[styles.subControlRow, { backgroundColor: c.inset }]}
+            >
+              <View style={[styles.ctlBadge, { backgroundColor: c.card }]}>
+                <Clock size={16} weight="fill" color={c.accent} />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="subhead" color="text" style={fontFor(600)}>
+                  {g.breakTimer}
+                </Text>
+                <Text variant="caption" numberOfLines={2}>
+                  {g.breakTimerSub}
+                </Text>
+              </View>
+              <View style={[styles.valuePill, { backgroundColor: c.card }]}>
+                <Text variant="subhead" color={v.breakIntervalSec ? 'accent' : 'textSecondary'} style={fontFor(700)}>
+                  {formatBreakInterval(v.breakIntervalSec, g.off)}
+                </Text>
+              </View>
+              <CaretRight size={15} weight="bold" color={c.textTertiary} />
+            </PressableScale>
+          ) : null}
         </View>
 
         <View style={[styles.toggleRow, { borderColor: c.hairline }]}>
@@ -1495,6 +1510,7 @@ const styles = StyleSheet.create({
   reqIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   controlSelectRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   subControlRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.inset },
+  advancedPacingToggle: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 2 },
   ctlBadge: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   valuePill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill },
   toggleRow: {

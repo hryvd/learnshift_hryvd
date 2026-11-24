@@ -7,15 +7,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
+import expo.modules.usagemonitor.mirror.SentinelBus
 import java.util.Calendar
 
 /** Opt-in metadata only. Never access event.text, event.source or any window hierarchy. */
 class ScrollService : AccessibilityService() {
   private var wakeReceiverRegistered = false
   private var lastServiceKickAt = 0L
+  private var lastSentinelScrollAt = 0L
 
   private val wakeReceiver = object : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
@@ -77,9 +80,17 @@ class ScrollService : AccessibilityService() {
       return
     }
     if (event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED) return
+    val isTarget = Categories.isTargetApp(this, pkg, cfg.monitorAllApps)
+    if (isTarget) {
+      val elapsed = SystemClock.elapsedRealtime()
+      if (elapsed - lastSentinelScrollAt >= 300L) {
+        lastSentinelScrollAt = elapsed
+        SentinelBus.recordScrollEvent(elapsed)
+      }
+    }
     if (!cfg.enabled || !Perms.hasUsageAccess(this) || !MonitorService.running || cfg.paused || cfg.focusUntil > now ||
       now < Store.getLong(this, "snoozeUntil") ||
-      !Categories.isTargetApp(this, pkg, cfg.monitorAllApps) || OverlayController.isShowing()) return
+      !isTarget || OverlayController.isShowing()) return
     // Positive content movement corresponds to an upward feed swipe. Feeds such as
     // ViewPager2 may report zero deltas; fall back to allowing scroll events once armed.
     val forward = if (Build.VERSION.SDK_INT >= 28 && (event.scrollDeltaY != 0 || event.scrollDeltaX != 0)) {

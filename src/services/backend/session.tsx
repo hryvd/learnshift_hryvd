@@ -17,14 +17,17 @@ import { configureNotifications, registerForPush, routeNotificationTaps } from '
 import { initialState, useAppStore } from '@/store/useAppStore';
 import { refreshProfile, startAuth, useAuth } from '@/store/useAuth';
 
+import { startStudentPeerSync } from './peerModuleSync';
 import { startStudentSync } from './sync';
 
 export function SessionEffects() {
   const profile = useAuth((s) => s.profile);
   const storeRole = useAppStore((s) => s.role);
+  const classes = useAppStore((s) => s.classes);
   const accountRequests = useAppStore((s) => s.accountRequests);
   const id = profile?.id ?? null;
   const role = profile?.role ?? null;
+  const classIdsKey = classes.map((c) => c.id).join(',');
   const signingOutReq = useRef<string | null>(null);
   useMonitorBridge(IS_PITCH ? (storeRole === 'student' ? 'local-student' : null) : role === 'student' ? id : null);
 
@@ -85,6 +88,11 @@ export function SessionEffects() {
     if (IS_PITCH || !id || role !== 'student') return;
     return startStudentSync(id);
   }, [id, role]);
+
+  useEffect(() => {
+    if (IS_PITCH || !id || role !== 'student' || !classIdsKey) return;
+    return startStudentPeerSync(classIdsKey.split(',').filter(Boolean));
+  }, [id, role, classIdsKey]);
 
   useEffect(() => {
     if (IS_PITCH || !id) return;

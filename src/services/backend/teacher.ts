@@ -10,8 +10,17 @@ import { create } from 'zustand';
 import type { Section, Student } from '@/data/class';
 import { SKILLS, type SkillId } from '@/data/skills';
 import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
+import { IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
+import * as api from '@/services/backend/api';
+import {
+  broadcastClassModules,
+  loadTeacherLocalModules,
+  persistTeacherLocalModules,
+  shutdownTeacherPeerHost,
+  startTeacherPeerHost,
+} from '@/services/backend/peerModuleSync';
 import { PRIOR_MASTERY, todayKey } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
@@ -37,10 +46,12 @@ type TeacherState = {
   error: string | null;
   classes: TeacherClass[];
   selected: string | null;
+  uploadOpen: boolean;
   students: Record<string, LiveStudent[]>;
   modules: Record<string, ClassModule[]>;
   review: ReviewRow[];
   select: (id: string) => void;
+  setUploadOpen: (open: boolean) => void;
 };
 
 export const useTeacher = create<TeacherState>()((set) => ({
@@ -48,18 +59,22 @@ export const useTeacher = create<TeacherState>()((set) => ({
   error: null,
   classes: [],
   selected: null,
+  uploadOpen: false,
   students: {},
   modules: {},
   review: [],
   select: (selected) => set({ selected }),
+  setUploadOpen: (uploadOpen) => set({ uploadOpen }),
 }));
 
 export function resetTeacher() {
+  shutdownTeacherPeerHost();
   useTeacher.setState({
     loading: true,
     error: null,
     classes: [],
     selected: null,
+    uploadOpen: false,
     students: {},
     modules: {},
     review: [],
@@ -180,44 +195,128 @@ export async function loadReview() {
 }
 
 export async function loadModules(classId: string) {
+  const localMap = await loadTeacherLocalModules();
+  const localRows = localMap[classId] ?? [];
   const { data, error } = await supabase
     .from('class_modules')
     .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
     .eq('class_id', classId)
     .order('created_at', { ascending: false })
     .limit(40);
-  if (error) return;
-  const rows: ClassModule[] = (data ?? []).map((m) => ({
-    id: m.id,
-    classId: m.class_id,
-    title: m.title,
-    subject: m.subject,
-    sourceName: m.source_name,
-    summary: m.summary ?? '',
-    flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
-    questions: (m.questions ?? []) as ModuleQuestion[],
-    published: !!m.published,
-    createdAt: m.created_at,
-  }));
-  useTeacher.setState((s) => ({ modules: { ...s.modules, [classId]: rows } }));
+  const remoteRows: ClassModule[] = !error
+    ? (data ?? []).map((m) => ({
+      id: m.id,
+      classId: m.class_id,
+      title: m.title,
+      subject: m.subject,
+      sourceName: m.source_name,
+      summary: m.summary ?? '',
+      flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+      questions: (m.questions ?? []) as ModuleQuestion[],
+      published: !!m.published,
+      createdAt: m.created_at,
+    }))
+    : [];
+  const byId = new Map<string, ClassModule>();
+  for (const r of remoteRows) byId.set(r.id, r);
+  for (const l of localRows) byId.set(l.id, l);
+  const merged = [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  useTeacher.setState((s) => ({ modules: { ...s.modules, [classId]: merged } }));
+  if (merged.length > 0) {
+    void persistTeacherLocalModules({ ...useTeacher.getState().modules, [classId]: merged });
+  }
 }
 
 export function addLocalModule(mod: ClassModule) {
-  useTeacher.setState((s) => ({
-    modules: {
+  useTeacher.setState((s) => {
+    const nextModules = {
       ...s.modules,
       [mod.classId]: [mod, ...(s.modules[mod.classId] ?? []).filter((x) => x.id !== mod.id)],
-    },
-  }));
+    };
+    void persistTeacherLocalModules(nextModules);
+    return { modules: nextModules };
+  });
 }
 
 export function removeLocalModule(classId: string, id: string) {
-  useTeacher.setState((s) => ({
-    modules: {
+  useTeacher.setState((s) => {
+    const nextModules = {
       ...s.modules,
       [classId]: (s.modules[classId] ?? []).filter((x) => x.id !== id),
-    },
-  }));
+    };
+    void persistTeacherLocalModules(nextModules);
+    return { modules: nextModules };
+  });
+}
+
+/**
+ * Approves a generated module deck, saves full content locally on the teacher's phone,
+ * serves it over LAN HTTP + P2P broadcast to every chosen class, and stores only lightweight
+ * metadata in the database.
+ */
+export async function publishModulesToClasses(
+  classIds: string[],
+  input: {
+    title: string;
+    subject: string;
+    sourceName: string | null;
+    summary: string;
+    flashcards: ModuleFlashcard[];
+    questions: ModuleQuestion[];
+  },
+): Promise<{ saved: ClassModule[]; lanUrl: string }> {
+  const uniqueIds = Array.from(new Set(classIds.filter(Boolean)));
+  const saved: ClassModule[] = [];
+  for (const classId of uniqueIds) {
+    let mod: ClassModule;
+    if (IS_PITCH) {
+      mod = {
+        id: `mod-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
+        classId,
+        title: input.title.trim(),
+        subject: input.subject,
+        sourceName: input.sourceName,
+        summary: input.summary,
+        flashcards: input.flashcards,
+        questions: input.questions,
+        published: true,
+        createdAt: new Date().toISOString(),
+      };
+    } else {
+      try {
+        mod = await api.saveClassModule({
+          classId,
+          title: input.title,
+          subject: input.subject,
+          sourceName: input.sourceName,
+          sourceExcerpt: '',
+          summary: input.summary,
+          flashcards: input.flashcards,
+          questions: input.questions,
+        });
+      } catch {
+        mod = {
+          id: `local-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
+          classId,
+          title: input.title.trim(),
+          subject: input.subject,
+          sourceName: input.sourceName,
+          summary: input.summary,
+          flashcards: input.flashcards,
+          questions: input.questions,
+          published: true,
+          createdAt: new Date().toISOString(),
+        };
+      }
+    }
+    addLocalModule(mod);
+    saved.push(mod);
+  }
+  const lanUrl = await persistTeacherLocalModules(useTeacher.getState().modules);
+  await Promise.all(
+    saved.map((mod) => broadcastClassModules(mod.classId, useTeacher.getState().modules[mod.classId] ?? [mod], lanUrl)),
+  );
+  return { saved, lanUrl };
 }
 
 export async function reviewAnswer(id: string, status: 'approved' | 'edited', note?: string) {
@@ -278,6 +377,15 @@ export function useTeacherLive(enabled = true) {
       app.remove();
     };
   }, [activeId, resume]);
+
+  const classes = useTeacher((s) => s.classes);
+  const classIdsKey = classes.map((c) => c.id).join(',');
+
+  useEffect(() => {
+    if (!enabled || !classIdsKey) return;
+    const ids = classIdsKey.split(',').filter(Boolean);
+    return startTeacherPeerHost(ids, (cid) => useTeacher.getState().modules[cid] ?? []);
+  }, [enabled, classIdsKey]);
 
   useEffect(() => {
     if (!enabled || !selected) return;

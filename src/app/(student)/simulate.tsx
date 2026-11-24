@@ -12,11 +12,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Pause, Play, Timer, X } from 'phosphor-react-native';
+import { Heart, Pause, Play, Timer } from 'phosphor-react-native';
 
 import { FullQuizOverlay } from '@/components/student/FullQuizOverlay';
 import { VerticalPager } from '@/components/student/VerticalPager';
-import { Text } from '@/components/ui';
+import { IconButton, Text } from '@/components/ui';
 import { mirroredAppByIdOrPkg, type MirroredClip } from '@/data/mirroredApps';
 import { ease, useReducedMotion } from '@/design/motion';
 import { DEFAULT_SENTINEL, useAppStore } from '@/store/useAppStore';
@@ -103,14 +103,13 @@ export default function Simulate() {
           ))}
         </VerticalPager>
         <View style={[styles.header, { top: insets.top + 12 }]}>
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
+          <IconButton
+            kind="close"
+            tone="glass"
+            size={44}
             accessibilityLabel="Close preview"
-            style={styles.iconButton}
-          >
-            <X size={24} color="#FFFFFF" />
-          </Pressable>
+            onPress={() => router.back()}
+          />
           <View style={styles.headerText}>
             <Text variant="headline" color="#FFFFFF">
               Try a learning break

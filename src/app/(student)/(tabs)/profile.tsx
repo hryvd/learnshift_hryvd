@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
-import { Clock, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from 'phosphor-react-native';
+import { router, type Href } from 'expo-router';
+import { Clock, Eye, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from 'phosphor-react-native';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
@@ -16,21 +16,14 @@ import { formatClock, useT } from '@/i18n/useT';
 import { IS_PITCH } from '@/lib/config';
 import * as api from '@/services/backend/api';
 import { flushStudent } from '@/services/backend/sync';
+import { BREAK_INTERVAL_PRESETS, snapBreakIntervalSec } from '@/services/learningBreak';
 import { openBatterySettings, openOverlaySettings, openScrollSettings, platform, requestAccess } from '@/services/monitor';
 import { useDevice } from '@/services/monitor/bridge';
 import { patchProfile, useAuth } from '@/store/useAuth';
 import { DEFAULT_SENTINEL, useAppStore, type ThemePref } from '@/store/useAppStore';
 import { useSession } from '@/store/useSession';
 
-const FREQ_OPTIONS = [
-  { sec: 15, label: '15s' },
-  { sec: 30, label: '30s' },
-  { sec: 60, label: '1m' },
-  { sec: 180, label: '3m' },
-  { sec: 300, label: '5m' },
-  { sec: 600, label: '10m' },
-  { sec: 900, label: '15m' },
-] as const;
+const FREQ_OPTIONS = BREAK_INTERVAL_PRESETS;
 
 export default function Profile() {
   const { c } = useTheme();
@@ -42,13 +35,14 @@ export default function Profile() {
   const themePref = useAppStore((s) => s.themePref);
   const [confirm, setConfirm] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const [showPacing, setShowPacing] = useState(false);
   const name = useAppStore((s) => s.studentName);
   const classes = useAppStore((s) => s.classes);
   const userId = useAuth((s) => s.profile?.id ?? null);
   const grade = useAuth((s) => s.profile?.grade ?? null);
   const overlayIntervalSec = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
   const guardianBreakSec = useAppStore((s) => (s.guardian.linked ? s.limits.breakIntervalSec : null));
-  const effectiveIntervalSec = guardianBreakSec ?? overlayIntervalSec;
+  const effectiveIntervalSec = snapBreakIntervalSec(guardianBreakSec ?? overlayIntervalSec);
   const monitorAllApps = useAppStore((s) => s.sentinel?.monitorAllApps ?? DEFAULT_SENTINEL.monitorAllApps);
   const learningGrade = useAppStore((s) => s.learningGrade);
   const learningSubject = useAppStore((s) => s.learningSubject);
@@ -157,7 +151,7 @@ export default function Profile() {
               </PressableScale>
             ))}
           </View>
-          <Text variant="caption">{fil ? 'Nasa app ang 500 tanong. Ang mga sagot sa practice feed ay mananatili sa sesyon mo.' : '500 questions are included in the app. Practice-feed answers stay in your session.'}</Text>
+          <Text variant="caption">{fil ? 'Nasa app ang 3,000 tanong. Ang mga sagot sa practice feed ay mananatili sa sesyon mo.' : '3,000 questions are included in the app. Practice-feed answers stay in your session.'}</Text>
         </Card>
       </Stagger>
 
@@ -176,68 +170,6 @@ export default function Profile() {
               syncSettingNow();
             }}
           />
-        </Card>
-      </Stagger>
-
-      <Stagger index={i++}>
-        <Card style={styles.gap}>
-          <View style={styles.rowBetween}>
-            <View style={styles.flex}>
-              <Text variant="headline">{fil ? 'Kailan ka magpapahinga?' : 'When should a break be ready?'}</Text>
-              <Text variant="subhead">
-                {guardianBreakSec != null
-                  ? fil
-                    ? `Itinakda ni ${guardian.name || 'Guardian mo'}. Umiikli ito kapag tuloy-tuloy ka sa libangan.`
-                    : `Set by ${guardian.name || 'your guardian'}. Shortens automatically if entertainment scrolling persists.`
-                  : fil
-                    ? 'Pagkatapos ng timer, maghihintay kami sa susunod mong pag-swipe pataas.'
-                    : 'When the timer ends, we wait for your next upward scroll.'}
-              </Text>
-            </View>
-            <Clock size={20} weight="fill" color={c.accent} />
-          </View>
-          <View style={styles.freqRow}>
-            {FREQ_OPTIONS.map((opt) => {
-              const active = effectiveIntervalSec === opt.sec;
-              return (
-                <PressableScale
-                  key={opt.sec}
-                  disabled={guardianBreakSec != null}
-                  accessibilityLabel={`Break ready after ${opt.label}`}
-                  accessibilityState={{ selected: active, disabled: guardianBreakSec != null }}
-                  onPress={() => {
-                    haptic.select();
-                    useAppStore.getState().setOverlayInterval(opt.sec);
-                    syncSettingNow();
-                  }}
-                  style={[
-                    styles.freqPill,
-                    { backgroundColor: active ? c.accent : c.inset, opacity: guardianBreakSec != null && !active ? 0.45 : 1 },
-                  ]}
-                >
-                  <Text variant="caption" color={active ? c.onAccent : c.text} style={fontFor(700)}>
-                    {opt.label}
-                  </Text>
-                </PressableScale>
-              );
-            })}
-          </View>
-          <View style={styles.rowBetween}>
-            <View style={styles.flex}>
-              <Text variant="subhead" color="text">
-                Include other apps
-              </Text>
-              <Text variant="caption">Also include non-study apps beyond video, social and games.</Text>
-            </View>
-            <Toggle
-              value={monitorAllApps}
-              onChange={(v) => {
-                useAppStore.getState().setMonitorAllApps(v);
-                syncSettingNow();
-              }}
-              accessibilityLabel="Include other apps"
-            />
-          </View>
         </Card>
       </Stagger>
 
@@ -274,10 +206,83 @@ export default function Profile() {
 
       <Stagger index={i++}>
         <ListGroup>
+          <ListRow
+            title={fil ? 'Attention Mirror (Neutral Feed)' : 'Attention Mirror (Neutral Feed)'}
+            value="Mode C"
+            icon={<Eye size={20} weight="fill" color={c.accent} />}
+            onPress={() => router.push('/mirror' as unknown as Href)}
+          />
           <ListRow title={fil ? 'Subukan ang pag-swipe' : 'Try the swipe demo'} value="Preview" icon={<Clock size={20} color={c.accent} />} onPress={() => router.push({ pathname: '/simulate', params: { app: 'tiktok' } })} />
           {IS_PITCH ? <ListRow title="Demo controls" icon={<Info size={20} color={c.accent} />} onPress={() => router.push('/demo')} /> : null}
           <ListRow title={fil ? 'I-setup ang learning breaks' : 'Set up learning breaks'} icon={<HouseLine size={20} color={c.accent} />} onPress={() => router.push('/account')} />
         </ListGroup>
+      </Stagger>
+
+      {/* Quietly tucked away adaptive pacing selector (45s / 3m / 9m / 15m) */}
+      <Stagger index={i++}>
+        <ListGroup>
+          <ListRow
+            title={fil ? 'Adaptive rhythm' : 'Adaptive rhythm'}
+            value={showPacing ? (fil ? 'Itago' : 'Hide') : `${FREQ_OPTIONS.find((x) => x.sec === effectiveIntervalSec)?.label ?? '3m'} · Auto`}
+            chevron={!showPacing}
+            onPress={() => setShowPacing((v) => !v)}
+          />
+        </ListGroup>
+        {showPacing ? (
+          <Card style={[styles.gap, { marginTop: 8 }]}>
+            <Text variant="caption">
+              {guardianBreakSec != null
+                ? fil
+                  ? `Itinakda ni ${guardian.name || 'Guardian mo'}. Mas umiikli ito kapag tuloy-tuloy o mabilis ang pag-scroll.`
+                  : `Set by ${guardian.name || 'your guardian'}. Adapts automatically: longer use time and rapid scrolling shorten the break timer.`
+                : fil
+                  ? 'Awtomatikong umiikli ang timer kapag matagal ang paggamit o mabilis ang pag-scroll.'
+                  : 'Adapts automatically: longer use time and excessive scrolling shorten the interval.'}
+            </Text>
+            <View style={styles.freqRow}>
+              {FREQ_OPTIONS.map((opt) => {
+                const active = effectiveIntervalSec === opt.sec;
+                return (
+                  <PressableScale
+                    key={opt.sec}
+                    disabled={guardianBreakSec != null}
+                    accessibilityLabel={`Break ready after ${opt.label}`}
+                    accessibilityState={{ selected: active, disabled: guardianBreakSec != null }}
+                    onPress={() => {
+                      haptic.select();
+                      useAppStore.getState().setOverlayInterval(opt.sec);
+                      syncSettingNow();
+                    }}
+                    style={[
+                      styles.freqPill,
+                      { backgroundColor: active ? c.accent : c.inset, opacity: guardianBreakSec != null && !active ? 0.45 : 1 },
+                    ]}
+                  >
+                    <Text variant="caption" color={active ? c.onAccent : c.text} style={fontFor(700)}>
+                      {opt.label}
+                    </Text>
+                  </PressableScale>
+                );
+              })}
+            </View>
+            <View style={styles.rowBetween}>
+              <View style={styles.flex}>
+                <Text variant="subhead" color="text">
+                  Include other apps
+                </Text>
+                <Text variant="caption">Watch non-study apps beyond video, social and games.</Text>
+              </View>
+              <Toggle
+                value={monitorAllApps}
+                onChange={(v) => {
+                  useAppStore.getState().setMonitorAllApps(v);
+                  syncSettingNow();
+                }}
+                accessibilityLabel="Include other apps"
+              />
+            </View>
+          </Card>
+        ) : null}
       </Stagger>
 
       <Stagger index={i++}>

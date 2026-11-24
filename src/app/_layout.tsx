@@ -35,7 +35,14 @@ export default function RootLayout() {
 }
 
 function App() {
-  const [loaded, error] = useFonts({ Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold });
+  const [loaded, error] = useFonts({
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Bungee_400Regular: require('../../assets/fonts/Bungee-Regular.ttf'),
+    Poppins_700Bold: require('../../assets/fonts/Poppins-Bold.ttf'),
+  });
   const [hydrated, setHydrated] = useState(() => useAppStore.persist.hasHydrated());
   const authReady = useAuth((s) => s.status !== 'loading');
 

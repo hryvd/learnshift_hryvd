@@ -23,6 +23,7 @@ export default function StudentLayout() {
       <Stack.Screen name="isla" />
       <Stack.Screen name="isla-how" options={sheet} />
       <Stack.Screen name="focus" />
+      <Stack.Screen name="mirror" />
       <Stack.Screen name="winddown" options={full} />
       <Stack.Screen name="lock" options={{ ...full, gestureEnabled: false }} />
       <Stack.Screen name="privacy" />

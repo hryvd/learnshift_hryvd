@@ -11,6 +11,7 @@ import { clampBedtimeStart } from '@/lib/bedtime';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import { gapEngine } from '@/services/ai/gapEngine';
 import { SAMPLE_PITCH_MODULES, type ClassModule } from '@/services/ai/moduleGenerator';
+import { snapBreakIntervalSec } from '@/services/learningBreak';
 import type { AnswerEvidence, ArmStats, Mastery, NudgeAction } from '@/services/types';
 
 export type Role = 'student' | 'guardian' | 'teacher';
@@ -255,7 +256,7 @@ export const DEFAULT_SENTINEL: SentinelSlice = {
   timingVotes: { good: 0, bad: 0 },
   regretVotes: { yes: 0, no: 0 },
   deckLang: 'taglish',
-  overlayIntervalSec: 15,
+  overlayIntervalSec: 180,
   monitorAllApps: false,
 };
 
@@ -588,7 +589,12 @@ export const useAppStore = create<State & Actions>()(
         set((s) => {
           const cur = s.sentinel ?? DEFAULT_SENTINEL;
           return {
-            sentinel: { ...cur, overlayIntervalSec: Number.isFinite(overlayIntervalSec) ? Math.min(3600, Math.max(10, Math.round(overlayIntervalSec))) : DEFAULT_SENTINEL.overlayIntervalSec },
+            sentinel: {
+              ...cur,
+              overlayIntervalSec: Number.isFinite(overlayIntervalSec)
+                ? snapBreakIntervalSec(overlayIntervalSec)
+                : DEFAULT_SENTINEL.overlayIntervalSec,
+            },
             dirty: { ...s.dirty, settings: true },
           };
         }),
@@ -640,6 +646,7 @@ export const useAppStore = create<State & Actions>()(
             sentinel: {
               ...DEFAULT_SENTINEL,
               ...s.sentinel,
+              overlayIntervalSec: snapBreakIntervalSec(s.sentinel.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec),
               day: today,
               ...(resetDaily ? { swipesToday: 0, decksToday: 0, dismissStreak: 0 } : {}),
             },

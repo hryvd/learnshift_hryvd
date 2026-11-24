@@ -12,6 +12,16 @@ import androidx.core.content.ContextCompat
 import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.usagemonitor.mirror.InterventionDispatcher
+import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
+import expo.modules.usagemonitor.mirror.NeutralSeedManager
+import expo.modules.usagemonitor.mirror.OemBatteryHardening
+import expo.modules.usagemonitor.mirror.OfflineContextCollector
+import expo.modules.usagemonitor.mirror.PilotTelemetryRecorder
+import expo.modules.usagemonitor.mirror.SentinelBus
+import expo.modules.usagemonitor.mirror.SessionRiskScorer
+import expo.modules.usagemonitor.mirror.SmartStudyGuardService
+import expo.modules.usagemonitor.mirror.WorkProfileOnboardingManager
 import org.json.JSONObject
 
 class UsageMonitorModule : Module() {
@@ -63,9 +73,30 @@ class UsageMonitorModule : Module() {
     }
 
     val pendingFilePromise = java.util.concurrent.atomic.AtomicReference<expo.modules.kotlin.Promise?>(null)
+    val pendingGuardPromise = java.util.concurrent.atomic.AtomicReference<expo.modules.kotlin.Promise?>(null)
     val pickModuleFileReq = 4107
+    val provisionWorkReq = 4108
+    val mediaProjReq = 4109
 
     OnActivityResult { _, payload ->
+      if (payload.requestCode == provisionWorkReq) return@OnActivityResult
+      if (payload.requestCode == mediaProjReq) {
+        val guardPromise = pendingGuardPromise.getAndSet(null) ?: return@OnActivityResult
+        val prefs = ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+        if (payload.resultCode == android.app.Activity.RESULT_OK && payload.data != null) {
+          prefs.edit().putBoolean("smart_study_guard_enabled", true).apply()
+          val svcIntent = Intent(ctx, SmartStudyGuardService::class.java).apply {
+            putExtra(SmartStudyGuardService.EXTRA_RESULT_CODE, payload.resultCode)
+            putExtra(SmartStudyGuardService.EXTRA_RESULT_DATA, payload.data)
+          }
+          ContextCompat.startForegroundService(ctx, svcIntent)
+          guardPromise.resolve(true)
+        } else {
+          prefs.edit().putBoolean("smart_study_guard_enabled", false).apply()
+          guardPromise.resolve(false)
+        }
+        return@OnActivityResult
+      }
       if (payload.requestCode != pickModuleFileReq) return@OnActivityResult
       val promise = pendingFilePromise.getAndSet(null) ?: return@OnActivityResult
       if (payload.resultCode != android.app.Activity.RESULT_OK) {
@@ -415,6 +446,102 @@ class UsageMonitorModule : Module() {
       val cfg = Store.config(ctx)
       JSONObject().put("enabled", cfg.enabled).put("grade", cfg.grade)
         .put("subject", cfg.subject).put("overlayIntervalSec", cfg.overlayIntervalSec).toString()
+    }
+
+    Function("syncPeerModules") { modulesByClassJson: String ->
+      PeerModuleServer.updateAndEnsureRunning(modulesByClassJson)
+    }
+
+    Function("stopPeerModuleServer") {
+      PeerModuleServer.stop()
+    }
+
+    Function("getMirrorStatus") {
+      val mgr = WorkProfileOnboardingManager(ctx)
+      val dispatcher = InterventionDispatcher(ctx)
+      val prefs = ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+      val now = android.os.SystemClock.elapsedRealtime()
+      val swipes = SentinelBus.snapshotScrollTimestamps(now)
+      val vec = SessionRiskScorer().buildVector(0L, swipes)
+      val risk = SessionRiskScorer().computeRiskProbability(vec)
+      val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+      mapOf(
+        "workProfileStatus" to mgr.checkStatus().name,
+        "tierAReady" to dispatcher.canSafelyLaunchWorkProfileApp(),
+        "studyGuardEnabled" to prefs.getBoolean("smart_study_guard_enabled", false),
+        "studyGuardRunning" to SmartStudyGuardService.isRunning(),
+        "mirrorAutoEnabled" to prefs.getBoolean("mirror_auto_enabled", false),
+        "swipesPerMin" to vec.scrollCadencePerMin.toInt(),
+        "riskScore" to risk.toDouble(),
+        "batteryExempt" to pm.isIgnoringBatteryOptimizations(ctx.packageName),
+        "lastStrategy" to SentinelBus.lastInterventionStrategy,
+      )
+    }
+
+    Function("provisionMirrorWorkProfile") {
+      val activity = appContext.currentActivity ?: return@Function false
+      WorkProfileOnboardingManager(ctx).launchProvisioningWizard(activity, provisionWorkReq)
+    }
+
+    Function("openOemAutostart") {
+      OemBatteryHardening.openOemAutostartIfPresent(ctx)
+    }
+
+    AsyncFunction("requestSmartStudyGuard") { enabled: Boolean, promise: expo.modules.kotlin.Promise ->
+      val prefs = ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+      if (!enabled) {
+        prefs.edit().putBoolean("smart_study_guard_enabled", false).apply()
+        ctx.stopService(Intent(ctx, SmartStudyGuardService::class.java))
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      val activity = appContext.currentActivity
+      if (activity == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      val mgr = ctx.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
+      pendingGuardPromise.getAndSet(promise)?.resolve(false)
+      try {
+        @Suppress("DEPRECATION")
+        activity.startActivityForResult(mgr.createScreenCaptureIntent(), mediaProjReq)
+      } catch (_: Exception) {
+        pendingGuardPromise.set(null)
+        promise.resolve(false)
+      }
+    }
+
+    Function("setMirrorAutoEnabled") { enabled: Boolean ->
+      ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+        .edit()
+        .putBoolean("mirror_auto_enabled", enabled)
+        .apply()
+      true
+    }
+
+    Function("triggerMirrorIntervention") { targetPkg: String ->
+      val elapsed = android.os.SystemClock.elapsedRealtime()
+      val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
+      val snap = OfflineContextCollector(ctx).buildSnapshot(
+        cadencePerMin = maxOf(24f, swipes.size.toFloat()),
+        sessionMin = 28,
+        dwellVar = 1.1f,
+      )
+      val pkg = if (targetPkg.isNotBlank()) targetPkg else "com.zhiliaoapp.musically"
+      val tier = InterventionDispatcher(ctx).dispatch(pkg, snap)
+      SentinelBus.lastInterventionTimeMs = elapsed
+      SentinelBus.lastInterventionStrategy = tier
+      SentinelBus.lastActivePackage = pkg
+      tier
+    }
+
+    Function("openNeutralSeed") { url: String ->
+      NeutralSeedManager.openSeedInWorkBrowser(ctx, url)
+    }
+
+    AsyncFunction("exportMirrorPilotCsv") {
+      val file = PilotTelemetryRecorder(LearnShiftOfflineDb.getInstance(ctx)).exportAnonymizedCsv(ctx)
+      file.absolutePath
     }
   }
 }
