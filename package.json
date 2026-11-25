@@ -11,6 +11,7 @@
     "eslint-config-expo": "~58.0.4",
     "expo": "~58.0.23",
     "expo-blur": "~58.0.5",
+    "expo-camera": "~58.0.14",
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.15",
     "expo-dev-client": "~58.0.18",
@@ -24,6 +25,7 @@
     "expo-notifications": "~58.1.8",
     "expo-router": "~58.0.30",
     "expo-secure-store": "~58.0.2",
+    "expo-sharing": "~58.0.23",
     "expo-splash-screen": "~58.0.13",
     "expo-status-bar": "~58.0.4",
     "expo-symbols": "~58.0.4",
@@ -31,6 +33,7 @@
     "expo-updates": "~58.0.21",
     "expo-web-browser": "~58.0.7",
     "phosphor-react-native": "^3.0.6",
+    "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
@@ -40,11 +43,13 @@
     "react-native-safe-area-context": "~5.11.1",
     "react-native-screens": "~4.30.1",
     "react-native-svg": "15.16.0",
+    "react-native-view-shot": "6.1.1",
     "react-native-web": "~0.21.4",
     "react-native-worklets": "0.13.0",
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
@@ -59,7 +64,7 @@
     "lint": "expo lint",
     "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
-    "test:local": "node scripts/validate-content.mjs && npx -y tsx --tsconfig tsconfig.json scripts/test-question-rotation.ts && node scripts/test-learning-break.mjs && node scripts/test-credential-storage.mjs",
+    "test:local": "node scripts/validate-content.mjs && npx -y tsx --tsconfig tsconfig.json scripts/test-question-rotation.ts && node scripts/test-learning-break.mjs && node scripts/test-credential-storage.mjs && node scripts/test-friend-qr.mjs",
     "test:database": "node scripts/test-database.mjs"
   },
   "private": true
