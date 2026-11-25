@@ -16,7 +16,7 @@ import { haptic } from '@/design/haptics';
 import { spring, useReducedMotion } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius } from '@/design/tokens';
-import { fontFor } from '@/design/typography';
+import { FONT_MAIN, fontFor } from '@/design/typography';
 
 import type { IconProps } from './icons';
 import { PressableScale } from './PressableScale';
@@ -308,7 +308,8 @@ const styles = StyleSheet.create({
   },
   plusBox: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   plus: {
-    fontFamily: 'Bungee_400Regular',
+    fontFamily: FONT_MAIN,
+    fontWeight: 'normal',
     fontSize: 34,
     lineHeight: 40,
     textAlign: 'center',
