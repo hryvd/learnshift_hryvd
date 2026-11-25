@@ -1,10 +1,19 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BellRinging,
   CaretRight,
+  ChatCircleDots,
   CheckCircle,
   Clock,
   EyeSlash,
@@ -18,6 +27,7 @@ import {
   Sparkle,
   Trash,
   UserPlus,
+  UsersThree,
   WarningCircle,
   X,
 } from 'phosphor-react-native';
@@ -69,11 +79,13 @@ import {
   refreshGuardian,
   useGuardianLive,
   type AppDay,
+  type ChildFriend,
   type LearnerStyle,
   type LearningProfile,
   type LiveNow,
 } from '@/services/backend/guardian';
 import { todayKey, useAppStore, type AccountRequest, type TimeRequest } from '@/store/useAppStore';
+import { useSocial } from '@/services/backend/social';
 import { useAuth } from '@/store/useAuth';
 
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
@@ -151,6 +163,9 @@ type GView = {
   scrollLimit: number | null;
   gamesLimit: number | null;
   breakIntervalSec: number | null;
+  socialEnabled: boolean;
+  chatEnabled: boolean;
+  friends: ChildFriend[];
   apps: AppDay[];
   live: LiveNow | null;
   learningProfile: LearningProfile | null;
@@ -167,6 +182,8 @@ type GView = {
   setScrollLimit: (m: number | null) => void;
   setGamesLimit: (m: number | null) => void;
   setBreakInterval: (sec: number | null) => void;
+  setSocialEnabled: (v: boolean) => void;
+  setChatEnabled: (v: boolean) => void;
 };
 
 type DangerReq = {
@@ -188,6 +205,7 @@ function usePitchView(): GView {
   const limits = useAppStore((s) => s.limits);
   const mastery = useAppStore((s) => s.mastery);
   const breaksToday = useAppStore((s) => (s.breaksDay === todayKey() ? s.breaksToday : 0));
+  const pitchFriends = useSocial((s) => s.friends);
   const [pitchUpdatedAt] = useState(() => new Date().toISOString());
   const s = useAppStore.getState;
 
@@ -225,6 +243,14 @@ function usePitchView(): GView {
     scrollLimit: limits.scroll,
     gamesLimit: limits.games,
     breakIntervalSec: limits.breakIntervalSec,
+    socialEnabled: guardian.socialEnabled ?? true,
+    chatEnabled: guardian.chatEnabled ?? true,
+    friends: pitchFriends.map((f) => ({
+      id: f.id,
+      displayName: f.displayName,
+      grade: f.grade,
+      acceptedAt: f.acceptedAt,
+    })),
     apps: PITCH_APPS,
     live: {
       package: 'com.zhiliaoapp.musically',
@@ -254,6 +280,14 @@ function usePitchView(): GView {
     setScrollLimit: (m) => s().hydrate({ limits: { ...s().limits, scroll: m } }),
     setGamesLimit: (m) => s().hydrate({ limits: { ...s().limits, games: m } }),
     setBreakInterval: (sec) => s().hydrate({ limits: { ...s().limits, breakIntervalSec: sec } }),
+    setSocialEnabled: (v) => {
+      s().setGuardian({ socialEnabled: v, chatEnabled: v ? s().guardian.chatEnabled : false });
+      useSocial.setState({ socialEnabled: v, chatEnabled: v && (s().guardian.chatEnabled ?? true) });
+    },
+    setChatEnabled: (v) => {
+      s().setGuardian({ chatEnabled: v });
+      useSocial.setState({ chatEnabled: (s().guardian.socialEnabled ?? true) && v });
+    },
   };
 }
 
@@ -298,16 +332,25 @@ function useRealView(onError: (m: string) => void): GView | null {
     scrollLimit: d.controls.scrollLimit,
     gamesLimit: d.controls.gamesLimit,
     breakIntervalSec: d.controls.breakIntervalSec,
+    socialEnabled: d.controls.socialEnabled,
+    chatEnabled: d.controls.chatEnabled,
+    friends: d.friends,
     apps: d.apps,
     live: d.live,
     learningProfile: d.learningProfile,
     hasData: d.usage.some((u) => u.total > 0 || u.breaks > 0) || d.nudges.length > 0,
     approve: (id) => {
-      patchChild(selected, (x) => ({ ...x, requests: x.requests.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)) }));
+      patchChild(selected, (x) => ({
+        ...x,
+        requests: x.requests.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)),
+      }));
       guard(api.decideRequest(id, true));
     },
     decline: (id) => {
-      patchChild(selected, (x) => ({ ...x, requests: x.requests.map((r) => (r.id === id ? { ...r, status: 'declined' } : r)) }));
+      patchChild(selected, (x) => ({
+        ...x,
+        requests: x.requests.map((r) => (r.id === id ? { ...r, status: 'declined' } : r)),
+      }));
       guard(api.decideRequest(id, false));
     },
     approveSignOut: (id) => {
@@ -374,6 +417,17 @@ function useRealView(onError: (m: string) => void): GView | null {
       patchChild(selected, (x) => ({ ...x, controls: { ...x.controls, breakIntervalSec: sec } }));
       guard(api.setControls(selected, { break_interval_sec: sec }));
     },
+    setSocialEnabled: (val) => {
+      patchChild(selected, (x) => ({
+        ...x,
+        controls: { ...x.controls, socialEnabled: val, chatEnabled: val ? x.controls.chatEnabled : false },
+      }));
+      guard(api.setControls(selected, val ? { social_enabled: true } : { social_enabled: false, chat_enabled: false }));
+    },
+    setChatEnabled: (val) => {
+      patchChild(selected, (x) => ({ ...x, controls: { ...x.controls, chatEnabled: val } }));
+      guard(api.setControls(selected, { chat_enabled: val }));
+    },
   };
 }
 
@@ -436,11 +490,7 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
     if (!v) return;
     haptic.select();
     const value =
-      target === 'scroll'
-        ? (v.scrollLimit ?? 0)
-        : target === 'games'
-          ? (v.gamesLimit ?? 0)
-          : (v.breakIntervalSec ?? 0);
+      target === 'scroll' ? (v.scrollLimit ?? 0) : target === 'games' ? (v.gamesLimit ?? 0) : (v.breakIntervalSec ?? 0);
     setDurationSheet((prev) => ({ open: true, target, value, key: prev.key + 1 }));
   };
 
@@ -470,13 +520,7 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
       <AccountCard onAskDanger={askDanger} />
     </View>
   ) : (
-    <Content
-      v={v}
-      wide={wide}
-      onEditBedtime={openBedtime}
-      onEditLimit={openDuration}
-      onAskDanger={askDanger}
-    />
+    <Content v={v} wide={wide} onEditBedtime={openBedtime} onEditLimit={openDuration} onAskDanger={askDanger} />
   );
 
   return (
@@ -489,7 +533,12 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
         keyboardShouldPersistTaps="handled"
         refreshControl={
           IS_PITCH ? undefined : (
-            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
+            <RefreshControl
+              refreshing={pull.refreshing}
+              onRefresh={pull.onRefresh}
+              tintColor={c.accent}
+              colors={[c.accent]}
+            />
           )
         }
       >
@@ -526,10 +575,7 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
         }}
       />
 
-      <ConfirmDangerSheet
-        sheet={dangerSheet}
-        onClose={() => setDangerSheet((prev) => ({ ...prev, open: false }))}
-      />
+      <ConfirmDangerSheet sheet={dangerSheet} onClose={() => setDangerSheet((prev) => ({ ...prev, open: false }))} />
     </KeyboardAvoidingView>
   );
 }
@@ -558,7 +604,13 @@ function Content({
 
   const summary = (
     <View style={styles.col}>
-      <NowCard live={v.live} apps={v.apps} childName={v.childName} scrollLimit={v.scrollLimit} gamesLimit={v.gamesLimit} />
+      <NowCard
+        live={v.live}
+        apps={v.apps}
+        childName={v.childName}
+        scrollLimit={v.scrollLimit}
+        gamesLimit={v.gamesLimit}
+      />
 
       <Card style={styles.gap}>
         <View style={styles.rowTop}>
@@ -704,7 +756,13 @@ function Content({
                       }
                     }}
                   />
-                  <PillButton label={g.decline} kind="secondary" style={styles.flex} block onPress={() => v.declineAccountReq(ar.id)} />
+                  <PillButton
+                    label={g.decline}
+                    kind="secondary"
+                    style={styles.flex}
+                    block
+                    onPress={() => v.declineAccountReq(ar.id)}
+                  />
                 </View>
               ) : null}
             </View>
@@ -733,7 +791,13 @@ function Content({
               {r.status === 'pending' ? (
                 <View style={styles.row}>
                   <PillButton label={g.approve} style={styles.flex} block onPress={() => v.approve(r.id)} />
-                  <PillButton label={g.decline} kind="secondary" style={styles.flex} block onPress={() => v.decline(r.id)} />
+                  <PillButton
+                    label={g.decline}
+                    kind="secondary"
+                    style={styles.flex}
+                    block
+                    onPress={() => v.decline(r.id)}
+                  />
                 </View>
               ) : null}
             </View>
@@ -830,7 +894,9 @@ function Content({
             style={styles.advancedPacingToggle}
           >
             <Text variant="caption" color="textSecondary" style={fontFor(600)}>
-              {showAdvancedPacing ? 'Hide advanced pacing' : `Advanced pacing · ${formatBreakInterval(v.breakIntervalSec, 'Auto')}`}
+              {showAdvancedPacing
+                ? 'Hide advanced pacing'
+                : `Advanced pacing · ${formatBreakInterval(v.breakIntervalSec, 'Auto')}`}
             </Text>
           </PressableScale>
 
@@ -915,6 +981,54 @@ function Content({
           />
         </View>
       </Card>
+
+      <Card style={styles.gap}>
+        <Text variant="headline">{g.socialTitle}</Text>
+        <View style={[styles.controlSelectRow]}>
+          <View style={[styles.ctlBadge, { backgroundColor: c.inset }]}>
+            <UsersThree size={18} weight="fill" color={c.tabInsights} />
+          </View>
+          <View style={styles.flex}>
+            <Text variant="headline">{g.socialToggle}</Text>
+            <Text variant="caption">{g.socialToggleSub}</Text>
+          </View>
+          <Toggle value={v.socialEnabled} onChange={v.setSocialEnabled} accessibilityLabel={g.socialToggle} />
+        </View>
+
+        <View style={[styles.toggleRow, { borderColor: c.hairline }]}>
+          <View style={[styles.ctlBadge, { backgroundColor: c.inset }]}>
+            <ChatCircleDots size={18} weight="fill" color={c.indigo} />
+          </View>
+          <View style={styles.flex}>
+            <Text variant="headline">{g.chatToggle}</Text>
+            <Text variant="caption">{g.chatToggleSub}</Text>
+          </View>
+          <Toggle
+            value={v.chatEnabled && v.socialEnabled}
+            onChange={v.setChatEnabled}
+            accessibilityLabel={g.chatToggle}
+          />
+        </View>
+
+        <View style={[styles.toggleRow, styles.column, { borderColor: c.hairline }]}>
+          <Text variant="overline">{g.friendsListTitle}</Text>
+          {v.friends.length ? (
+            <View style={styles.chipWrap}>
+              {v.friends.map((f) => (
+                <Chip key={f.id} label={`${f.displayName} · Grade ${f.grade}`} kind="neutral" />
+              ))}
+            </View>
+          ) : (
+            <Text variant="caption">{g.noFriendsYet}</Text>
+          )}
+          <View style={[styles.privacyStrip, { backgroundColor: c.inset, borderColor: c.hairline }]}>
+            <EyeSlash size={15} weight="bold" color={c.textSecondary} />
+            <Text variant="caption" style={styles.flex}>
+              {g.friendsPrivacyNote}
+            </Text>
+          </View>
+        </View>
+      </Card>
       {!IS_PITCH ? (
         <>
           <LinkChild />
@@ -946,7 +1060,8 @@ function LearningSummaryCard({ v, lateNights }: { v: GView; lateNights: number }
   const fallbackStyle: LearnerStyle = v.breaks >= 2 || v.learningMin >= 15 ? 'visual_paced' : 'getting_started';
   const styleKey = v.learningProfile?.learnerStyle ?? fallbackStyle;
   const styleTitle = g.learningStyleTitle[styleKey] ?? g.learningStyleTitle.getting_started;
-  const styleDescFn = g.learningStyleDesc[styleKey as keyof typeof g.learningStyleDesc] ?? g.learningStyleDesc.getting_started;
+  const styleDescFn =
+    g.learningStyleDesc[styleKey as keyof typeof g.learningStyleDesc] ?? g.learningStyleDesc.getting_started;
   const styleDesc = styleDescFn(v.childName, v.breaks, v.learningMin);
 
   const strong = v.learningProfile?.strongSkills ?? [];
@@ -955,7 +1070,9 @@ function LearningSummaryCard({ v, lateNights }: { v: GView; lateNights: number }
   const growingNames = growing.map((id) => L(SHORT[id]));
 
   const hasLearnShiftStudy = v.apps.some((a) => isLearnShiftApp(a.package, a.label) && a.minutes > 0);
-  const hasOtherStudyApp = v.apps.some((a) => a.category === 'study' && !isLearnShiftApp(a.package, a.label) && a.minutes > 0);
+  const hasOtherStudyApp = v.apps.some(
+    (a) => a.category === 'study' && !isLearnShiftApp(a.package, a.label) && a.minutes > 0,
+  );
   const habitSignals: string[] = [];
   if (hasLearnShiftStudy) habitSignals.push(g.habitLearnShift);
   if (v.breaks > 0) habitSignals.push(g.habitBreaks);
@@ -1037,7 +1154,13 @@ function BedtimeWheelSheet({
   const g = useGuardianT();
   return (
     <BottomSheet visible={sheet.open} onClose={onClose} accessibilityLabel={g.bedtime}>
-      <BedtimeWheelBody key={sheet.key} initialStart={sheet.start} initialEnd={sheet.end} onClose={onClose} onSave={onSave} />
+      <BedtimeWheelBody
+        key={sheet.key}
+        initialStart={sheet.start}
+        initialEnd={sheet.end}
+        onClose={onClose}
+        onSave={onSave}
+      />
     </BottomSheet>
   );
 }
@@ -1092,8 +1215,18 @@ function BedtimeWheelBody({
 
       <WheelGroup key={which}>
         <WheelPicker items={HOURS} index={parts.h} onChange={(h) => updatePart({ h })} accessibilityLabel="Hour" />
-        <WheelPicker items={MINUTES} index={parts.min} onChange={(min) => updatePart({ min })} accessibilityLabel="Minute" />
-        <WheelPicker items={AMPM} index={parts.pm} onChange={(pm) => updatePart({ pm })} accessibilityLabel="AM or PM" />
+        <WheelPicker
+          items={MINUTES}
+          index={parts.min}
+          onChange={(min) => updatePart({ min })}
+          accessibilityLabel="Minute"
+        />
+        <WheelPicker
+          items={AMPM}
+          index={parts.pm}
+          onChange={(pm) => updatePart({ pm })}
+          accessibilityLabel="AM or PM"
+        />
       </WheelGroup>
 
       <View style={styles.sheetActions}>
@@ -1212,13 +1345,7 @@ function ConfirmDangerSheet({
   );
 }
 
-function ConfirmDangerBody({
-  sheet,
-  onClose,
-}: {
-  sheet: DangerReq;
-  onClose: () => void;
-}) {
+function ConfirmDangerBody({ sheet, onClose }: { sheet: DangerReq; onClose: () => void }) {
   const { c } = useTheme();
   const g = useGuardianT();
   const t = useT();
@@ -1422,7 +1549,13 @@ function LinkChild({ first }: { first?: boolean }) {
       ) : (
         <View style={styles.row}>
           <PillButton label={t.common.close} kind="neutral" style={styles.flex} block onPress={close} />
-          <PillButton label={busy ? '…' : g.link} style={styles.flex} block disabled={busy || code.length < 6} onPress={link} />
+          <PillButton
+            label={busy ? '…' : g.link}
+            style={styles.flex}
+            block
+            disabled={busy || code.length < 6}
+            onPress={link}
+          />
         </View>
       )}
     </Card>

@@ -34,6 +34,11 @@ const OY = 56;
 const CX = OX;
 const CY = OY + 3 * TH + TH / 2 + SIDE - 4;
 
+export const ISLA_VW = VW;
+export const ISLA_VH = VH;
+export const ISLA_CX = CX;
+export const ISLA_CY = CY;
+
 /** Island mask: a 7×7 grid with the corners rounded off. */
 const LAND = (col: number, row: number) => {
   if (col < 0 || row < 0 || col >= N || row >= N) return false;
@@ -445,7 +450,12 @@ function Building({ id, x, y, night }: { id: BuildingId; x: number; y: number; n
           {[-9, -3, 5, 11].map((dx) => (
             <Rect key={dx} x={x + dx} y={y - 4} width={3} height={7} fill={dim('#5E5A5A', '#403D3D')} />
           ))}
-          <Path d={`M${x - 16} ${y - 12} q -5 3 -3 9`} stroke={dim('#5E5A5A', '#403D3D')} strokeWidth={1.6} fill="none" />
+          <Path
+            d={`M${x - 16} ${y - 12} q -5 3 -3 9`}
+            stroke={dim('#5E5A5A', '#403D3D')}
+            strokeWidth={1.6}
+            fill="none"
+          />
         </G>
       );
     case 'jeepney':
@@ -515,7 +525,15 @@ function Building({ id, x, y, night }: { id: BuildingId; x: number; y: number; n
           ))}
           {night
             ? [0, 1].map((i) => (
-                <Rect key={i} x={x - 16 + i * 8} y={y - 18 - i * 4} width={5} height={8} fill="#F5C46B" opacity={0.85} />
+                <Rect
+                  key={i}
+                  x={x - 16 + i * 8}
+                  y={y - 18 - i * 4}
+                  width={5}
+                  height={8}
+                  fill="#F5C46B"
+                  opacity={0.85}
+                />
               ))
             : null}
           <Roof
@@ -563,7 +581,10 @@ function Building({ id, x, y, night }: { id: BuildingId; x: number; y: number; n
       return (
         <G>
           {shadow}
-          <Polygon points={`${x - 9},${y} ${x + 9},${y} ${x + 6},${y - 52} ${x - 6},${y - 52}`} fill={dim('#FFFFFF', '#C9C6D6')} />
+          <Polygon
+            points={`${x - 9},${y} ${x + 9},${y} ${x + 6},${y - 52} ${x - 6},${y - 52}`}
+            fill={dim('#FFFFFF', '#C9C6D6')}
+          />
           <Polygon points={`${x},${y} ${x + 9},${y} ${x + 6},${y - 52} ${x},${y - 52}`} fill="#000" opacity={0.08} />
           {[0, 1].map((i) => (
             <Polygon
@@ -745,7 +766,13 @@ function BuildingSprite({
   useEffect(() => {
     if (!poke) return;
     jump.set(withSequence(withTiming(-14, { duration: 140, easing: ease.out }), withSpring(0, spring.bouncy)));
-    squash.set(withSequence(withTiming(1.12, { duration: 140 }), withTiming(0.86, { duration: 110 }), withSpring(1, spring.bouncy)));
+    squash.set(
+      withSequence(
+        withTiming(1.12, { duration: 140 }),
+        withTiming(0.86, { duration: 110 }),
+        withSpring(1, spring.bouncy),
+      ),
+    );
   }, [poke, jump, squash]);
 
   const style = useSpriteStyle(k, id, seed, drop, jump, squash, op);
@@ -756,7 +783,19 @@ function BuildingSprite({
   );
 }
 
-function PalmSprite({ col, row, k, night, seed }: { col: number; row: number; k: number; night: boolean; seed: number }) {
+function PalmSprite({
+  col,
+  row,
+  k,
+  night,
+  seed,
+}: {
+  col: number;
+  row: number;
+  k: number;
+  night: boolean;
+  seed: number;
+}) {
   const { x, y } = stand(col, row);
   const zero = useSharedValue(0);
   const one = useSharedValue(1);
@@ -774,7 +813,7 @@ function NextSite({ id, k, night }: { id: BuildingId; k: number; night: boolean 
   const { x, y } = iso(b.cell[0], b.cell[1]);
   const t = useLoop(1400);
   const ring = useAnimatedStyle(() => ({ opacity: 0.45 + t.get() * 0.55 }));
-  const pin = useAnimatedStyle(() => ({ transform: [{ translateY: (-4 * t.get()) * k }] }));
+  const pin = useAnimatedStyle(() => ({ transform: [{ translateY: -4 * t.get() * k }] }));
   const ink = night ? '#F5C46B' : '#C8400F';
   return (
     <>
@@ -888,7 +927,14 @@ function Bangka({ k, night }: { k: number; night: boolean }) {
     <Animated.View
       pointerEvents="none"
       style={[
-        { position: 'absolute', left: (x - w / 2) * k, top: (y - h) * k, width: w * k, height: h * k, transformOrigin: '50% 90%' },
+        {
+          position: 'absolute',
+          left: (x - w / 2) * k,
+          top: (y - h) * k,
+          width: w * k,
+          height: h * k,
+          transformOrigin: '50% 90%',
+        },
         style,
       ]}
     >
@@ -911,11 +957,7 @@ function Smoke({ x, y, k, delay }: { x: number; y: number; k: number; delay: num
   const s = 10;
   const style = useAnimatedStyle(() => ({
     opacity: Math.sin(t.get() * Math.PI) * 0.6,
-    transform: [
-      { translateX: t.get() * 10 * k },
-      { translateY: -t.get() * 30 * k },
-      { scale: 0.5 + t.get() * 1.1 },
-    ],
+    transform: [{ translateX: t.get() * 10 * k }, { translateY: -t.get() * 30 * k }, { scale: 0.5 + t.get() * 1.1 }],
   }));
   return (
     <Animated.View
@@ -936,7 +978,10 @@ function LampGlow({ k, night }: { k: number; night: boolean }) {
   const ly = y - 57;
   const t = useLoop(1600);
   const sweep = useLoop(3600, 0, true, night);
-  const glow = useAnimatedStyle(() => ({ opacity: 0.35 + t.get() * 0.5, transform: [{ scale: 0.85 + t.get() * 0.3 }] }));
+  const glow = useAnimatedStyle(() => ({
+    opacity: 0.35 + t.get() * 0.5,
+    transform: [{ scale: 0.85 + t.get() * 0.3 }],
+  }));
   const beam = useAnimatedStyle(() => ({ transform: [{ scaleX: sweep.get() * 2 - 1 }] }));
   const g = night ? 38 : 22;
   const bw = 120;
@@ -947,7 +992,14 @@ function LampGlow({ k, night }: { k: number; night: boolean }) {
         <Animated.View
           pointerEvents="none"
           style={[
-            { position: 'absolute', left: lx * k, top: (ly - bh / 2) * k, width: bw * k, height: bh * k, transformOrigin: '0% 50%' },
+            {
+              position: 'absolute',
+              left: lx * k,
+              top: (ly - bh / 2) * k,
+              width: bw * k,
+              height: bh * k,
+              transformOrigin: '0% 50%',
+            },
             beam,
           ]}
         >
@@ -1008,7 +1060,21 @@ function Firefly({ f, k }: { f: (typeof FIREFLIES)[number]; k: number }) {
   );
 }
 
-function Cloud({ k, y, scale, ms, delay, night }: { k: number; y: number; scale: number; ms: number; delay: number; night: boolean }) {
+function Cloud({
+  k,
+  y,
+  scale,
+  ms,
+  delay,
+  night,
+}: {
+  k: number;
+  y: number;
+  scale: number;
+  ms: number;
+  delay: number;
+  night: boolean;
+}) {
   const t = useLoop(ms, delay, false);
   const w = 70 * scale;
   const h = 26 * scale;
@@ -1017,7 +1083,10 @@ function Cloud({ k, y, scale, ms, delay, night }: { k: number; y: number; scale:
     opacity: Math.min(1, Math.sin(t.get() * Math.PI) * 3) * (night ? 0.35 : 0.95),
   }));
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: y * k, width: w * k, height: h * k }, style]}>
+    <Animated.View
+      pointerEvents="none"
+      style={[{ position: 'absolute', left: 0, top: y * k, width: w * k, height: h * k }, style]}
+    >
       <Svg width={w * k} height={h * k} viewBox="0 0 70 26">
         <Path
           d="M10 24c-5 0-9-3-9-7s4-7 9-7c1-5 6-9 12-9 5 0 9 2 11 6 2-1 4-2 7-2 6 0 11 4 12 10h2c5 0 9 3 9 7s-4 2-9 2H10Z"
@@ -1032,11 +1101,17 @@ function Birds({ k }: { k: number }) {
   const t = useLoop(16000, 2000, false);
   const flap = useLoop(260);
   const fly = useAnimatedStyle(() => ({
-    transform: [{ translateX: (-40 + t.get() * (VW + 80)) * k }, { translateY: Math.sin(t.get() * Math.PI * 2) * 6 * k }],
+    transform: [
+      { translateX: (-40 + t.get() * (VW + 80)) * k },
+      { translateY: Math.sin(t.get() * Math.PI * 2) * 6 * k },
+    ],
   }));
   const wing = useAnimatedStyle(() => ({ transform: [{ scaleY: 1 - flap.get() * 1.5 }] }));
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 22 * k, width: 40 * k, height: 18 * k }, fly]}>
+    <Animated.View
+      pointerEvents="none"
+      style={[{ position: 'absolute', left: 0, top: 22 * k, width: 40 * k, height: 18 * k }, fly]}
+    >
       {[
         [0, 6, 1],
         [14, 0, 0.8],
@@ -1047,7 +1122,13 @@ function Birds({ k }: { k: number }) {
           style={[{ position: 'absolute', left: bx * k, top: by * k, width: 12 * s * k, height: 6 * s * k }, wing]}
         >
           <Svg width={12 * s * k} height={6 * s * k} viewBox="0 0 12 6">
-            <Path d="M0.5 4 Q 3 0.5 6 4 Q 9 0.5 11.5 4" stroke="#5A3E30" strokeWidth={1.4} fill="none" strokeLinecap="round" />
+            <Path
+              d="M0.5 4 Q 3 0.5 6 4 Q 9 0.5 11.5 4"
+              stroke="#5A3E30"
+              strokeWidth={1.4}
+              fill="none"
+              strokeLinecap="round"
+            />
           </Svg>
         </Animated.View>
       ))}
@@ -1083,7 +1164,15 @@ function Particle({ x, y, p, k }: { x: number; y: number; p: (typeof BURST)[numb
     <Animated.View
       pointerEvents="none"
       style={[
-        { position: 'absolute', left: (x - p.s / 2) * k, top: (y - p.s / 2) * k, width: p.s * k, height: p.s * k * 1.4, borderRadius: 1, backgroundColor: p.c },
+        {
+          position: 'absolute',
+          left: (x - p.s / 2) * k,
+          top: (y - p.s / 2) * k,
+          width: p.s * k,
+          height: p.s * k * 1.4,
+          borderRadius: 1,
+          backgroundColor: p.c,
+        },
         style,
       ]}
     />
@@ -1108,7 +1197,15 @@ function Burst({ id, k }: { id: BuildingId; k: number }) {
         pointerEvents="none"
         style={[
           styles.ripple,
-          { left: (x - D / 2) * k, top: (y - D / 2) * k, width: D * k, height: D * k, borderRadius: (D / 2) * k, borderWidth: 4, borderColor: '#FFFFFF' },
+          {
+            left: (x - D / 2) * k,
+            top: (y - D / 2) * k,
+            width: D * k,
+            height: D * k,
+            borderRadius: (D / 2) * k,
+            borderWidth: 4,
+            borderColor: '#FFFFFF',
+          },
           ring,
         ]}
       />
@@ -1174,7 +1271,16 @@ function Stroller({ k, night, tappable }: { k: number; night: boolean; tappable:
   return (
     <Animated.View
       pointerEvents="box-none"
-      style={[{ position: 'absolute', left: (WALK_A.x - S / 2) * k, top: (WALK_A.y - S + 3) * k, width: S * k, height: S * k }, walk]}
+      style={[
+        {
+          position: 'absolute',
+          left: (WALK_A.x - S / 2) * k,
+          top: (WALK_A.y - S + 3) * k,
+          width: S * k,
+          height: S * k,
+        },
+        walk,
+      ]}
     >
       <View
         pointerEvents="none"
@@ -1208,7 +1314,21 @@ function Stroller({ k, night, tappable }: { k: number; night: boolean; tappable:
 }
 
 /** A fish leaps out of the lagoon now and then, with a splash on each end. */
-function Fish({ x, y, k, night, ms, delay }: { x: number; y: number; k: number; night: boolean; ms: number; delay: number }) {
+function Fish({
+  x,
+  y,
+  k,
+  night,
+  ms,
+  delay,
+}: {
+  x: number;
+  y: number;
+  k: number;
+  night: boolean;
+  ms: number;
+  delay: number;
+}) {
   const t = useLoop(ms, delay, false);
   const J = 0.2;
   const fish = useAnimatedStyle(() => {
@@ -1254,7 +1374,10 @@ function Fish({ x, y, k, night, ms, delay }: { x: number; y: number; k: number; 
       <Animated.View pointerEvents="none" style={[ring, s2]} />
       <Animated.View
         pointerEvents="none"
-        style={[{ position: 'absolute', left: (x - W / 2) * k, top: (y - H / 2) * k, width: W * k, height: H * k }, fish]}
+        style={[
+          { position: 'absolute', left: (x - W / 2) * k, top: (y - H / 2) * k, width: W * k, height: H * k },
+          fish,
+        ]}
       >
         <Svg width={W * k} height={H * k} viewBox="0 0 14 8">
           <Path d="M1 4 C 3 0.6, 8 0.6, 10.5 4 C 8 7.4, 3 7.4, 1 4 Z" fill={night ? '#9FB2E8' : '#FF9F1C'} />
@@ -1308,7 +1431,14 @@ function LandLayer({ p, tiles }: { p: Pal; tiles: { col: number; row: number }[]
       {/* foam, then sand beach at the waterline */}
       {tiles.map(({ col, row }) => {
         const { x, y } = iso(col, row);
-        return <Polygon key={`f${col}-${row}`} points={diamond(x, y, 1.62, SIDE - 1)} fill={p.foam} opacity={p.night ? 0.18 : 0.55} />;
+        return (
+          <Polygon
+            key={`f${col}-${row}`}
+            points={diamond(x, y, 1.62, SIDE - 1)}
+            fill={p.foam}
+            opacity={p.night ? 0.18 : 0.55}
+          />
+        );
       })}
       {tiles.map(({ col, row }) => {
         const { x, y } = iso(col, row);
@@ -1435,7 +1565,15 @@ function Pier({ p }: { p: Pal }) {
         [-22, 10],
         [-4, 19],
       ].map(([dx, dy], i) => (
-        <Line key={i} x1={c.x + dx} y1={c.y + dy - 4} x2={c.x + dx} y2={c.y + dy + 8} stroke={p.woodDeep} strokeWidth={2.5} />
+        <Line
+          key={i}
+          x1={c.x + dx}
+          y1={c.y + dy - 4}
+          x2={c.x + dx}
+          y2={c.y + dy + 8}
+          stroke={p.woodDeep}
+          strokeWidth={2.5}
+        />
       ))}
       <Box x={c.x - 6} y={c.y + 6} w={0.42} d={1.25} h={3} top={p.wood} left={p.woodDeep} right={p.woodDeep} />
       {planks.map((i) => {
@@ -1469,7 +1607,17 @@ type Props = {
 };
 
 /** "Your little isla": isometric island in a living lagoon that grows with coins. */
-export function IslaScene({ built, width, interactive, onBuildingPress, fresh, nextId, poke, alive = true, overlay }: Props) {
+export function IslaScene({
+  built,
+  width,
+  interactive,
+  onBuildingPress,
+  fresh,
+  nextId,
+  poke,
+  alive = true,
+  overlay,
+}: Props) {
   const { isNight } = useTheme();
   const L = useL();
   const p = palette(isNight);
@@ -1538,7 +1686,9 @@ export function IslaScene({ built, width, interactive, onBuildingPress, fresh, n
       <Bangka k={k} night={isNight} />
       {nextId && !built.includes(nextId) ? <NextSite id={nextId} k={k} night={isNight} /> : null}
       {things.map((t) => t.node)}
-      {alive && bahay ? [0, 1000, 2000].map((d) => <Smoke key={d} x={bahay.x + 9} y={bahay.y - 50} k={k} delay={d} />) : null}
+      {alive && bahay
+        ? [0, 1000, 2000].map((d) => <Smoke key={d} x={bahay.x + 9} y={bahay.y - 50} k={k} delay={d} />)
+        : null}
       {built.includes('lighthouse') ? <LampGlow k={k} night={isNight} /> : null}
       {alive && isNight ? FIREFLIES.map((f, i) => <Firefly key={i} f={f} k={k} />) : null}
       {alive ? (
@@ -1691,5 +1841,13 @@ const styles = StyleSheet.create({
   ripple: { position: 'absolute' },
   glint: { position: 'absolute', borderRadius: 2 },
   puff: { position: 'absolute', backgroundColor: 'rgba(255,255,255,0.9)' },
-  firefly: { position: 'absolute', backgroundColor: '#FFE38A', shadowColor: '#FFE38A', shadowOpacity: 1, shadowRadius: 4 },
+  firefly: {
+    position: 'absolute',
+    backgroundColor: '#FFE38A',
+    shadowColor: '#FFE38A',
+    shadowOpacity: 1,
+    shadowRadius: 4,
+  },
 });
+
+export { LAND, PALMS, palette, stand, Building, Palm, WaterLayer, LandLayer, Pier };

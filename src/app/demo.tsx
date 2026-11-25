@@ -4,6 +4,8 @@ import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Play } from 'phosphor-react-native';
 
+import { pitchSimulateCarloReturn } from '@/services/backend/social';
+
 import {
   Card,
   ListGroup,
@@ -191,6 +193,15 @@ function DemoPanel() {
             onPress={() => {
               useAppStore.getState().setOnboarded(false);
               router.dismissTo('/onboarding');
+            }}
+          />
+          <ListRow title="Kapuluan" onPress={() => router.push('/isla')} />
+          <ListRow title={t.friends.title} onPress={() => router.push('/friends')} />
+          <ListRow
+            title={t.isla.demoReturnBtn}
+            onPress={() => {
+              pitchSimulateCarloReturn();
+              router.push('/isla');
             }}
           />
           <ListRow title={t.demo.gallery} onPress={() => router.push('/dev/gallery')} />
