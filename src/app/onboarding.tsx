@@ -19,7 +19,7 @@ import {
   Monitor,
   Student,
   Timer,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { QuizOption, type OptionState } from '@/components/learn/QuizOption';
 import { SkillGraph } from '@/components/learn/SkillGraph';

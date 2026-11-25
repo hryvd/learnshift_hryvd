@@ -14,7 +14,7 @@ import {
   Sparkle,
   WarningCircle,
   X,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { Diagram } from '@/components/learn/Diagram';
 import { Chip, PillButton, PressableScale, Text } from '@/components/ui';

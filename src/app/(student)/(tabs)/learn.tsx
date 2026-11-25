@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Play } from 'phosphor-react-native';
+import { Play } from '@/components/ui/icons';
 
 import { SkillGraph } from '@/components/learn/SkillGraph';
 import { Screen } from '@/components/student/Screen';

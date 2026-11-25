@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Pause, Play, Timer } from 'phosphor-react-native';
+import { Heart, Pause, Play, Timer } from '@/components/ui/icons';
 
 import { FullQuizOverlay } from '@/components/student/FullQuizOverlay';
 import { VerticalPager } from '@/components/student/VerticalPager';

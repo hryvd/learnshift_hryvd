@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BellSlash, CaretLeft } from 'phosphor-react-native';
+import { BellSlash, CaretLeft } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Chip, NavBar, PillButton, Ring, Stepper, Text } from '@/components/ui';

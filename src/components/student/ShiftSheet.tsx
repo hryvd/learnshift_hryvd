@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { ChatsCircle, Eye, HouseLine, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from 'phosphor-react-native';
+import { ChatsCircle, Eye, HouseLine, Lightning, MonitorPlay, MoonStars, Question, Sparkle, Timer } from '@/components/ui/icons';
 
 import { BottomSheet, DarkTile, Text } from '@/components/ui';
 import { useLive } from '@/hooks/useLive';

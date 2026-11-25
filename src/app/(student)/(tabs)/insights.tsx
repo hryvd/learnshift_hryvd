@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Lightning, Moon, Sparkle, Timer } from 'phosphor-react-native';
+import { Lightning, Moon, Sparkle, Timer } from '@/components/ui/icons';
 
 import { Screen } from '@/components/student/Screen';
 import {

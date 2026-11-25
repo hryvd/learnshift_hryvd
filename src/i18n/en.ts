@@ -363,6 +363,7 @@ const en = {
   },
   privacy: {
     title: 'Privacy',
+    iconCredit: 'Icons by 480 Design (Solar), CC BY 4.0',
     sees: 'LearnShift sees',
     never: 'Never sees',
     seesList: ['Time of day', 'Session length', 'Which apps, how long', 'Unlocks'],
