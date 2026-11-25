@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChalkboardTeacher, HouseLine, SignOut, Trash } from 'phosphor-react-native';
+import { ChalkboardTeacher, HouseLine, SignOut, Trash } from '@/components/ui/icons';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { MonitorSetup } from '@/components/student/MonitorSetup';

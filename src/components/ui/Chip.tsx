@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { CaretDown } from 'phosphor-react-native';
+import { CaretDown } from '@/components/ui/icons';
 
 import { useTheme } from '@/design/theme';
 import { radius, type RiskLevel } from '@/design/tokens';

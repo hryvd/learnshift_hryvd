@@ -29,7 +29,7 @@ import {
   TrendUp,
   UserPlus,
   UsersThree,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { IslaBackdrop } from '@/components/isla/IslaBackdrop';
 import { BuildingThumb, IslaScene, useLoop } from '@/components/isla/IslaScene';

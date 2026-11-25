@@ -30,7 +30,7 @@ import {
   UsersThree,
   WarningCircle,
   X,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { AppsCard, isLearnShiftApp, NowCard } from '@/components/guardian/AppUsage';
 import { Paty } from '@/components/mascot/Paty';

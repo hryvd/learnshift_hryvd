@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
-import { ArrowsOutSimple, Check, CopySimple, Export, QrCode, Scan, ShareNetwork, X } from 'phosphor-react-native';
+import { ArrowsOutSimple, Check, CopySimple, Export, QrCode, Scan, ShareNetwork, X } from '@/components/ui/icons';
 
 import { BottomSheet, IconButton, Notice, PillButton, PressableScale, SheetHeader, Text } from '@/components/ui';
 import { haptic } from '@/design/haptics';

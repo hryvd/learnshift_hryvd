@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CaretLeft, LockKey } from 'phosphor-react-native';
+import { CaretLeft, LockKey } from '@/components/ui/icons';
 
 import { MasteryRow } from '@/components/learn/MasteryRow';
 import { BarChart, Card, Chip, EmptyState, ListGroup, ListRow, NavBar, Ring, Text } from '@/components/ui';

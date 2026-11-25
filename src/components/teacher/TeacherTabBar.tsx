@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpenText, ChalkboardTeacher, ChatTeardropText, GearSix, Plus, type IconProps } from 'phosphor-react-native';
+import { BookOpenText, ChalkboardTeacher, ChatTeardropText, GearSix, Plus, type IconProps } from '@/components/ui/icons';
 
 import { PressableScale, Text } from '@/components/ui';
 import { haptic } from '@/design/haptics';

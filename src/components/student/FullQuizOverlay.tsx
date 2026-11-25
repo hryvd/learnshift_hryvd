@@ -13,7 +13,7 @@ import {
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowUp, Check, CheckCircle, House, Lightbulb } from 'phosphor-react-native';
+import { ArrowUp, Check, CheckCircle, House, Lightbulb } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { QuestionVisual } from '@/components/student/QuestionVisual';

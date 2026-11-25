@@ -3,7 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
-import { CaretDown, CaretUp } from 'phosphor-react-native';
+import { CaretDown, CaretUp } from '@/components/ui/icons';
 
 import { PressableScale } from '@/components/ui/PressableScale';
 import { haptic } from '@/design/haptics';

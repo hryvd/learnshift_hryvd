@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpen, ChartBar, House, Plus, UserCircle, type IconProps } from 'phosphor-react-native';
+import { BookOpen, ChartBar, House, Plus, UserCircle, type IconProps } from '@/components/ui/icons';
 
 import { haptic } from '@/design/haptics';
 import { spring, useReducedMotion } from '@/design/motion';
