@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { Copy } from 'phosphor-react-native';
+import { Copy } from '@/components/ui/icons';
 
 import { Card, ListGroup, ListRow, Notice, PillButton, PressableScale, Text, TextField } from '@/components/ui';
 import { useTheme } from '@/design/theme';

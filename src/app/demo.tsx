@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Play } from 'phosphor-react-native';
+import { Play } from '@/components/ui/icons';
 
 import { pitchSimulateCarloReturn } from '@/services/backend/social';
 

@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowUp, CheckCircle, SealCheck, Warning, XCircle } from 'phosphor-react-native';
+import { ArrowUp, CheckCircle, SealCheck, Warning, XCircle } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Card, Chip, InsetCard, PressableScale, SegmentedControl, SheetHeader, Skeleton, Text } from '@/components/ui';

@@ -1,7 +1,7 @@
 import { Share, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ShareNetwork } from 'phosphor-react-native';
+import { ShareNetwork } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { BarChart, PillButton, Ring, SheetHeader, Text } from '@/components/ui';

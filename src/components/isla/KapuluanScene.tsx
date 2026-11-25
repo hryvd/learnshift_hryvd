@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from 'react-native-svg';
-import { CrownSimple, Lighthouse, TrendUp } from 'phosphor-react-native';
+import { CrownSimple, Lighthouse, TrendUp } from '@/components/ui/icons';
 
 import {
   Building,

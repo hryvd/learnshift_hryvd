@@ -2,13 +2,13 @@ import { useState, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useFloatingBar } from '@/components/ui/FloatingBar';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 
-/** Space the floating tab bar (and its fade) takes at the bottom of a tab screen. */
+/** Space the floating tab bar takes at the bottom of a tab screen. */
 export function useTabInset(): number {
-  const insets = useSafeAreaInsets();
-  return 104 + insets.bottom;
+  return useFloatingBar().inset;
 }
 
 type Props = {

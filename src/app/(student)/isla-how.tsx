@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Compass, Eye, Lightning, Plant, Waves } from 'phosphor-react-native';
+import { Compass, Eye, Lightning, Plant, Waves } from '@/components/ui/icons';
 
 import { SagwanIcon } from '@/components/isla/SagwanIcon';
 

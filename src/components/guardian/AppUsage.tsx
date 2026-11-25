@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { ChatsCircle, DeviceMobile, EyeSlash, GameController, GraduationCap, Play, Sparkle, UsersThree } from 'phosphor-react-native';
+import { ChatsCircle, DeviceMobile, EyeSlash, GameController, GraduationCap, Play, Sparkle, UsersThree } from '@/components/ui/icons';
 
 import { Card, Chip, EmptyState, SegmentedControl, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';

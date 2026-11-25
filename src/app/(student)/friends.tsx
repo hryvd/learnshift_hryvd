@@ -21,7 +21,7 @@ import {
   UserMinus,
   UserPlus,
   UsersThree,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { FriendQrCode, type PassThemeId } from '@/components/friends/FriendQrPass';
 import { FriendShareSheet, FullScreenQrModal } from '@/components/friends/FriendShareSheet';

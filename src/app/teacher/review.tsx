@@ -1,9 +1,10 @@
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChatTeardropText } from 'phosphor-react-native';
+import { ChatTeardropText } from '@/components/ui/icons';
 
 import { TeacherReviewQueueCard } from '@/components/teacher/ReviewQueueCard';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
+import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Stagger, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
@@ -18,30 +19,39 @@ export default function TeacherReview() {
   const pull = usePullRefresh(refreshTeacher);
 
   return (
-    <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-      <ScrollView
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
-        refreshControl={
-          IS_PITCH ? undefined : (
-            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
-          )
-        }
-      >
-        <Stagger index={0} style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-            <ChatTeardropText size={22} weight="fill" color="#FFFFFF" />
-          </View>
-          <View style={styles.flex}>
-            <Text variant="largeTitle">{T.review}</Text>
-            <Text variant="subhead">{T.learningOnly}</Text>
-          </View>
-        </Stagger>
-        <Stagger index={1}>
-          <TeacherReviewQueueCard />
-        </Stagger>
-      </ScrollView>
-      <TeacherTabBar active="review" />
-    </View>
+    <BarBlurHost>
+      <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
+        <BarBlurTarget>
+          <ScrollView
+            contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
+            refreshControl={
+              IS_PITCH ? undefined : (
+                <RefreshControl
+                  refreshing={pull.refreshing}
+                  onRefresh={pull.onRefresh}
+                  tintColor={c.accent}
+                  colors={[c.accent]}
+                />
+              )
+            }
+          >
+            <Stagger index={0} style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                <ChatTeardropText size={22} weight="fill" color="#FFFFFF" />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="largeTitle">{T.review}</Text>
+                <Text variant="subhead">{T.learningOnly}</Text>
+              </View>
+            </Stagger>
+            <Stagger index={1}>
+              <TeacherReviewQueueCard />
+            </Stagger>
+          </ScrollView>
+        </BarBlurTarget>
+        <TeacherTabBar active="review" />
+      </View>
+    </BarBlurHost>
   );
 }
 
