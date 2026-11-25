@@ -36,6 +36,15 @@ class DecelerationOverlayActivity : AppCompatActivity() {
   private var cardEnterTimeMs = 0L
   private var lastTouchY = 0f
 
+  private val mainFont: Typeface by lazy {
+    runCatching { Typeface.createFromAsset(assets, "fonts/Bungee-Regular.ttf") }.getOrNull()
+      ?: Typeface.DEFAULT_BOLD
+  }
+  private val secondaryFont: Typeface by lazy {
+    runCatching { Typeface.createFromAsset(assets, "fonts/Poppins-Bold.ttf") }.getOrNull()
+      ?: Typeface.DEFAULT_BOLD
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -55,6 +64,7 @@ class DecelerationOverlayActivity : AppCompatActivity() {
 
     val pill = TextView(this).apply {
       text = "$sessionMin min scroll break • Low-Stim Mode (${strategy.name.lowercase().replace('_', ' ')})"
+      typeface = secondaryFont
       setTextColor(Color.parseColor("#E0E0E0"))
       setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
       setPadding(36, 18, 36, 18)
@@ -114,7 +124,7 @@ class DecelerationOverlayActivity : AppCompatActivity() {
 
   @SuppressLint("ClickableViewAccessibility")
   private fun setupPager(strategy: DecelerationStrategy) {
-    pager.adapter = DecelerationCardAdapter(cards) { finishAndGoHome() }
+    pager.adapter = DecelerationCardAdapter(cards, mainFont, secondaryFont) { finishAndGoHome() }
     cardEnterTimeMs = SystemClock.elapsedRealtime()
 
     pager.setPageTransformer { page, _ ->
@@ -190,6 +200,8 @@ class DecelerationOverlayActivity : AppCompatActivity() {
 
   private class DecelerationCardAdapter(
     private val items: List<DecelerationCard>,
+    private val mainFont: Typeface,
+    private val secondaryFont: Typeface,
     private val onExitClicked: () -> Unit,
   ) : RecyclerView.Adapter<DecelerationCardAdapter.CardHolder>() {
 
@@ -214,13 +226,14 @@ class DecelerationOverlayActivity : AppCompatActivity() {
         setPadding(72, 72, 72, 72)
       }
       val badge = TextView(ctx).apply {
+        typeface = secondaryFont
         setTextColor(Color.parseColor("#9E9E9E"))
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
       }
       val title = TextView(ctx).apply {
+        typeface = mainFont
         setTextColor(Color.parseColor("#F5F5F5"))
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
-        setTypeface(null, Typeface.BOLD)
         gravity = Gravity.CENTER
       }
       val titleLp = LinearLayout.LayoutParams(
@@ -228,6 +241,7 @@ class DecelerationOverlayActivity : AppCompatActivity() {
         LinearLayout.LayoutParams.WRAP_CONTENT,
       ).apply { topMargin = 32 }
       val body = TextView(ctx).apply {
+        typeface = secondaryFont
         setTextColor(Color.parseColor("#CCCCCC"))
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
         gravity = Gravity.CENTER
@@ -239,6 +253,7 @@ class DecelerationOverlayActivity : AppCompatActivity() {
       ).apply { topMargin = 40 }
       val closeBtn = Button(ctx).apply {
         text = "Rest Eyes & Exit"
+        typeface = secondaryFont
         visibility = View.GONE
       }
       val btnLp = LinearLayout.LayoutParams(

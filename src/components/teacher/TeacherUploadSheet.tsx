@@ -24,7 +24,7 @@ import { haptic } from '@/design/haptics';
 import { spring } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius } from '@/design/tokens';
-import { fontFor } from '@/design/typography';
+import { FONT_SECONDARY, fontFor } from '@/design/typography';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import {
   generateModuleDeck,
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     fontSize: 15,
     color: '#111111',
-    fontFamily: 'Poppins_700Bold',
+    fontFamily: FONT_SECONDARY,
   },
   pasteInput: { minHeight: 96 },
   subjRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

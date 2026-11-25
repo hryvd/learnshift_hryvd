@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import { useFonts } from 'expo-font';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
+import { FONT_MAIN, FONT_SECONDARY } from '@/design/typography';
 
 /**
  * On a laptop or desktop browser, LearnShift shows inside a 9:16 phone, the
@@ -30,6 +32,10 @@ function size() {
 }
 
 export function PhoneFrame() {
+  useFonts({
+    [FONT_MAIN]: require('../../../assets/fonts/Bungee-Regular.ttf'),
+    [FONT_SECONDARY]: require('../../../assets/fonts/Poppins-Bold.ttf'),
+  });
   const [{ w, h }, setSize] = useState(size);
   const [src] = useState(() => `${window.location.pathname}${window.location.search}`);
   const wide = typeof window !== 'undefined' && window.innerWidth >= 1100;
@@ -103,13 +109,19 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     gap: 72,
     background: 'radial-gradient(circle at 30% 20%, #FDF1E2 0%, #F3E2C8 55%, #E9CDB0 100%)',
-    fontFamily: 'Inter_700Bold, system-ui, -apple-system, Segoe UI, sans-serif',
+    fontFamily: 'Poppins-Bold, system-ui, -apple-system, Segoe UI, sans-serif',
     overflow: 'hidden',
   },
   side: { maxWidth: 360, color: '#3A2A20' },
   brandRow: { display: 'flex', alignItems: 'center', gap: 12 },
-  brand: { fontSize: 44, fontWeight: 800, letterSpacing: -1.2, color: '#C8400F' },
-  tag: { fontSize: 22, fontWeight: 700, marginTop: 6 },
+  brand: {
+    fontFamily: 'Bungee-Regular, system-ui, sans-serif',
+    fontSize: 40,
+    fontWeight: 'normal',
+    letterSpacing: -0.6,
+    color: '#C8400F',
+  },
+  tag: { fontSize: 22, fontWeight: 'normal', marginTop: 6 },
   copy: { fontSize: 16, lineHeight: 1.5, color: '#6B5546', marginTop: 16 },
   button: {
     marginTop: 18,
@@ -118,8 +130,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 20px',
     background: '#C8400F',
     color: '#FFFFFF',
+    fontFamily: 'Poppins-Bold, system-ui, sans-serif',
     fontSize: 15,
-    fontWeight: 700,
+    fontWeight: 'normal',
     cursor: 'pointer',
   },
   column: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 },
