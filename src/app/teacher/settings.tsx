@@ -5,6 +5,7 @@ import { GearSix, Plus } from '@/components/ui/icons';
 
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
+import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Card, PillButton, SegmentedControl, Stagger, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
@@ -24,65 +25,69 @@ export default function TeacherSettings() {
   const active = classes.find((x) => x.id === selected) ?? classes[0] ?? null;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
-    >
-      <ScrollView
-        contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
-        keyboardShouldPersistTaps="handled"
+    <BarBlurHost>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
       >
-        <Stagger index={0} style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-            <GearSix size={22} weight="fill" color="#FFFFFF" />
-          </View>
-          <View style={styles.flex}>
-            <Text variant="largeTitle">{T.settings}</Text>
-            <Text variant="subhead">{T.settingsSub}</Text>
-          </View>
-        </Stagger>
+        <BarBlurTarget>
+          <ScrollView
+            contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Stagger index={0} style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                <GearSix size={22} weight="fill" color="#FFFFFF" />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="largeTitle">{T.settings}</Text>
+                <Text variant="subhead">{T.settingsSub}</Text>
+              </View>
+            </Stagger>
 
-        {!IS_PITCH ? (
-          <>
-            {classes.length > 1 ? (
-              <SegmentedControl
-                options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
-                value={active?.id ?? ''}
-                onChange={(id) => useTeacher.getState().select(id)}
-              />
-            ) : null}
+            {!IS_PITCH ? (
+              <>
+                {classes.length > 1 ? (
+                  <SegmentedControl
+                    options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
+                    value={active?.id ?? ''}
+                    onChange={(id) => useTeacher.getState().select(id)}
+                  />
+                ) : null}
 
-            {active ? <JoinCodeCard code={active.join_code} /> : null}
+                {active ? <JoinCodeCard code={active.join_code} /> : null}
 
-            {creating ? (
-              <CreateClassCard
-                first={classes.length === 0}
-                onDone={() => setCreating(false)}
-                onCancel={() => setCreating(false)}
-              />
+                {creating ? (
+                  <CreateClassCard
+                    first={classes.length === 0}
+                    onDone={() => setCreating(false)}
+                    onCancel={() => setCreating(false)}
+                  />
+                ) : (
+                  <PillButton
+                    label={T.newClass}
+                    kind="secondary"
+                    icon={<Plus size={18} weight="bold" color={c.accent} />}
+                    block
+                    onPress={() => setCreating(true)}
+                  />
+                )}
+
+                <TeacherAccountCard classId={active?.id} />
+              </>
             ) : (
-              <PillButton
-                label={T.newClass}
-                kind="secondary"
-                icon={<Plus size={18} weight="bold" color={c.accent} />}
-                block
-                onPress={() => setCreating(true)}
-              />
+              <Card style={styles.gap}>
+                <Text variant="title">Grade 8 – {PITCH_NAMES.section}</Text>
+                <Text variant="subhead">
+                  {me?.display_name ?? T.teacher} · {T.learningOnly}
+                </Text>
+              </Card>
             )}
-
-            <TeacherAccountCard classId={active?.id} />
-          </>
-        ) : (
-          <Card style={styles.gap}>
-            <Text variant="title">Grade 8 – {PITCH_NAMES.section}</Text>
-            <Text variant="subhead">
-              {me?.display_name ?? T.teacher} · {T.learningOnly}
-            </Text>
-          </Card>
-        )}
-      </ScrollView>
-      <TeacherTabBar active="settings" />
-    </KeyboardAvoidingView>
+          </ScrollView>
+        </BarBlurTarget>
+        <TeacherTabBar active="settings" />
+      </KeyboardAvoidingView>
+    </BarBlurHost>
   );
 }
 
