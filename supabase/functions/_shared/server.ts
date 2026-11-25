@@ -102,6 +102,49 @@ export async function nameOf(id: string): Promise<{ name: string; lang: 'en' | '
   return { name: data?.display_name?.split(' ')[0] ?? 'Your child', lang: data?.lang === 'fil' ? 'fil' : 'en' };
 }
 
+/** Manila-time minutes since midnight (Asia/Manila = UTC+8, no DST). */
+export function manilaClockMinutes(now = new Date()): number {
+  const manilaMs = now.getTime() + 8 * 3600 * 1000;
+  const d = new Date(manilaMs);
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+
+/** True when a student is inside their bedtime wind-down window (quiet hours for social pushes). */
+export async function isQuietHours(studentId: string, now = new Date()): Promise<boolean> {
+  const { data } = await admin
+    .from('student_settings')
+    .select('bedtime_start, bedtime_end')
+    .eq('student_id', studentId)
+    .maybeSingle();
+  const start = data?.bedtime_start ?? 22 * 60;
+  const end = data?.bedtime_end ?? 6 * 60;
+  if (start === end) return false;
+  const mins = manilaClockMinutes(now);
+  return start <= end ? mins >= start && mins < end : mins >= start || mins < end;
+}
+
+/** Filters student recipients to those with social/chat enabled and not in quiet hours. */
+export async function filterSocialRecipients(
+  userIds: string[],
+  opts: { requireChat?: boolean } = {},
+): Promise<string[]> {
+  if (userIds.length === 0) return [];
+  const { data: controls } = await admin
+    .from('guardian_controls')
+    .select('student_id, social_enabled, chat_enabled')
+    .in('student_id', userIds);
+  const ctrlMap = new Map((controls ?? []).map((c) => [c.student_id as string, c]));
+  const eligible: string[] = [];
+  for (const uid of userIds) {
+    const c = ctrlMap.get(uid);
+    if (c?.social_enabled === false) continue;
+    if (opts.requireChat && c?.chat_enabled === false) continue;
+    if (await isQuietHours(uid)) continue;
+    eligible.push(uid);
+  }
+  return eligible;
+}
+
 const fmt = (min: number) => {
   const h = Math.floor(min / 60) % 24;
   const m = min % 60;

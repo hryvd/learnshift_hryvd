@@ -38,45 +38,58 @@ export function onPulled(fn: Listener) {
 // ── Pull ─────────────────────────────────────────────────────────────────
 
 export async function pullStudent(userId: string) {
-  const [prog, mastery, daily, settings, controls, links, classes, nudges, requests, accountReqs, usage, attempts, profile] =
-    await Promise.all([
-      supabase.from('progress').select('*').eq('student_id', userId).maybeSingle(),
-      supabase.from('mastery').select('skill_id, p').eq('student_id', userId),
-      supabase
-        .from('mastery_daily')
-        .select('day, skill_id, p')
-        .eq('student_id', userId)
-        .gte('day', isoDay(42))
-        .order('day'),
-      supabase.from('student_settings').select('*').eq('student_id', userId).maybeSingle(),
-      supabase.from('guardian_controls').select('*').eq('student_id', userId).maybeSingle(),
-      supabase
-        .from('guardian_links')
-        .select('guardian_id, profiles!guardian_links_guardian_id_fkey(display_name)')
-        .eq('student_id', userId),
-      supabase.from('class_members').select('classes(id, name, grade)').eq('student_id', userId),
-      supabase.from('nudge_events').select('*').eq('student_id', userId).order('at', { ascending: false }).limit(60),
-      supabase
-        .from('time_requests')
-        .select('*')
-        .eq('student_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20),
-      supabase
-        .from('account_requests')
-        .select('*')
-        .eq('student_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20),
-      supabase.from('usage_daily').select('*').eq('student_id', userId).gte('day', isoDay(13)).order('day'),
-      supabase
-        .from('attempts')
-        .select('created_at')
-        .eq('student_id', userId)
-        .gte('created_at', new Date(Date.now() - 154 * DAY_MS).toISOString())
-        .limit(5000),
-      supabase.from('profiles').select('display_name, lang').eq('id', userId).maybeSingle(),
-    ]);
+  const [
+    prog,
+    mastery,
+    daily,
+    settings,
+    controls,
+    links,
+    classes,
+    nudges,
+    requests,
+    accountReqs,
+    usage,
+    attempts,
+    profile,
+  ] = await Promise.all([
+    supabase.from('progress').select('*').eq('student_id', userId).maybeSingle(),
+    supabase.from('mastery').select('skill_id, p').eq('student_id', userId),
+    supabase
+      .from('mastery_daily')
+      .select('day, skill_id, p')
+      .eq('student_id', userId)
+      .gte('day', isoDay(42))
+      .order('day'),
+    supabase.from('student_settings').select('*').eq('student_id', userId).maybeSingle(),
+    supabase.from('guardian_controls').select('*').eq('student_id', userId).maybeSingle(),
+    supabase
+      .from('guardian_links')
+      .select('guardian_id, profiles!guardian_links_guardian_id_fkey(display_name)')
+      .eq('student_id', userId),
+    supabase.from('class_members').select('classes(id, name, grade)').eq('student_id', userId),
+    supabase.from('nudge_events').select('*').eq('student_id', userId).order('at', { ascending: false }).limit(60),
+    supabase
+      .from('time_requests')
+      .select('*')
+      .eq('student_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20),
+    supabase
+      .from('account_requests')
+      .select('*')
+      .eq('student_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20),
+    supabase.from('usage_daily').select('*').eq('student_id', userId).gte('day', isoDay(13)).order('day'),
+    supabase
+      .from('attempts')
+      .select('created_at')
+      .eq('student_id', userId)
+      .gte('created_at', new Date(Date.now() - 154 * DAY_MS).toISOString())
+      .limit(5000),
+    supabase.from('profiles').select('display_name, lang').eq('id', userId).maybeSingle(),
+  ]);
   const firstError = [prog, mastery, daily, settings, controls, links, classes, nudges, requests, usage, attempts].find(
     (r) => r.error,
   )?.error;
@@ -139,6 +152,8 @@ export async function pullStudent(userId: string) {
     lockEnabled: !!controls.data?.lock_enabled && guardians.length > 0,
     lockNow: !!controls.data?.lock_now && guardians.length > 0,
     lateNightAlerts: controls.data?.late_alerts ?? true,
+    socialEnabled: controls.data?.social_enabled ?? true,
+    chatEnabled: (controls.data?.social_enabled ?? true) && (controls.data?.chat_enabled ?? true),
   };
   patch.limits = {
     scroll: controls.data?.scroll_limit ?? null,
@@ -169,20 +184,18 @@ export async function pullStudent(userId: string) {
       .order('created_at', { ascending: false })
       .limit(30);
     if (modRows) {
-      patch.classModules = modRows.map(
-        (m): ClassModule => ({
-          id: m.id,
-          classId: m.class_id,
-          title: m.title,
-          subject: m.subject,
-          sourceName: m.source_name,
-          summary: m.summary ?? '',
-          flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
-          questions: (m.questions ?? []) as ModuleQuestion[],
-          published: !!m.published,
-          createdAt: m.created_at,
-        }),
-      );
+      patch.classModules = modRows.map((m): ClassModule => ({
+        id: m.id,
+        classId: m.class_id,
+        title: m.title,
+        subject: m.subject,
+        sourceName: m.source_name,
+        summary: m.summary ?? '',
+        flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+        questions: (m.questions ?? []) as ModuleQuestion[],
+        published: !!m.published,
+        createdAt: m.created_at,
+      }));
     }
   } else {
     patch.classModules = [];
