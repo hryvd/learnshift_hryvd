@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowRight, BookOpenText, ChalkboardTeacher, Plus, TrendDown, Warning } from '@/components/ui/icons';
@@ -8,6 +17,7 @@ import { Paty } from '@/components/mascot/Paty';
 import { ClassHeatmap, MasteryLegend, masteryColor } from '@/components/teacher/ClassHeatmap';
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
+import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import {
   BottomSheet,
   Card,
@@ -99,14 +109,19 @@ function RealTeacher() {
 
   if (classes.length === 0 || creating) {
     return (
-      <Frame title={classes.length === 0 ? T.createTitle : T.newClass} subtitle={me?.display_name ?? T.teacher} showTabs>
+      <Frame
+        title={classes.length === 0 ? T.createTitle : T.newClass}
+        subtitle={me?.display_name ?? T.teacher}
+        showTabs
+      >
         {classes.length === 0 ? (
           <Card style={styles.welcomeCard}>
             <Paty expression="waving" size={72} />
             <View style={styles.flex}>
               <Text variant="headline">Welcome{me?.display_name ? `, ${me.display_name.split(' ')[0]}` : ''}!</Text>
               <Text variant="subhead">
-                Create a class to get a student join code, upload lesson modules for AI quizzes, and review class mastery.
+                Create a class to get a student join code, upload lesson modules for AI quizzes, and review class
+                mastery.
               </Text>
             </View>
           </Card>
@@ -153,34 +168,43 @@ function Frame({
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
-    >
-      <ScrollView
-        contentContainerStyle={[styles.body, { maxWidth: 560, paddingBottom: insets.bottom + 110 }]}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          IS_PITCH ? undefined : (
-            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
-          )
-        }
+    <BarBlurHost>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
       >
-        <View style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-            <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />
-          </View>
-          <View style={styles.flex}>
-            <Text variant="largeTitle" numberOfLines={2}>
-              {title}
-            </Text>
-            <Text variant="subhead">{subtitle}</Text>
-          </View>
-        </View>
-        {children}
-      </ScrollView>
-      {showTabs ? <TeacherTabBar active="classes" /> : null}
-    </KeyboardAvoidingView>
+        <BarBlurTarget>
+          <ScrollView
+            contentContainerStyle={[styles.body, { maxWidth: 560, paddingBottom: insets.bottom + 110 }]}
+            keyboardShouldPersistTaps="handled"
+            refreshControl={
+              IS_PITCH ? undefined : (
+                <RefreshControl
+                  refreshing={pull.refreshing}
+                  onRefresh={pull.onRefresh}
+                  tintColor={c.accent}
+                  colors={[c.accent]}
+                />
+              )
+            }
+          >
+            <View style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="largeTitle" numberOfLines={2}>
+                  {title}
+                </Text>
+                <Text variant="subhead">{subtitle}</Text>
+              </View>
+            </View>
+            {children}
+          </ScrollView>
+        </BarBlurTarget>
+        {showTabs ? <TeacherTabBar active="classes" /> : null}
+      </KeyboardAvoidingView>
+    </BarBlurHost>
   );
 }
 
@@ -212,10 +236,7 @@ function Dashboard({
   const wide = width >= 900;
   const [cell, setCell] = useState<{ s: Student; skill: SkillId } | null>(null);
 
-  const active = useMemo(
-    () => section.students.filter((s) => (s as { answered?: number }).answered !== 0),
-    [section],
-  );
+  const active = useMemo(() => section.students.filter((s) => (s as { answered?: number }).answered !== 0), [section]);
   const support = useMemo(
     () => needsSupport({ ...section, students: active }, (m) => gapEngine.rootGap(m)),
     [section, active],
@@ -325,100 +346,113 @@ function Dashboard({
   );
 
   return (
-    <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-      <ScrollView
-        contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 110 }]}
-        refreshControl={
-          IS_PITCH ? undefined : (
-            <RefreshControl refreshing={pull.refreshing} onRefresh={pull.onRefresh} tintColor={c.accent} colors={[c.accent]} />
-          )
-        }
-      >
-        <Stagger index={0} style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-            <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />
-          </View>
-          <View style={styles.flex}>
-            <Text variant="largeTitle" numberOfLines={1}>
-              {title}
-            </Text>
-            <Text variant="subhead" numberOfLines={1}>
-              {subtitle}
-            </Text>
-          </View>
-          {IS_PITCH ? <DevChip onPress={() => router.push('/demo')} /> : null}
-        </Stagger>
-        <Stagger index={1} style={styles.segRow}>
-          {sections.length > 1 ? (
-            <SegmentedControl
-              options={sections.map((s) => ({ value: s.id, label: s.name }))}
-              value={section.id}
-              onChange={onSection}
-              style={styles.seg}
-            />
-          ) : null}
-          {onNewClass ? (
-            <PillButton
-              label={T.newClass}
-              kind="neutral"
-              size="sm"
-              icon={<Plus size={14} weight="bold" color={c.text} />}
-              onPress={onNewClass}
-            />
-          ) : null}
-        </Stagger>
-        {wide ? (
-          <View style={styles.columns}>
-            <View style={styles.mainCol}>{heat}</View>
-            {side}
-          </View>
-        ) : (
-          <>
-            {heat}
-            {side}
-          </>
-        )}
-      </ScrollView>
-
-      <BottomSheet visible={!!cell} onClose={() => setCell(null)} accessibilityLabel="Cell detail">
-        {cell ? (
-          <View style={styles.sheet}>
-            <View style={styles.rowBetween}>
-              <View style={styles.flex}>
-                <Text variant="overline">{SKILL_BY_ID[cell.skill].name.en}</Text>
-                <Text variant="title">{cell.s.name}</Text>
+    <BarBlurHost>
+      <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
+        <BarBlurTarget>
+          <ScrollView
+            contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 110 }]}
+            refreshControl={
+              IS_PITCH ? undefined : (
+                <RefreshControl
+                  refreshing={pull.refreshing}
+                  onRefresh={pull.onRefresh}
+                  tintColor={c.accent}
+                  colors={[c.accent]}
+                />
+              )
+            }
+          >
+            <Stagger index={0} style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />
               </View>
-              <View style={[styles.bigCell, { backgroundColor: masteryColor(cell.s.mastery[cell.skill], c, isNight) }]}>
-                <Text
-                  variant="title"
-                  color={cell.s.mastery[cell.skill] < 0.35 || cell.s.mastery[cell.skill] >= 0.8 ? '#FFFFFF' : 'text'}
-                  style={fontFor(800)}
-                >
-                  {Math.round(cell.s.mastery[cell.skill] * 100)}%
+              <View style={styles.flex}>
+                <Text variant="largeTitle" numberOfLines={1}>
+                  {title}
+                </Text>
+                <Text variant="subhead" numberOfLines={1}>
+                  {subtitle}
                 </Text>
               </View>
-            </View>
-            <Text variant="body">{T.rootGap(SKILL_BY_ID[gapEngine.rootGap(cell.s.mastery, cell.skill)].name.en)}</Text>
-            <View style={styles.chips}>
-              {SKILLS.filter((s) => SKILL_BY_ID[cell.skill].prereqs.includes(s.id)).map((s) => (
-                <Chip key={s.id} label={`${s.name.en} ${Math.round(cell.s.mastery[s.id] * 100)}%`} kind="outline" />
-              ))}
-            </View>
-            <PillButton
-              label={T.open}
-              block
-              onPress={() => {
-                const s = cell.s;
-                setCell(null);
-                openStudent(s);
-              }}
-            />
-          </View>
-        ) : null}
-      </BottomSheet>
+              {IS_PITCH ? <DevChip onPress={() => router.push('/demo')} /> : null}
+            </Stagger>
+            <Stagger index={1} style={styles.segRow}>
+              {sections.length > 1 ? (
+                <SegmentedControl
+                  options={sections.map((s) => ({ value: s.id, label: s.name }))}
+                  value={section.id}
+                  onChange={onSection}
+                  style={styles.seg}
+                />
+              ) : null}
+              {onNewClass ? (
+                <PillButton
+                  label={T.newClass}
+                  kind="neutral"
+                  size="sm"
+                  icon={<Plus size={14} weight="bold" color={c.text} />}
+                  onPress={onNewClass}
+                />
+              ) : null}
+            </Stagger>
+            {wide ? (
+              <View style={styles.columns}>
+                <View style={styles.mainCol}>{heat}</View>
+                {side}
+              </View>
+            ) : (
+              <>
+                {heat}
+                {side}
+              </>
+            )}
+          </ScrollView>
+        </BarBlurTarget>
 
-      <TeacherTabBar active="classes" />
-    </View>
+        <BottomSheet visible={!!cell} onClose={() => setCell(null)} accessibilityLabel="Cell detail">
+          {cell ? (
+            <View style={styles.sheet}>
+              <View style={styles.rowBetween}>
+                <View style={styles.flex}>
+                  <Text variant="overline">{SKILL_BY_ID[cell.skill].name.en}</Text>
+                  <Text variant="title">{cell.s.name}</Text>
+                </View>
+                <View
+                  style={[styles.bigCell, { backgroundColor: masteryColor(cell.s.mastery[cell.skill], c, isNight) }]}
+                >
+                  <Text
+                    variant="title"
+                    color={cell.s.mastery[cell.skill] < 0.35 || cell.s.mastery[cell.skill] >= 0.8 ? '#FFFFFF' : 'text'}
+                    style={fontFor(800)}
+                  >
+                    {Math.round(cell.s.mastery[cell.skill] * 100)}%
+                  </Text>
+                </View>
+              </View>
+              <Text variant="body">
+                {T.rootGap(SKILL_BY_ID[gapEngine.rootGap(cell.s.mastery, cell.skill)].name.en)}
+              </Text>
+              <View style={styles.chips}>
+                {SKILLS.filter((s) => SKILL_BY_ID[cell.skill].prereqs.includes(s.id)).map((s) => (
+                  <Chip key={s.id} label={`${s.name.en} ${Math.round(cell.s.mastery[s.id] * 100)}%`} kind="outline" />
+                ))}
+              </View>
+              <PillButton
+                label={T.open}
+                block
+                onPress={() => {
+                  const s = cell.s;
+                  setCell(null);
+                  openStudent(s);
+                }}
+              />
+            </View>
+          ) : null}
+        </BottomSheet>
+
+        <TeacherTabBar active="classes" />
+      </View>
+    </BarBlurHost>
   );
 }
 
