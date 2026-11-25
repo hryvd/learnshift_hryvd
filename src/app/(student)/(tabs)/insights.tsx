@@ -4,17 +4,7 @@ import { router } from 'expo-router';
 import { Lightning, Moon, Sparkle, Timer } from '@/components/ui/icons';
 
 import { Screen } from '@/components/student/Screen';
-import {
-  BarChart,
-  Card,
-  Chip,
-  Heatmap,
-  LargeTitleHeader,
-  Ring,
-  Stagger,
-  StatTile,
-  Text,
-} from '@/components/ui';
+import { BarChart, Card, Chip, Heatmap, LargeTitleHeader, Ring, Stagger, StatTile, Text } from '@/components/ui';
 import { heatmapMonths, seedHeatmap } from '@/data/seed';
 import { SHORT } from '@/data/skills';
 import { IS_PITCH } from '@/lib/config';
@@ -24,7 +14,7 @@ import { reportNow } from '@/services/monitor';
 import { useDevice } from '@/services/monitor/bridge';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
-import { useWeek, weeklyGrade, learnHeatmap, masteryGain } from '@/hooks/useWeek';
+import { useWeek, weeklyGrade, heatmapDate, learnHeatmap, masteryGain } from '@/hooks/useWeek';
 import { formatDuration, useT, useL } from '@/i18n/useT';
 import { todayKey, useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
@@ -49,6 +39,8 @@ export default function Insights() {
   const mastery = useAppStore((s) => s.mastery);
   const feed = useAppStore((s) => s.feed);
   const learnDays = useAppStore((s) => s.learnDays);
+  const learnMinutes = useAppStore((s) => s.learnMinutes);
+  const usage = useAppStore((s) => s.usage);
   const history = useAppStore((s) => s.history);
   const heat = useMemo(() => (IS_PITCH ? seedHeatmap(WEEKS) : learnHeatmap(learnDays, WEEKS)), [learnDays]);
   const months = useMemo(() => heatmapMonths(WEEKS, t.months), [t.months]);
@@ -59,6 +51,28 @@ export default function Insights() {
     const lastIndex = WEEKS * 7 - 1 - (6 - today.getDay());
     return heat.slice(lastIndex - today.getDate() + 1, lastIndex + 1).filter((v) => v > 0).length;
   }, [heat]);
+
+  // What a tapped heatmap day shows: the date, minutes studied and questions answered.
+  const describeDay = (index: number) => {
+    const date = heatmapDate(index, WEEKS);
+    if (!date) return null;
+    const key = todayKey(date);
+    const level = heat[index] ?? 0;
+    // The demo has no per-day history, so it shows figures that match each cell's shade.
+    const minutes = IS_PITCH
+      ? level === 0
+        ? 0
+        : [0, 4, 10, 18, 28][level] + (index % 4)
+      : Math.max(usage.find((u) => u.day === key)?.learning ?? 0, learnMinutes[key] ?? 0);
+    const questions = IS_PITCH ? [0, 2, 5, 8, 12][level] : (learnDays[key] ?? 0);
+    return {
+      title: t.insights.dayDate(t.days.long[date.getDay()], t.months[date.getMonth()], date.getDate()),
+      body:
+        minutes === 0 && questions === 0
+          ? t.insights.dayNoStudy
+          : t.insights.dayStudied(formatDuration(minutes), questions),
+    };
+  };
 
   // The demo tracks Fractions; real accounts track their current root gap.
   const focus = IS_PITCH ? 'fractions' : gapEngine.rootGap(mastery);
@@ -95,6 +109,8 @@ export default function Insights() {
             weeks={WEEKS}
             months={months}
             accessibilityLabel={`${t.insights.learningDays}: ${learningDays} ${t.insights.days}`}
+            accessibilityHint={t.insights.tapDayHint}
+            describe={describeDay}
           />
         </Card>
       </Stagger>
@@ -132,7 +148,11 @@ export default function Insights() {
         <StatTile
           label={t.insights.breaks}
           value={week.breaks}
-          caption={breaksToday > 0 ? `${breaksToday} ${t.common.today.toLowerCase()} · ${t.insights.thisWeek}` : t.insights.taken}
+          caption={
+            breaksToday > 0
+              ? `${breaksToday} ${t.common.today.toLowerCase()} · ${t.insights.thisWeek}`
+              : t.insights.taken
+          }
           icon={<Lightning size={16} weight="fill" color={c.accent} />}
           style={styles.flex}
         />
