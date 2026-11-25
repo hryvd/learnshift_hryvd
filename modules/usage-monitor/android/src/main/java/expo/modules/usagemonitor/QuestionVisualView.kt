@@ -32,7 +32,8 @@ class QuestionVisualView(ctx: Context) : View(ctx) {
   }
   private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     textAlign = Paint.Align.CENTER
-    typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+    typeface = runCatching { Typeface.createFromAsset(ctx.assets, "fonts/Poppins-Bold.ttf") }.getOrNull()
+      ?: Typeface.create("sans-serif-medium", Typeface.BOLD)
   }
 
   private val ink = Color.parseColor("#17352F")

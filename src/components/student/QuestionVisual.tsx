@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 import type { CountItemId, QuestionVisual as VisualSpec, VisualSceneId } from '@/data/localQuestions';
+import { FONT_SECONDARY } from '@/design/typography';
 
 const INK = '#17352F';
 const ACCENT = '#146B50';
@@ -180,7 +181,7 @@ function renderCount(
         {Array.from({ length: leftCount }, (_, i) => (
           <G key={`l-${i}`}>{drawCountIcon(item, x0 + i * 24, 56, false)}</G>
         ))}
-        <SvgText x={x0 + leftCount * 24 + 2} y={62} fill={ACCENT} fontSize={22} fontWeight="700" textAnchor="middle">
+        <SvgText x={x0 + leftCount * 24 + 2} y={62} fill={ACCENT} fontSize={22} fontFamily={FONT_SECONDARY} textAnchor="middle">
           +
         </SvgText>
         {Array.from({ length: addCount }, (_, i) => (
@@ -207,7 +208,7 @@ function renderCount(
       {askNext ? (
         <G>
           <Rect x={208} y={38} width={32} height={34} rx={10} fill="#FFFFFF" stroke={ACCENT} strokeWidth={2} />
-          <SvgText x={224} y={61} fill={ACCENT} fontSize={18} fontWeight="700" textAnchor="middle">
+          <SvgText x={224} y={61} fill={ACCENT} fontSize={18} fontFamily={FONT_SECONDARY} textAnchor="middle">
             ?
           </SvgText>
         </G>
@@ -229,7 +230,7 @@ function renderShape(
         <G>
           <Rect x={96} y={20} width={68} height={68} rx={6} fill="#DCEFE2" stroke={ACCENT} strokeWidth={3} />
           {sideLabel ? (
-            <SvgText x={130} y={104} fill={INK} fontSize={13} fontWeight="700" textAnchor="middle">
+            <SvgText x={130} y={104} fill={INK} fontSize={13} fontFamily={FONT_SECONDARY} textAnchor="middle">
               {sideLabel}
             </SvgText>
           ) : null}
@@ -274,16 +275,16 @@ function renderClock(hour: number, minute: number) {
           />
         );
       })}
-      <SvgText x={cx} y={cy - 24} fill={INK} fontSize={10} fontWeight="700" textAnchor="middle">
+      <SvgText x={cx} y={cy - 24} fill={INK} fontSize={10} fontFamily={FONT_SECONDARY} textAnchor="middle">
         12
       </SvgText>
-      <SvgText x={cx + 28} y={cy + 4} fill={INK} fontSize={10} fontWeight="700" textAnchor="middle">
+      <SvgText x={cx + 28} y={cy + 4} fill={INK} fontSize={10} fontFamily={FONT_SECONDARY} textAnchor="middle">
         3
       </SvgText>
-      <SvgText x={cx} y={cy + 32} fill={INK} fontSize={10} fontWeight="700" textAnchor="middle">
+      <SvgText x={cx} y={cy + 32} fill={INK} fontSize={10} fontFamily={FONT_SECONDARY} textAnchor="middle">
         6
       </SvgText>
-      <SvgText x={cx - 28} y={cy + 4} fill={INK} fontSize={10} fontWeight="700" textAnchor="middle">
+      <SvgText x={cx - 28} y={cy + 4} fill={INK} fontSize={10} fontFamily={FONT_SECONDARY} textAnchor="middle">
         9
       </SvgText>
       <Line
@@ -391,10 +392,10 @@ function renderBars(items: { label: string; value: number }[]) {
         return (
           <G key={it.label}>
             <Rect x={x} y={baseY - h} width={bw} height={h} rx={6} fill={i === 1 ? WARM : ACCENT} />
-            <SvgText x={x + bw / 2} y={baseY - h - 5} fill={INK} fontSize={11} fontWeight="700" textAnchor="middle">
+            <SvgText x={x + bw / 2} y={baseY - h - 5} fill={INK} fontSize={11} fontFamily={FONT_SECONDARY} textAnchor="middle">
               {String(it.value)}
             </SvgText>
-            <SvgText x={x + bw / 2} y={baseY + 16} fill={INK} fontSize={11} fontWeight="700" textAnchor="middle">
+            <SvgText x={x + bw / 2} y={baseY + 16} fill={INK} fontSize={11} fontFamily={FONT_SECONDARY} textAnchor="middle">
               {it.label}
             </SvgText>
           </G>
@@ -420,12 +421,12 @@ function renderGrid(rows: number, cols: number, rowLabel?: string, colLabel?: st
         <Line key={`h-${i}`} x1={x0} y1={y0 + (i + 1) * cell} x2={x0 + w} y2={y0 + (i + 1) * cell} stroke={ACCENT} strokeWidth={1.2} />
       ))}
       {colLabel ? (
-        <SvgText x={130} y={y0 + h + 16} fill={INK} fontSize={12} fontWeight="700" textAnchor="middle">
+        <SvgText x={130} y={y0 + h + 16} fill={INK} fontSize={12} fontFamily={FONT_SECONDARY} textAnchor="middle">
           {colLabel}
         </SvgText>
       ) : null}
       {rowLabel ? (
-        <SvgText x={x0 - 8} y={y0 + h / 2 + 4} fill={INK} fontSize={12} fontWeight="700" textAnchor="end">
+        <SvgText x={x0 - 8} y={y0 + h / 2 + 4} fill={INK} fontSize={12} fontFamily={FONT_SECONDARY} textAnchor="end">
           {rowLabel}
         </SvgText>
       ) : null}
@@ -643,16 +644,16 @@ function renderScene(id: VisualSceneId, hideEast?: boolean) {
           <Circle cx={130} cy={56} r={38} fill="#FFFFFF" stroke={INK} strokeWidth={2.2} />
           <Line x1={130} y1={32} x2={130} y2={80} stroke={ACCENT} strokeWidth={2.5} />
           <Line x1={106} y1={56} x2={154} y2={56} stroke={ACCENT} strokeWidth={2.5} />
-          <SvgText x={130} y={28} fill={INK} fontSize={12} fontWeight="700" textAnchor="middle">
+          <SvgText x={130} y={28} fill={INK} fontSize={12} fontFamily={FONT_SECONDARY} textAnchor="middle">
             N
           </SvgText>
-          <SvgText x={130} y={92} fill={INK} fontSize={12} fontWeight="700" textAnchor="middle">
+          <SvgText x={130} y={92} fill={INK} fontSize={12} fontFamily={FONT_SECONDARY} textAnchor="middle">
             S
           </SvgText>
-          <SvgText x={98} y={60} fill={INK} fontSize={12} fontWeight="700" textAnchor="middle">
+          <SvgText x={98} y={60} fill={INK} fontSize={12} fontFamily={FONT_SECONDARY} textAnchor="middle">
             W
           </SvgText>
-          <SvgText x={162} y={60} fill={hideEast ? WARM : INK} fontSize={13} fontWeight="700" textAnchor="middle">
+          <SvgText x={162} y={60} fill={hideEast ? WARM : INK} fontSize={13} fontFamily={FONT_SECONDARY} textAnchor="middle">
             {hideEast ? '?' : 'E'}
           </SvgText>
         </G>

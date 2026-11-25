@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -13,11 +13,11 @@ import { SHORT, SKILLS, SKILL_BY_ID, type SkillId } from '@/data/skills';
 import { haptic } from '@/design/haptics';
 import { ease, useReducedMotion } from '@/design/motion';
 import { useTheme } from '@/design/theme';
+import { FONT_MAIN, FONT_SECONDARY } from '@/design/typography';
 import { useL } from '@/i18n/useT';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedG = Animated.createAnimatedComponent(G);
-const FONT = Platform.OS === 'ios' ? undefined : 'Inter_600SemiBold';
 
 type Props = {
   mastery: Record<SkillId, number>;
@@ -106,8 +106,7 @@ export function SkillGraph({ mastery, root, blocked, width, onPress, reveal }: P
                 x={x}
                 y={y + 5}
                 fontSize={13}
-                fontWeight="700"
-                fontFamily={FONT}
+                fontFamily={FONT_MAIN}
                 fill={c.text}
                 textAnchor="middle"
               >
@@ -117,8 +116,7 @@ export function SkillGraph({ mastery, root, blocked, width, onPress, reveal }: P
                 x={x}
                 y={y + R + 18}
                 fontSize={12}
-                fontWeight="600"
-                fontFamily={FONT}
+                fontFamily={FONT_SECONDARY}
                 fill={isRoot ? c.accent : c.textSecondary}
                 textAnchor="middle"
               >

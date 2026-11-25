@@ -1,9 +1,10 @@
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 import type { DiagramSpec } from '@/data/lessons';
 import { useTheme } from '@/design/theme';
 import type { Palette } from '@/design/tokens';
+import { FONT_SECONDARY } from '@/design/typography';
 
 type Props = {
   spec: DiagramSpec;
@@ -13,7 +14,7 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-const FONT = Platform.OS === 'ios' ? undefined : 'Inter_700Bold';
+const FONT = FONT_SECONDARY;
 
 /**
  * Flat, one-idea diagrams for concept cards and the Feed. Each kind is a
@@ -75,7 +76,6 @@ function label(
       y={y}
       fill={color}
       fontSize={size}
-      fontWeight="700"
       fontFamily={FONT}
       textAnchor={anchor}
     >

@@ -2,15 +2,18 @@ import type { TextStyle } from 'react-native';
 
 export type Weight = 500 | 600 | 700 | 800;
 
+export const FONT_MAIN = 'Bungee-Regular';
+export const FONT_SECONDARY = 'Poppins-Bold';
+
 /**
  * Main display headings use Bungee; secondary labels and body use Poppins Bold
  * consistently across iOS, Android, and web.
  */
 const familyByWeight: Record<Weight, string> = {
-  500: 'Poppins_700Bold',
-  600: 'Poppins_700Bold',
-  700: 'Poppins_700Bold',
-  800: 'Bungee_400Regular',
+  500: FONT_SECONDARY,
+  600: FONT_SECONDARY,
+  700: FONT_SECONDARY,
+  800: FONT_MAIN,
 };
 
 export function fontFor(weight: Weight): TextStyle {
