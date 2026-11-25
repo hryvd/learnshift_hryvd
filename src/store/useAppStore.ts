@@ -176,6 +176,8 @@ type State = {
   usage: UsageDay[];
   /** YYYY-MM-DD → answers that day, for the learning heatmap. */
   learnDays: Record<string, number>;
+  /** YYYY-MM-DD → study minutes that day (server history for the heatmap; today lives in `usage`). */
+  learnMinutes: Record<string, number>;
   /** Weekly mastery per skill, oldest first (excluding now). */
   history: Record<SkillId, number[]>;
   dirty: Dirty;
@@ -340,6 +342,7 @@ const pitchState = (): State => ({
   classModules: [...SAMPLE_PITCH_MODULES],
   usage: [],
   learnDays: {},
+  learnMinutes: {},
   history: MIKA_HISTORY,
 });
 
@@ -375,6 +378,7 @@ const realState = (): State => ({
   classModules: [],
   usage: [],
   learnDays: {},
+  learnMinutes: {},
   history: EMPTY_HISTORY,
 });
 
