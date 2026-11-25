@@ -53,22 +53,28 @@ export default function Privacy() {
   const exportData = async () => {
     setExportError(null);
     try {
-    const s = useAppStore.getState();
-    const data = IS_PITCH
-      ? {
-          profile: { name: 'Mika', grade: 8, section: 'Sampaguita' },
-          mastery: s.mastery,
-          nudges: s.nudges.map((n) => ({ at: n.at, level: n.level, response: n.response })),
-          coins: s.coins,
-          note: 'Usage metadata stays on this phone. No messages, screens or browsing are ever collected.',
-        }
-      : await exportMyData();
-    const result = await Share.share({ message: JSON.stringify(data, null, 2) });
-    if (result.action === Share.sharedAction) setExported(true);
-    } catch { setExportError('Could not export your data. Please try again when connected.'); }
+      const s = useAppStore.getState();
+      const data = IS_PITCH
+        ? {
+            profile: { name: 'Mika', grade: 8, section: 'Sampaguita' },
+            mastery: s.mastery,
+            nudges: s.nudges.map((n) => ({ at: n.at, level: n.level, response: n.response })),
+            coins: s.coins,
+            note: 'Usage metadata stays on this phone. No messages, screens or browsing are ever collected.',
+          }
+        : await exportMyData();
+      const result = await Share.share({ message: JSON.stringify(data, null, 2) });
+      if (result.action === Share.sharedAction) setExported(true);
+    } catch {
+      setExportError('Could not export your data. Please try again when connected.');
+    }
   };
   const holdItems = t.privacy.holdItems.map(([k, v], idx) =>
-    idx === 0 ? [k, [name, grade ? `Grade ${grade}` : ''].filter(Boolean).join(' · ')] : idx === 2 ? [k, `${answers}`] : [k, v],
+    idx === 0
+      ? [k, [name, grade ? `Grade ${grade}` : ''].filter(Boolean).join(' · ')]
+      : idx === 2
+        ? [k, `${answers}`]
+        : [k, v],
   );
 
   let i = 0;
@@ -161,7 +167,10 @@ export default function Privacy() {
           </View>
           <View style={styles.flex}>
             <Text variant="headline">{t.privacy.onPhone}</Text>
-            <Text variant="subhead">Local questions and scroll detection run here. Signed-in accounts sync learning progress and app-usage summaries with the configured service. Linked guardians can see habits; teachers can see learning.</Text>
+            <Text variant="subhead">
+              Local questions and scroll detection run here. Signed-in accounts sync learning progress and app-usage
+              summaries with the configured service. Linked guardians can see habits; teachers can see learning.
+            </Text>
           </View>
         </Card>
       </Stagger>
@@ -204,6 +213,7 @@ export default function Privacy() {
             [t.privacy.youSee, t.privacy.youWhat, c.tabProfile],
             [t.privacy.guardianSees, t.privacy.guardianWhat, c.success],
             [t.privacy.teacherSees, t.privacy.teacherWhat, c.tabInsights],
+            [t.privacy.friendsSees, t.privacy.friendsWhat, c.accent],
           ].map(([who, what, col]) => (
             <View key={who} style={styles.who}>
               <View style={[styles.dot, { backgroundColor: col }]} />
@@ -234,7 +244,11 @@ export default function Privacy() {
         </ListGroup>
       </Stagger>
 
-      {exportError ? <Text color="danger" accessibilityRole="alert">{exportError}</Text> : null}
+      {exportError ? (
+        <Text color="danger" accessibilityRole="alert">
+          {exportError}
+        </Text>
+      ) : null}
       <Stagger index={i++}>
         <PillButton
           label={exported ? t.privacy.exported : t.privacy.export}
@@ -280,7 +294,13 @@ const styles = StyleSheet.create({
   strike: { textDecorationLine: 'line-through' },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   receipt: { gap: 10 },
-  receiptHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
+  receiptHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   phone: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   expandHead: { flexDirection: 'row', alignItems: 'center', padding: space.card, minHeight: 60 },
   holdList: { paddingHorizontal: space.card, paddingBottom: 8 },

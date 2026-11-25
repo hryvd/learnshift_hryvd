@@ -1,9 +1,11 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Eye, Lightning, Plant } from 'phosphor-react-native';
+import { Compass, Eye, Lightning, Plant, Waves } from 'phosphor-react-native';
 
-import { Card, Coin, ProgressBar, SheetHeader, Text } from '@/components/ui';
+import { SagwanIcon } from '@/components/isla/SagwanIcon';
+
+import { Card, Coin, InsetCard, ProgressBar, SheetHeader, Text } from '@/components/ui';
 import { BUILDINGS } from '@/data/seed';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
@@ -88,6 +90,30 @@ export default function IslaHow() {
             );
           })}
         </Card>
+        <Card style={styles.gap}>
+          <Text variant="headline">{t.how.kapuluanTitle}</Text>
+          {t.how.kapuluanRows.map(([k, v], i) => {
+            const kIcons = [Compass, Waves, Eye];
+            const KIcon = kIcons[i];
+            return (
+              <InsetCard key={k} style={styles.kapCard}>
+                <View style={styles.loop}>
+                  <View style={[styles.loopIcon, { backgroundColor: c.card }]}>
+                    {KIcon ? (
+                      <KIcon size={18} weight="fill" color={c.accent} />
+                    ) : (
+                      <SagwanIcon size={18} color={c.accent} />
+                    )}
+                  </View>
+                  <View style={styles.flex}>
+                    <Text variant="headline">{k}</Text>
+                    <Text variant="caption">{v}</Text>
+                  </View>
+                </View>
+              </InsetCard>
+            );
+          })}
+        </Card>
         <Text variant="caption" align="center">
           {t.how.never}
         </Text>
@@ -106,4 +132,5 @@ const styles = StyleSheet.create({
   total: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   loop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   loopIcon: { width: 40, height: 40, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  kapCard: { marginTop: 2 },
 });

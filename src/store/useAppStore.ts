@@ -40,6 +40,8 @@ export type GuardianSettings = {
   lockNow: boolean;
   lateNightAlerts: boolean;
   limitStyle: 'adaptive' | 'fixed';
+  socialEnabled: boolean;
+  chatEnabled: boolean;
 };
 
 export type LockWindow = { start: number; end: number; unlockUntil: string | null };
@@ -96,7 +98,14 @@ export type OutboxOp =
     }
   | {
       kind: 'flag';
-      row: { question_id: string; wrong_index: number; lang: Lang; misconception: string; content: unknown; confidence: number };
+      row: {
+        question_id: string;
+        wrong_index: number;
+        lang: Lang;
+        misconception: string;
+        content: unknown;
+        confidence: number;
+      };
     };
 
 export type SentinelSlice = {
@@ -186,6 +195,13 @@ type Actions = {
   setOnboarded: (v: boolean) => void;
   addCoins: (n: number) => void;
   answer: (e: AnswerEvidence, meta?: AttemptMeta) => Mastery;
+  recordFeedAttempt: (row: {
+    questionId: string;
+    subject: string;
+    chosen: number;
+    correct: boolean;
+    seconds?: number;
+  }) => void;
   setMastery: (m: Mastery) => void;
   logNudge: (level: NudgeEntry['level'], reasons: NudgeEntry['reasons'], response: NudgeResponse) => string;
   respondNudge: (id: string, response: NudgeResponse) => void;
@@ -300,7 +316,16 @@ const pitchState = (): State => ({
   answers: 142,
   nudges: seedNudges(),
   feed: { day: todayKey(), minutes: 6, saved: [] },
-  guardian: { name: PITCH_NAMES.guardian, linked: true, lockEnabled: false, lockNow: false, lateNightAlerts: true, limitStyle: 'adaptive' },
+  guardian: {
+    name: PITCH_NAMES.guardian,
+    linked: true,
+    lockEnabled: false,
+    lockNow: false,
+    lateNightAlerts: true,
+    limitStyle: 'adaptive',
+    socialEnabled: true,
+    chatEnabled: true,
+  },
   requests: [seedRequest()],
   accountRequests: [],
   offline: ['fractions', 'algebraic'],
@@ -327,7 +352,16 @@ const realState = (): State => ({
   mastery: { ...PRIOR_MASTERY },
   answers: 0,
   nudges: [],
-  guardian: { name: '', linked: false, lockEnabled: false, lockNow: false, lateNightAlerts: true, limitStyle: 'adaptive' },
+  guardian: {
+    name: '',
+    linked: false,
+    lockEnabled: false,
+    lockNow: false,
+    lateNightAlerts: true,
+    limitStyle: 'adaptive',
+    socialEnabled: true,
+    chatEnabled: true,
+  },
   requests: [],
   accountRequests: [],
   offline: [],
@@ -347,7 +381,8 @@ const realState = (): State => ({
 export const initialState = (): State => (IS_PITCH ? pitchState() : realState());
 
 let nid = 0;
-export const uid = (p: string) => `${p}-${Date.now().toString(36)}-${(nid++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+export const uid = (p: string) =>
+  `${p}-${Date.now().toString(36)}-${(nid++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 const addUnique = <T>(list: T[], v: T) => (list.includes(v) ? list : [...list, v]);
 
@@ -406,6 +441,32 @@ export const useAppStore = create<State & Actions>()(
         });
         return next;
       },
+      recordFeedAttempt: ({ questionId, subject, chosen, correct, seconds = 6 }) =>
+        set((s) => {
+          const day = todayKey();
+          return {
+            answers: s.answers + 1,
+            learnDays: { ...s.learnDays, [day]: (s.learnDays[day] ?? 0) + 1 },
+            outbox: [
+              ...s.outbox,
+              {
+                kind: 'attempt',
+                row: {
+                  client_id: uid('f'),
+                  question_id: questionId,
+                  skill_id: subject,
+                  chosen,
+                  correct,
+                  seconds: Math.min(32000, Math.round(seconds)),
+                  hints: 0,
+                  context: 'feed',
+                  created_at: new Date().toISOString(),
+                },
+              },
+            ],
+            dirty: { ...s.dirty, progress: true },
+          };
+        }),
       setMastery: (mastery) => set({ mastery }),
       logNudge: (level, reasons, response) => {
         const id = uid('n');
@@ -484,7 +545,10 @@ export const useAppStore = create<State & Actions>()(
       requestAccountAction: (kind) => {
         const id = uid('ar');
         set((s) => ({
-          accountRequests: [{ id, at: new Date().toISOString(), kind, status: 'pending' as const }, ...s.accountRequests],
+          accountRequests: [
+            { id, at: new Date().toISOString(), kind, status: 'pending' as const },
+            ...s.accountRequests,
+          ],
         }));
         return id;
       },
@@ -608,8 +672,7 @@ export const useAppStore = create<State & Actions>()(
         }),
       addPitchModule: (mod) =>
         set((s) => ({ classModules: [mod, ...(s.classModules ?? []).filter((x) => x.id !== mod.id)] })),
-      deletePitchModule: (id) =>
-        set((s) => ({ classModules: (s.classModules ?? []).filter((x) => x.id !== id) })),
+      deletePitchModule: (id) => set((s) => ({ classModules: (s.classModules ?? []).filter((x) => x.id !== id) })),
       hydrate: (patch) => set(patch),
       clean: ({ outbox, ...flags }) =>
         set((s) => ({
@@ -646,7 +709,9 @@ export const useAppStore = create<State & Actions>()(
             sentinel: {
               ...DEFAULT_SENTINEL,
               ...s.sentinel,
-              overlayIntervalSec: snapBreakIntervalSec(s.sentinel.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec),
+              overlayIntervalSec: snapBreakIntervalSec(
+                s.sentinel.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec,
+              ),
               day: today,
               ...(resetDaily ? { swipesToday: 0, decksToday: 0, dismissStreak: 0 } : {}),
             },
@@ -658,10 +723,20 @@ export const useAppStore = create<State & Actions>()(
         if (!Array.isArray(s.accountRequests)) {
           s.hydrate({ accountRequests: [] });
         }
-        if (s.limits.breakIntervalSec === undefined || s.guardian.lockNow === undefined) {
+        if (
+          s.limits.breakIntervalSec === undefined ||
+          s.guardian.lockNow === undefined ||
+          s.guardian.socialEnabled === undefined ||
+          s.guardian.chatEnabled === undefined
+        ) {
           s.hydrate({
             limits: { ...s.limits, breakIntervalSec: s.limits.breakIntervalSec ?? null },
-            guardian: { ...s.guardian, lockNow: !!s.guardian.lockNow },
+            guardian: {
+              ...s.guardian,
+              lockNow: !!s.guardian.lockNow,
+              socialEnabled: s.guardian.socialEnabled ?? true,
+              chatEnabled: s.guardian.chatEnabled ?? true,
+            },
           });
         }
       },

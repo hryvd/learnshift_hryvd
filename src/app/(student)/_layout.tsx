@@ -22,6 +22,8 @@ export default function StudentLayout() {
       <Stack.Screen name="feed" options={{ ...full, contentStyle: { backgroundColor: '#0B0D14' } }} />
       <Stack.Screen name="isla" />
       <Stack.Screen name="isla-how" options={sheet} />
+      <Stack.Screen name="friends" />
+      <Stack.Screen name="chat/[id]" />
       <Stack.Screen name="focus" />
       <Stack.Screen name="mirror" />
       <Stack.Screen name="winddown" options={full} />

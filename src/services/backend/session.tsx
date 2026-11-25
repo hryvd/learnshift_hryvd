@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import { IS_PITCH } from '@/lib/config';
 import * as api from '@/services/backend/api';
 import { resetGuardian } from '@/services/backend/guardian';
+import { resetSocial, startSocialSync } from '@/services/backend/social';
 import { resetTeacher } from '@/services/backend/teacher';
 import { forgetDevice } from '@/services/monitor';
 import { useMonitorBridge } from '@/services/monitor/bridge';
@@ -43,6 +44,7 @@ export function SessionEffects() {
     if (IS_PITCH) return;
     resetTeacher();
     resetGuardian();
+    resetSocial();
     const s = useAppStore.getState();
     if (!id) {
       if (s.userId) s.hydrate({ ...initialState(), lang: s.lang, themePref: s.themePref });
@@ -87,6 +89,11 @@ export function SessionEffects() {
   useEffect(() => {
     if (IS_PITCH || !id || role !== 'student') return;
     return startStudentSync(id);
+  }, [id, role]);
+
+  useEffect(() => {
+    if (IS_PITCH || !id || role !== 'student') return;
+    return startSocialSync(id);
   }, [id, role]);
 
   useEffect(() => {
