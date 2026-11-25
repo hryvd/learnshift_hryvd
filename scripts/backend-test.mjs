@@ -248,6 +248,149 @@ try {
   ok(!n4e, 'guardian notifies a lock change', n4e?.message);
   const { error: n5e } = await stranger.c.functions.invoke('notify', { body: { type: 'lock_changed', studentId: student.id } });
   ok(!!n5e, 'stranger cannot notify a lock change');
+
+  console.log('Kapuluan social, chat, privacy & tide engine');
+  const friendB = await user('student', 'Friend B');
+  all.push(friendB);
+  const friendC = await user('student', 'Friend C');
+  all.push(friendC);
+
+  // Enroll Friend C in the same class to test classmate discovery
+  const { error: cJoinErr } = await friendC.c.rpc('join_class', { p_code: cls.join_code });
+  ok(!cJoinErr, 'friend C joins class', cJoinErr);
+
+  const { data: fCodeA, error: codeErrA } = await student.c.rpc('my_friend_code', { regenerate: false });
+  ok(!codeErrA && /^[A-Z2-9]{6}$/.test(fCodeA ?? ''), 'student gets a 6-char friend code', fCodeA);
+  const { error: guardCodeErr } = await guardian.c.rpc('my_friend_code', { regenerate: false });
+  ok(!!guardCodeErr, 'guardian cannot create a friend code');
+
+  const { data: reqCodeRes, error: reqCodeErr } = await friendB.c.rpc('send_friend_request_by_code', { p_code: fCodeA.toLowerCase() });
+  ok(!reqCodeErr && reqCodeRes?.status === 'pending', 'friend B sends request via friend code', reqCodeErr);
+  const { error: strangerAddErr } = await student.c.rpc('send_friend_request', { p_target_id: friendB.id });
+  // Already pending between student & friendB — check arbitrary non-classmate rejection instead:
+  const outsider = await user('student', 'Outsider Student');
+  all.push(outsider);
+  const { error: nonClassErr } = await student.c.rpc('send_friend_request', { p_target_id: outsider.id });
+  ok(!!nonClassErr, 'cannot friend-request non-classmate by UUID without friend code');
+
+  const { data: accRes, error: accErr } = await student.c.rpc('respond_friend_request', {
+    p_friendship_id: reqCodeRes.id,
+    p_accept: true,
+  });
+  ok(!accErr && accRes?.status === 'accepted' && !!accRes?.conversation_id, 'student accepts friend request and opens DM', accErr);
+
+  // Classmate request (student -> friendC)
+  const { data: reqClassRes, error: reqClassErr } = await student.c.rpc('send_friend_request', { p_target_id: friendC.id });
+  ok(!reqClassErr && reqClassRes?.status === 'pending', 'student sends classmate friend request', reqClassErr);
+  await friendC.c.rpc('respond_friend_request', { p_friendship_id: reqClassRes.id, p_accept: true });
+
+  // Messaging + profanity + stranger + guardian privacy checks
+  const dmId = accRes.conversation_id;
+  const { data: msgOk, error: msgErr } = await student.c.rpc('send_message', {
+    p_conversation_id: dmId,
+    p_body: "Kaya natin 'to!",
+    p_kind: 'text',
+  });
+  ok(!msgErr && msgOk?.id, 'accepted friends can message each other', msgErr);
+  const { error: msgBErr } = await friendB.c.rpc('send_message', {
+    p_conversation_id: dmId,
+    p_body: 'Game, aral tayo!',
+    p_kind: 'text',
+  });
+  ok(!msgBErr, 'friend B replies in DM', msgBErr);
+
+  const { error: profErr } = await student.c.rpc('send_message', {
+    p_conversation_id: dmId,
+    p_body: 'ang bobo mo naman gago',
+    p_kind: 'text',
+  });
+  ok(!!profErr, 'server profanity filter blocks EN/FIL slurs');
+
+  const strangerMsgs = await rows(stranger.c.from('messages').select('*').eq('conversation_id', dmId));
+  ok(Array.isArray(strangerMsgs) && strangerMsgs.length === 0, 'stranger cannot read DM messages');
+  const guardianMsgs = await rows(guardian.c.from('messages').select('*').eq('conversation_id', dmId));
+  ok(Array.isArray(guardianMsgs) && guardianMsgs.length === 0, 'guardian cannot read DM messages');
+  const teacherMsgs = await rows(teacher.c.from('messages').select('*').eq('conversation_id', dmId));
+  ok(Array.isArray(teacherMsgs) && teacherMsgs.length === 0, 'teacher cannot read DM messages');
+
+  const { data: gFriends, error: gfErr } = await guardian.c.rpc('guardian_child_friends', { p_student_id: student.id });
+  ok(!gfErr && Array.isArray(gFriends) && gFriends.length === 2, 'guardian sees child friend list', gfErr);
+  const { error: outsiderGfErr } = await stranger.c.rpc('guardian_child_friends', { p_student_id: student.id });
+  ok(!!outsiderGfErr, 'stranger cannot read child friend list');
+
+  // Guardian disables chat -> student cannot send messages
+  await guardian.c.from('guardian_controls').update({ chat_enabled: false }).eq('student_id', student.id);
+  const { error: chatOffErr } = await student.c.rpc('send_message', {
+    p_conversation_id: dmId,
+    p_body: 'hello again',
+    p_kind: 'text',
+  });
+  ok(!!chatOffErr, 'guardian chat_enabled=false blocks sending messages');
+  await guardian.c.from('guardian_controls').update({ chat_enabled: true }).eq('student_id', student.id);
+
+  // Archipelago pact creation, invite, tide/drift calculation, and Sagwan
+  const { data: archRes, error: archErr } = await student.c.rpc('create_archipelago', {
+    p_name: 'Barkada Test',
+    p_friend_ids: [friendB.id, friendC.id],
+  });
+  ok(!archErr && archRes?.id && archRes?.invited_count === 2, 'student creates barkada pact and invites 2 friends', archErr);
+
+  const { data: kapB1 } = await friendB.c.rpc('get_my_archipelagos');
+  const invB = kapB1?.incoming_invites?.find((i) => i.archipelago_id === archRes.id);
+  ok(!!invB, 'friend B receives pact invite');
+  await friendB.c.rpc('respond_archipelago_invite', { p_invite_id: invB.id, p_accept: true });
+
+  const { data: kapC1 } = await friendC.c.rpc('get_my_archipelagos');
+  const invC = kapC1?.incoming_invites?.find((i) => i.archipelago_id === archRes.id);
+  await friendC.c.rpc('respond_archipelago_invite', { p_invite_id: invC.id, p_accept: true });
+
+  // Student A aces attempts today; Friend B stays inactive -> Friend B drifts!
+  await student.c.from('attempts').insert([
+    { client_id: 'kap-1', question_id: 'fra-1', skill_id: 'fractions', chosen: 1, correct: true, seconds: 5 },
+    { client_id: 'kap-2', question_id: 'fra-2', skill_id: 'fractions', chosen: 1, correct: true, seconds: 5 },
+    { client_id: 'kap-3', question_id: 'fra-3', skill_id: 'fractions', chosen: 1, correct: true, seconds: 5 },
+  ]);
+  await student.c.from('usage_daily').upsert({ student_id: student.id, day, breaks: 2, learning_min: 5 });
+
+  const { data: kapNow, error: kapNowErr } = await student.c.rpc('get_my_archipelagos');
+  const testArch = kapNow?.archipelagos?.find((a) => a.id === archRes.id);
+  const meMem = testArch?.members?.find((m) => m.student_id === student.id);
+  const bMem = testArch?.members?.find((m) => m.student_id === friendB.id);
+  ok(
+    !kapNowErr && testArch?.members?.length === 3 && meMem?.agos_7d > 70 && meMem?.is_lighthouse_leader === true && bMem?.drift_level > 0,
+    'tide engine ranks ace scholar as lighthouse leader and drifts inactive friend',
+    { meMem, bMem, kapNowErr },
+  );
+
+  // Friends still cannot read raw attempts or usage_daily
+  ok((await rows(friendB.c.from('attempts').select('*').eq('student_id', student.id))).length === 0, 'friend cannot see raw quiz attempts');
+  ok((await rows(friendB.c.from('usage_daily').select('*').eq('student_id', student.id))).length === 0, 'friend cannot see raw usage_daily');
+
+  const { data: sagRes, error: sagErr } = await student.c.rpc('send_sagwan', {
+    p_archipelago_id: archRes.id,
+    p_recipient_id: friendB.id,
+    p_message: "Kaya mo 'yan!",
+  });
+  ok(!sagErr && sagRes?.id, 'student throws Sagwan paddle to drifting friend', sagErr);
+
+  // Report & Block enforcement
+  const { data: repId, error: repErr } = await student.c.rpc('report_user', {
+    p_target_id: friendB.id,
+    p_reason: 'spam',
+    p_details: 'test report',
+    p_message_id: msgOk.id,
+  });
+  ok(!repErr && !!repId, 'student submits moderation report', repErr);
+
+  await student.c.rpc('block_user', { p_target_id: friendB.id });
+  const { error: blockedMsgErr } = await friendB.c.rpc('send_message', {
+    p_conversation_id: dmId,
+    p_body: 'blocked attempt',
+    p_kind: 'text',
+  });
+  ok(!!blockedMsgErr, 'blocked user cannot send DM messages');
+  const blockedSee = await rows(student.c.from('messages').select('*').eq('conversation_id', dmId));
+  ok(Array.isArray(blockedSee) && blockedSee.length === 0, 'blocked user messages are hidden from blocker');
 } catch (e) {
   failed++;
   console.log('  ✗ crashed:', e.message);

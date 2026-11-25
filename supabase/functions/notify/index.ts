@@ -4,7 +4,27 @@
 //   { type: 'request_decided', id }   guardian → the student
 //   { type: 'lock_changed', studentId } guardian → the student
 //   { type: 'late_night', clock, minutes } student → guardians (throttled)
-import { admin, guardiansOf, HttpError, json, lateNightAlert, nameOf, pushTo, rateTake, requireUser, serve } from '../_shared/server.ts';
+//   { type: 'friend_request', id }     student → addressee (respects quiet hours)
+//   { type: 'friend_accepted', id }    student → requester (respects quiet hours)
+//   { type: 'archipelago_invite', id } student → invitee (respects quiet hours)
+//   { type: 'archipelago_accepted', archipelagoId } student → pact mates (respects quiet hours)
+//   { type: 'sagwan', id }             student → recipient (respects quiet hours)
+//   { type: 'chat_message', id }       student → conversation peers (throttled, respects quiet hours & chat switch)
+//   { type: 'streak_at_risk', archipelagoId } student → evening reminder for mates not yet done today
+import {
+  admin,
+  filterSocialRecipients,
+  guardiansOf,
+  HttpError,
+  json,
+  lateNightAlert,
+  manilaClockMinutes,
+  nameOf,
+  pushTo,
+  rateTake,
+  requireUser,
+  serve,
+} from '../_shared/server.ts';
 
 serve(async (req) => {
   const user = await requireUser(req);
@@ -139,6 +159,153 @@ serve(async (req) => {
       const clock = Math.max(0, Math.min(1439, Number(body.clock) || 0));
       const minutes = Math.max(0, Math.min(600, Number(body.minutes) || 0));
       return json({ sent: await lateNightAlert(user.id, clock, minutes) });
+    }
+    case 'friend_request': {
+      const { data: f } = await admin.from('friendships').select('*').eq('id', body.id).maybeSingle();
+      if (!f || f.requester_id !== user.id || f.status !== 'pending') throw new HttpError(404, 'Friend request not found');
+      const recipients = await filterSocialRecipients([f.addressee_id]);
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const { lang } = await nameOf(f.addressee_id);
+      const sent = await pushTo(recipients, {
+        title: lang === 'fil' ? `Gusto makipagkaibigan ni ${name}` : `${name} sent a friend request`,
+        body: lang === 'fil' ? 'Buksan ang Friends para tanggapin o bumuo ng Kapuluan.' : 'Open Friends to accept and start a Tulay streak.',
+        data: { url: '/friends' },
+      });
+      return json({ sent });
+    }
+    case 'friend_accepted': {
+      const { data: f } = await admin.from('friendships').select('*').eq('id', body.id).maybeSingle();
+      if (!f || f.addressee_id !== user.id || f.status !== 'accepted') throw new HttpError(404, 'Friend not found');
+      const recipients = await filterSocialRecipients([f.requester_id]);
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const { lang } = await nameOf(f.requester_id);
+      const sent = await pushTo(recipients, {
+        title: lang === 'fil' ? `Magkaibigan na kayo ni ${name}!` : `You and ${name} are now friends!`,
+        body: lang === 'fil' ? 'Imbitahan siya sa iyong Kapuluan.' : 'Invite them to your Kapuluan island pact.',
+        data: { url: '/isla' },
+      });
+      return json({ sent });
+    }
+    case 'archipelago_invite': {
+      const { data: inv } = await admin
+        .from('archipelago_invites')
+        .select('id, archipelago_id, inviter_id, invitee_id, status, archipelagos(name)')
+        .eq('id', body.id)
+        .maybeSingle();
+      if (!inv || inv.inviter_id !== user.id || inv.status !== 'pending') throw new HttpError(404, 'Invite not found');
+      const recipients = await filterSocialRecipients([inv.invitee_id]);
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const { lang } = await nameOf(inv.invitee_id);
+      const pactName = (inv.archipelagos as unknown as { name?: string } | null)?.name ?? 'Kapuluan';
+      const sent = await pushTo(recipients, {
+        title: lang === 'fil' ? `Inimbitahan ka ni ${name} sa ${pactName}` : `${name} invited you to ${pactName}`,
+        body: lang === 'fil' ? 'Sumali para itayo ang inyong Tulay streak.' : 'Join to build a shared Tulay streak bridge.',
+        data: { url: '/isla' },
+      });
+      return json({ sent });
+    }
+    case 'archipelago_accepted': {
+      const archId = String(body.archipelagoId ?? '');
+      const { data: mem } = await admin
+        .from('archipelago_members')
+        .select('student_id')
+        .eq('archipelago_id', archId);
+      const ids = (mem ?? []).map((m) => m.student_id as string);
+      if (!ids.includes(user.id)) throw new HttpError(403, 'Not a member');
+      const recipients = await filterSocialRecipients(ids.filter((id) => id !== user.id));
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const sent = await pushTo(recipients, {
+        title: `${name} joined the Kapuluan!`,
+        body: 'A new Tulay bridge just appeared across the lagoon.',
+        data: { url: '/isla' },
+      });
+      return json({ sent });
+    }
+    case 'sagwan': {
+      const { data: sn } = await admin.from('sagwan_nudges').select('*').eq('id', body.id).maybeSingle();
+      if (!sn || sn.sender_id !== user.id) throw new HttpError(404, 'Sagwan not found');
+      const recipients = await filterSocialRecipients([sn.recipient_id]);
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const { lang } = await nameOf(sn.recipient_id);
+      const sent = await pushTo(recipients, {
+        title: lang === 'fil' ? `Nagpadala si ${name} ng Sagwan!` : `${name} threw you a Sagwan paddle!`,
+        body: `"${sn.message}"`,
+        data: { url: '/isla' },
+      });
+      return json({ sent });
+    }
+    case 'chat_message': {
+      const { data: msg } = await admin.from('messages').select('*').eq('id', body.id).maybeSingle();
+      if (!msg || msg.sender_id !== user.id) throw new HttpError(404, 'Message not found');
+      if (!(await rateTake(user.id, `chat_push_${msg.conversation_id}`, 8, 300))) return json({ sent: 0 });
+      const { data: peers } = await admin
+        .from('conversation_members')
+        .select('user_id')
+        .eq('conversation_id', msg.conversation_id)
+        .neq('user_id', user.id);
+      const peerIds = (peers ?? []).map((p) => p.user_id as string);
+      const { data: blocks } = await admin
+        .from('blocks')
+        .select('blocker_id, blocked_id')
+        .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`);
+      const blockedSet = new Set(
+        (blocks ?? []).map((b) => (b.blocker_id === user.id ? (b.blocked_id as string) : (b.blocker_id as string))),
+      );
+      const unblocked = peerIds.filter((id) => !blockedSet.has(id));
+      const recipients = await filterSocialRecipients(unblocked, { requireChat: true });
+      if (!recipients.length) return json({ sent: 0 });
+      const { name } = await nameOf(user.id);
+      const preview =
+        msg.kind === 'sticker'
+          ? 'Sent a Paty sticker'
+          : msg.kind === 'study_invite'
+            ? 'Invited you to a study break!'
+            : String(msg.body).slice(0, 80);
+      const sent = await pushTo(recipients, {
+        title: name,
+        body: preview,
+        data: { url: `/chat/${msg.conversation_id}` },
+      });
+      return json({ sent });
+    }
+    case 'streak_at_risk': {
+      const archId = String(body.archipelagoId ?? '');
+      const clock = manilaClockMinutes();
+      // Only send evening streak reminders (5 PM – 10 PM Manila time; quiet-hour check handles individual bedtimes).
+      if (clock < 17 * 60) return json({ sent: 0 });
+      const { data: mem } = await admin
+        .from('archipelago_members')
+        .select('student_id')
+        .eq('archipelago_id', archId);
+      const ids = (mem ?? []).map((m) => m.student_id as string);
+      if (!ids.includes(user.id)) throw new HttpError(403, 'Not a member');
+      if (!(await rateTake(user.id, `risk_${archId}`, 1, 12 * 3600))) return json({ sent: 0 });
+      const manilaDay = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+      const { data: tides } = await admin
+        .from('tide_daily')
+        .select('student_id, goal_met')
+        .in('student_id', ids)
+        .eq('day', manilaDay);
+      const metSet = new Set((tides ?? []).filter((t) => t.goal_met).map((t) => t.student_id as string));
+      const pendingIds = ids.filter((id) => id !== user.id && !metSet.has(id));
+      const recipients = await filterSocialRecipients(pendingIds);
+      if (!recipients.length) return json({ sent: 0 });
+      const { data: arch } = await admin.from('archipelagos').select('name, streak_days').eq('id', archId).maybeSingle();
+      const pactName = arch?.name ?? 'Kapuluan';
+      const sent = await pushTo(recipients, {
+        title: `${pactName} · Tulay needs 1 break today`,
+        body:
+          (arch?.streak_days ?? 0) > 0
+            ? `Finish one 45s break before midnight to keep your ${arch?.streak_days}-day bridge alive.`
+            : 'Take a quick 45s break to add today’s plank to the bridge.',
+        data: { url: '/isla' },
+      });
+      return json({ sent });
     }
     default:
       throw new HttpError(400, 'Unknown notification');

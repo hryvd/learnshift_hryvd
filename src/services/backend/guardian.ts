@@ -15,11 +15,7 @@ import { todayKey, type AccountRequest, type BedtimeDays, type TimeRequest, type
 import { useAuth } from '@/store/useAuth';
 
 export type LearnerStyle =
-  | 'visual_paced'
-  | 'quick_solver'
-  | 'reflective_deep'
-  | 'consistent_builder'
-  | 'getting_started';
+  'visual_paced' | 'quick_solver' | 'reflective_deep' | 'consistent_builder' | 'getting_started';
 
 export type LearningProfile = {
   learnerStyle: LearnerStyle;
@@ -40,11 +36,19 @@ export type LiveNow = {
   screenOn: boolean;
   updatedAt: string;
 };
+export type ChildFriend = {
+  id: string;
+  displayName: string;
+  grade: number | null;
+  acceptedAt: string | null;
+};
+
 export type ChildData = {
   usage: UsageDay[];
   apps: AppDay[];
   live: LiveNow | null;
   learningProfile: LearningProfile | null;
+  friends: ChildFriend[];
   nudges: NudgeEntry[];
   requests: TimeRequest[];
   accountRequests: AccountRequest[];
@@ -58,6 +62,8 @@ export type ChildData = {
     scrollLimit: number | null;
     gamesLimit: number | null;
     breakIntervalSec: number | null;
+    socialEnabled: boolean;
+    chatEnabled: boolean;
   };
   settings: { bedtimeStart: number; bedtimeEnd: number; bedtimeDays: BedtimeDays; limitStyle: 'adaptive' | 'fixed' };
 };
@@ -148,23 +154,35 @@ function parseLearningProfile(raw: unknown): LearningProfile | null {
 
 export async function loadChild(id: string) {
   const since = todayKey(new Date(Date.now() - 13 * DAY_MS));
-  const [usage, nudges, requests, accountReqs, controls, settings, apps, live, profileRes] = await Promise.all([
-    supabase.from('usage_daily').select('*').eq('student_id', id).gte('day', since).order('day'),
-    supabase.from('nudge_events').select('*').eq('student_id', id).order('at', { ascending: false }).limit(40),
-    supabase.from('time_requests').select('*').eq('student_id', id).order('created_at', { ascending: false }).limit(20),
-    supabase.from('account_requests').select('*').eq('student_id', id).order('created_at', { ascending: false }).limit(20),
-    supabase.from('guardian_controls').select('*').eq('student_id', id).maybeSingle(),
-    supabase.from('student_settings').select('*').eq('student_id', id).maybeSingle(),
-    supabase
-      .from('app_usage')
-      .select('day, package, label, category, minutes')
-      .eq('student_id', id)
-      .gte('day', todayKey(new Date(Date.now() - 6 * DAY_MS)))
-      .order('minutes', { ascending: false })
-      .limit(400),
-    supabase.from('live_status').select('*').eq('student_id', id).maybeSingle(),
-    supabase.rpc('guardian_learning_profile', { p_student_id: id }),
-  ]);
+  const [usage, nudges, requests, accountReqs, controls, settings, apps, live, profileRes, friendsRes] =
+    await Promise.all([
+      supabase.from('usage_daily').select('*').eq('student_id', id).gte('day', since).order('day'),
+      supabase.from('nudge_events').select('*').eq('student_id', id).order('at', { ascending: false }).limit(40),
+      supabase
+        .from('time_requests')
+        .select('*')
+        .eq('student_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase
+        .from('account_requests')
+        .select('*')
+        .eq('student_id', id)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase.from('guardian_controls').select('*').eq('student_id', id).maybeSingle(),
+      supabase.from('student_settings').select('*').eq('student_id', id).maybeSingle(),
+      supabase
+        .from('app_usage')
+        .select('day, package, label, category, minutes')
+        .eq('student_id', id)
+        .gte('day', todayKey(new Date(Date.now() - 6 * DAY_MS)))
+        .order('minutes', { ascending: false })
+        .limit(400),
+      supabase.from('live_status').select('*').eq('student_id', id).maybeSingle(),
+      supabase.rpc('guardian_learning_profile', { p_student_id: id }),
+      supabase.rpc('guardian_child_friends', { p_student_id: id }),
+    ]);
   const err = [usage, nudges, requests, controls, settings, apps, live].find((r) => r.error)?.error;
   if (err) {
     useGuardian.setState({ error: err.message });
@@ -198,6 +216,17 @@ export async function loadChild(id: string) {
         }
       : null,
     learningProfile: profileRes.error ? null : parseLearningProfile(profileRes.data),
+    friends:
+      friendsRes.error || !Array.isArray(friendsRes.data)
+        ? []
+        : (
+            friendsRes.data as { id: string; display_name: string; grade: number | null; accepted_at: string | null }[]
+          ).map((f) => ({
+            id: f.id,
+            displayName: f.display_name,
+            grade: f.grade,
+            acceptedAt: f.accepted_at,
+          })),
     nudges: (nudges.data ?? []).map((n) => ({
       id: n.client_id,
       at: n.at,
@@ -206,7 +235,12 @@ export async function loadChild(id: string) {
       response: n.response,
     })),
     requests: (requests.data ?? []).map((r) => ({ id: r.id, at: r.created_at, minutes: r.minutes, status: r.status })),
-    accountRequests: (accountReqs.data ?? []).map((r) => ({ id: r.id, at: r.created_at, kind: r.kind, status: r.status })),
+    accountRequests: (accountReqs.data ?? []).map((r) => ({
+      id: r.id,
+      at: r.created_at,
+      kind: r.kind,
+      status: r.status,
+    })),
     controls: {
       lockEnabled: c?.lock_enabled ?? false,
       lockNow: c?.lock_now ?? false,
@@ -217,6 +251,8 @@ export async function loadChild(id: string) {
       scrollLimit: c?.scroll_limit ?? null,
       gamesLimit: c?.games_limit ?? null,
       breakIntervalSec: c?.break_interval_sec ?? null,
+      socialEnabled: c?.social_enabled ?? true,
+      chatEnabled: c?.chat_enabled ?? true,
     },
     settings: {
       bedtimeStart: st?.bedtime_start ?? 1320,
@@ -246,18 +282,24 @@ export function useGuardianLive() {
   const selected = useGuardian((s) => s.selected);
   // Rebuild realtime channels after a long sleep; poll as a safety net while open.
   const resume = useResumeKey();
-  useInterval(() => {
-    if (!me) return;
-    refreshGuardian().catch(() => {});
-  }, AUTO_REFRESH_MS, !!me);
+  useInterval(
+    () => {
+      if (!me) return;
+      refreshGuardian().catch(() => {});
+    },
+    AUTO_REFRESH_MS,
+    !!me,
+  );
 
   useEffect(() => {
     if (!me) return;
     loadChildren();
     const ch = supabase
       .channel(`guardian-links-${me}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'guardian_links', filter: `guardian_id=eq.${me}` }, () =>
-        loadChildren(),
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'guardian_links', filter: `guardian_id=eq.${me}` },
+        () => loadChildren(),
       )
       .subscribe();
     return () => {

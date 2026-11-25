@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, BackHandler, Dimensions, Easing, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Animated,
+  BackHandler,
+  Dimensions,
+  Easing,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,7 +114,12 @@ function LearningFeed({
       enter.setValue(0);
       return;
     }
-    Animated.timing(enter, { toValue: 0, duration: 520, easing: GLIDE, useNativeDriver: Platform.OS !== 'web' }).start();
+    Animated.timing(enter, {
+      toValue: 0,
+      duration: 520,
+      easing: GLIDE,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
   }, [animateIn, reduced, enter]);
   // There is no way out except answering: Back is ignored until the break is complete.
   const doneRef = useRef(false);
@@ -128,7 +143,14 @@ function LearningFeed({
     setPicked(choice);
     setExplain(true);
     setNotice('');
-    if (choice === q.answer) {
+    const correct = choice === q.answer;
+    useAppStore.getState().recordFeedAttempt({
+      questionId: q.id,
+      subject: q.subject,
+      chosen: choice,
+      correct,
+    });
+    if (correct) {
       setScore((n) => n + 1);
       haptic.success();
     } else haptic.light();
@@ -162,7 +184,12 @@ function LearningFeed({
     const native = Platform.OS !== 'web';
     // The answered card lifts away, the next one rises in with a soft landing.
     Animated.parallel([
-      Animated.timing(translateY, { toValue: -120, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
+      Animated.timing(translateY, {
+        toValue: -120,
+        duration: 190,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: native,
+      }),
       Animated.timing(fade, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
     ]).start(({ finished }) => {
       if (!finished) {
@@ -214,7 +241,13 @@ function LearningFeed({
                   : 'BREAK COMPLETE'
                 : `${SUBJECTS.find((s) => s.id === q.subject)?.label} · GRADE ${q.grade} · ${index + 1}/${questions.length}`}
             </Text>
-            <Text variant="headline" color={INK} numberOfLines={1} accessibilityRole="header" accessibilityLiveRegion="polite">
+            <Text
+              variant="headline"
+              color={INK}
+              numberOfLines={1}
+              accessibilityRole="header"
+              accessibilityLiveRegion="polite"
+            >
               {done ? (fil ? 'Bawat pag-aaral ay mahalaga' : 'A little learning goes a long way') : q.topic}
             </Text>
           </View>
@@ -255,12 +288,13 @@ function LearningFeed({
             </View>
             {onHome ? (
               <>
-                <Action label={fil ? 'Balik sa Home ng LearnShift' : 'Back to LearnShift Home'} icon="home" onPress={onHome} />
+                <Action
+                  label={fil ? 'Balik sa Home ng LearnShift' : 'Back to LearnShift Home'}
+                  icon="home"
+                  onPress={onHome}
+                />
                 {appName !== 'LearnShift' ? (
-                  <SecondaryAction
-                    label={fil ? `Buksan ang ${appName}` : `Open ${appName}`}
-                    onPress={onUnlock}
-                  />
+                  <SecondaryAction label={fil ? `Buksan ang ${appName}` : `Open ${appName}`} onPress={onUnlock} />
                 ) : null}
               </>
             ) : (

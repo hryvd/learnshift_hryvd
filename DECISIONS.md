@@ -38,3 +38,6 @@ One line each. Newest at the bottom.
 - Lock-screen request status is tracked by the request id sent from that screen (session store), not by timestamps.
 - Teacher heatmap cells size to the card width (no sideways scroll at 360 dp); the header row is sticky.
 - Grade letter = 45% breaks taken + 35% calm nights + 20% mastery gain, shared by Insights, Share card and Guardian.
+- Kapuluan social islands use named barkada pacts (capped at 5 islands max; students can join multiple pacts), keeping each viewer's own island centered in their sea.
+- Anod (drift) is the intentional exception to pure zero-pressure island design: falling behind on 7-day Agos momentum (effort + accuracy + improvement) triggers gentle reversible drift (fog, choppy water, stretched bridge, Paty waving a paddle) without ever losing buildings.
+- Minor-safe social boundary: friend discovery uses 6-char codes/QR or shared classmates (no public search); guardians can toggle social and chat off and inspect friend lists, never message contents; EN/FIL profanity filter runs on client and server.
