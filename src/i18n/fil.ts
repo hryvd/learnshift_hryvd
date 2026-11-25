@@ -327,6 +327,11 @@ const fil: Strings = {
     feed: 'Feed',
     thisWeek: 'ngayong linggo',
     taken: 'nagawa',
+    tapDayHint: 'Pindutin ang isang araw para makita kung gaano katagal ka nag-aral',
+    dayDate: (weekday: string, month: string, day: number) => `${weekday}, ${month} ${day}`,
+    dayStudied: (time: string, questions: number) =>
+      `${time} nag-aral` + (questions > 0 ? ` · ${questions} tanong` : ''),
+    dayNoStudy: 'Walang pag-aaral sa araw na ito',
     fractionsUp: (s) => `Tumaas ang ${s}`,
     underCap: 'pasok sa limit',
     report: 'Ulat ni Paty',

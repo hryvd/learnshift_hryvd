@@ -52,6 +52,7 @@ export async function pullStudent(userId: string) {
     usage,
     attempts,
     profile,
+    learnMin,
   ] = await Promise.all([
     supabase.from('progress').select('*').eq('student_id', userId).maybeSingle(),
     supabase.from('mastery').select('skill_id, p').eq('student_id', userId),
@@ -89,6 +90,13 @@ export async function pullStudent(userId: string) {
       .gte('created_at', new Date(Date.now() - 154 * DAY_MS).toISOString())
       .limit(5000),
     supabase.from('profiles').select('display_name, lang').eq('id', userId).maybeSingle(),
+    // Study minutes for the whole 22-week learning heatmap (the usage pull above keeps only 14 days).
+    supabase
+      .from('usage_daily')
+      .select('day, learning_min')
+      .eq('student_id', userId)
+      .gte('day', isoDay(153))
+      .gt('learning_min', 0),
   ]);
   const firstError = [prog, mastery, daily, settings, controls, links, classes, nudges, requests, usage, attempts].find(
     (r) => r.error,
@@ -298,6 +306,12 @@ export async function pullStudent(userId: string) {
         days[d] = (days[d] ?? 0) + 1;
       }
     patch.learnDays = days;
+  }
+
+  if (learnMin.data) {
+    const minutes: Record<string, number> = {};
+    for (const r of learnMin.data) minutes[r.day] = r.learning_min;
+    patch.learnMinutes = minutes;
   }
 
   useAppStore.getState().hydrate(patch);
