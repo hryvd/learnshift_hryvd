@@ -90,7 +90,9 @@ export function realWeek(usage: UsageDay[], now: Date, breaksToday: number): Day
 
 /** Average daily minutes over days 7–13 ago, or null without data. */
 function previousAvg(usage: UsageDay[], now: Date): number | null {
-  const rows = Array.from({ length: 7 }, (_, i) => usage.find((u) => u.day === todayKey(new Date(now.getTime() - (7 + i) * DAY_MS))));
+  const rows = Array.from({ length: 7 }, (_, i) =>
+    usage.find((u) => u.day === todayKey(new Date(now.getTime() - (7 + i) * DAY_MS))),
+  );
   const have = rows.filter((r): r is UsageDay => !!r && r.total > 0);
   if (have.length < 3) return null;
   return Math.round(have.reduce((a, r) => a + r.total, 0) / have.length);
@@ -127,6 +129,15 @@ export function masteryGain(now: number, history: number[]): number {
 }
 
 /** Learning-day intensities for the heatmap, `weeks` × 7 (oldest first), from answers per day. */
+/** The calendar day a heatmap cell stands for, or null for days after today. */
+export function heatmapDate(index: number, weeks: number, today = new Date()): Date | null {
+  const lastIndex = weeks * 7 - 1 - (6 - today.getDay());
+  if (index > lastIndex) return null;
+  const d = new Date(today);
+  d.setDate(today.getDate() - (lastIndex - index));
+  return d;
+}
+
 export function learnHeatmap(days: Record<string, number>, weeks: number, today = new Date()): number[] {
   const total = weeks * 7;
   const lastIndex = total - 1 - (6 - today.getDay());

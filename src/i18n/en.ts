@@ -321,6 +321,11 @@ const en = {
     feed: 'Feed',
     thisWeek: 'this week',
     taken: 'taken',
+    tapDayHint: 'Tap a day to see how long you studied',
+    dayDate: (weekday: string, month: string, day: number) => `${weekday}, ${month} ${day}`,
+    dayStudied: (time: string, questions: number) =>
+      `${time} studied` + (questions > 0 ? ` · ${questions} ${questions === 1 ? 'question' : 'questions'}` : ''),
+    dayNoStudy: 'No study this day',
     fractionsUp: (s: string) => `${s} up`,
     underCap: 'under cap',
     report: 'Paty report',
