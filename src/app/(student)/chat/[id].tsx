@@ -11,7 +11,7 @@ import {
   ShieldWarning,
   Smiley,
   Sparkle,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { Paty, type Expression } from '@/components/mascot/Paty';
 import {

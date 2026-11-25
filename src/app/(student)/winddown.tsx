@@ -11,7 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpen, CircleHalf, Pause, Play, ShieldCheck, Wind, X } from 'phosphor-react-native';
+import { BookOpen, CircleHalf, Pause, Play, ShieldCheck, Wind, X } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import {

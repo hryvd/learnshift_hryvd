@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
-import { Flame } from 'phosphor-react-native';
+import { Flame } from '@/components/ui/icons';
 
 import { Paty, type Expression } from '@/components/mascot/Paty';
 import { ease, enterAt, spring, timing, useReducedMotion } from '@/design/motion';

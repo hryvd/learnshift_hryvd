@@ -1,6 +1,6 @@
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChatTeardropText } from 'phosphor-react-native';
+import { ChatTeardropText } from '@/components/ui/icons';
 
 import { TeacherReviewQueueCard } from '@/components/teacher/ReviewQueueCard';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';

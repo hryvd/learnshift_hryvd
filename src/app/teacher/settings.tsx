@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GearSix, Plus } from 'phosphor-react-native';
+import { GearSix, Plus } from '@/components/ui/icons';
 
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';

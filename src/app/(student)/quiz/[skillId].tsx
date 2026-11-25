@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Lightbulb, X } from 'phosphor-react-native';
+import { Lightbulb, X } from '@/components/ui/icons';
 
 import { CoinFly, SparkBurst } from '@/components/learn/Effects';
 import { MasteryRow } from '@/components/learn/MasteryRow';

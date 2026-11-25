@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CaretLeft, ChatCircleDots, Lightning, LockKey, MoonStars } from 'phosphor-react-native';
+import { CaretLeft, ChatCircleDots, Lightning, LockKey, MoonStars } from '@/components/ui/icons';
 
 import { Card, Chip, EmptyState, LargeTitleHeader, NavBar, Text } from '@/components/ui';
 import type { NudgeEntry } from '@/data/seed';

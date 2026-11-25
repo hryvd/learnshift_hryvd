@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle, HourglassMedium, Phone } from 'phosphor-react-native';
+import { CheckCircle, HourglassMedium, Phone } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { DevChip, PillButton, Ring, Text } from '@/components/ui';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
-import { AppWindow, BatteryCharging, BellRinging, CheckCircle, Eye, Stack } from 'phosphor-react-native';
+import { AppWindow, BatteryCharging, BellRinging, CheckCircle, Eye, Stack } from '@/components/ui/icons';
 
 import { Card, PillButton, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';

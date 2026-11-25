@@ -2,7 +2,16 @@ import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Timer, BookOpenText, Lightning, Moon, ShieldCheck, Sparkle, Translate } from 'phosphor-react-native';
+import {
+  ALL_ICONS,
+  Timer,
+  BookOpenText,
+  Lightning,
+  Moon,
+  ShieldCheck,
+  Sparkle,
+  Translate,
+} from '@/components/ui/icons';
 
 import { IslaScene } from '@/components/isla/IslaScene';
 import { Diagram } from '@/components/learn/Diagram';
@@ -199,6 +208,21 @@ function Column() {
                 <View style={[styles.swatchChip, { backgroundColor: c[k], borderColor: c.hairline }]} />
                 <Text variant="caption" numberOfLines={1}>
                   {k}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
+      </Section>
+
+      <Section title="Icons" index={next()}>
+        <Card>
+          <View style={styles.icons}>
+            {Object.entries(ALL_ICONS).map(([name, Icon]) => (
+              <View key={name} style={styles.iconCell}>
+                <Icon size={26} color={c.text} />
+                <Text variant="caption" numberOfLines={1}>
+                  {name}
                 </Text>
               </View>
             ))}
@@ -616,6 +640,8 @@ const styles = StyleSheet.create({
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   swatch: { width: 72, gap: 4 },
   swatchChip: { height: 40, borderRadius: 12, borderWidth: 1 },
+  icons: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 14 },
+  iconCell: { width: '25%', alignItems: 'center', gap: 6, paddingHorizontal: 2 },
   breakCard: { flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
   breakText: { flex: 1, gap: 2 },
   mt8: { marginTop: 10 },

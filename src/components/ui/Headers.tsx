@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Trash, X } from 'phosphor-react-native';
+import { Trash, X } from '@/components/ui/icons';
 
 import { haptic } from '@/design/haptics';
 import { useTheme } from '@/design/theme';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { Clock, Eye, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from 'phosphor-react-native';
+import { Clock, Eye, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from '@/components/ui/icons';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';

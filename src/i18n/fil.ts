@@ -369,6 +369,7 @@ const fil: Strings = {
   },
   privacy: {
     title: 'Privacy',
+    iconCredit: 'Mga icon mula sa 480 Design (Solar), CC BY 4.0',
     sees: 'Nakikita ng LearnShift',
     never: 'Hindi kailanman',
     seesList: ['Oras ng araw', 'Haba ng session', 'Anong app, gaano katagal', 'Pag-unlock'],

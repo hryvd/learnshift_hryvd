@@ -1,6 +1,6 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { CaretRight } from 'phosphor-react-native';
+import { CaretRight } from '@/components/ui/icons';
 
 import { pressScale } from '@/design/motion';
 import { useTheme } from '@/design/theme';

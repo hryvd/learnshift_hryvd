@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowDown, CaretLeft, Check, WifiSlash } from 'phosphor-react-native';
+import { ArrowDown, CaretLeft, Check, WifiSlash } from '@/components/ui/icons';
 
 import { Screen } from '@/components/student/Screen';
 import { Card, LargeTitleHeader, NavBar, PillButton, Ring, Stagger, Text } from '@/components/ui';

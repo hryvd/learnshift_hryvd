@@ -8,7 +8,7 @@ import {
   MonitorPlay,
   ShieldCheck,
   Stack,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { BottomSheet, Card, Chip, PillButton, PressableScale, Text } from '@/components/ui';
 import { MIRRORED_APPS, type MirroredApp } from '@/data/mirroredApps';
