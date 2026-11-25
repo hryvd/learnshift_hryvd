@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { Moon } from 'phosphor-react-native';
+import { Moon } from '@/components/ui/icons';
 
 import { PatySpark, type SparkState } from '@/components/mascot/PatySpark';
 import { haptic } from '@/design/haptics';

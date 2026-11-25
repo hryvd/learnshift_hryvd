@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CaretLeft, CheckCircle, Lightning, Sparkle, XCircle } from 'phosphor-react-native';
+import { CaretLeft, CheckCircle, Lightning, Sparkle, XCircle } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Card, Chip, NavBar, PillButton, PressableScale, ProgressBar, SegmentedControl, Text } from '@/components/ui';

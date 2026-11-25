@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpenText, Plus, WifiHigh } from 'phosphor-react-native';
+import { BookOpenText, Plus, WifiHigh } from '@/components/ui/icons';
 
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import {

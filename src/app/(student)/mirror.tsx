@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Sparkle,
   WarningCircle,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import {
   Card,

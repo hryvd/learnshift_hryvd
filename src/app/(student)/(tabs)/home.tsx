@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   UsersThree,
   WarningCircle,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { IslaScene } from '@/components/isla/IslaScene';
 import { SagwanIcon } from '@/components/isla/SagwanIcon';
