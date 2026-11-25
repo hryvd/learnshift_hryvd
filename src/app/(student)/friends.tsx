@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowsClockwise,
+  ArrowsOutSimple,
   CaretLeft,
   ChatCircleDots,
   Check,
@@ -14,6 +15,7 @@ import {
   Island,
   Prohibit,
   QrCode,
+  Scan,
   ShareNetwork,
   ShieldWarning,
   UserMinus,
@@ -21,17 +23,22 @@ import {
   UsersThree,
 } from 'phosphor-react-native';
 
+import { FriendQrCode, type PassThemeId } from '@/components/friends/FriendQrPass';
+import { FriendShareSheet, FullScreenQrModal } from '@/components/friends/FriendShareSheet';
+import { QrScannerModal } from '@/components/friends/QrScannerModal';
 import { PatyAvatar } from '@/components/mascot/Paty';
 import {
   BottomSheet,
   Card,
   Chip,
   EmptyState,
+  IconButton,
   NavBar,
   Notice,
   PillButton,
   PressableScale,
   SheetHeader,
+  Skeleton,
   Stagger,
   Text,
   TextField,
@@ -41,7 +48,10 @@ import { haptic } from '@/design/haptics';
 import { pressScale } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
+import { fontFor } from '@/design/typography';
 import { useL, useT } from '@/i18n/useT';
+import { IS_PITCH } from '@/lib/config';
+import { normalizeFriendCode } from '@/lib/qr';
 import {
   blockUser,
   inviteFriendToArchipelago,
@@ -56,15 +66,21 @@ import {
   unblockUser,
   useSocial,
 } from '@/services/backend/social';
+import { useAuth } from '@/store/useAuth';
 
 type ReportReason = 'bullying' | 'profanity' | 'spam' | 'inappropriate' | 'other';
 const REPORT_REASONS: ReportReason[] = ['bullying', 'profanity', 'spam', 'inappropriate', 'other'];
 
 export default function FriendsScreen() {
-  const { c } = useTheme();
+  const { c, isNight } = useTheme();
   const insets = useSafeAreaInsets();
   const t = useT();
   const L = useL();
+  const { code: routeCode } = useLocalSearchParams<{ code?: string }>();
+
+  const profile = useAuth((s) => s.profile);
+  const displayName = IS_PITCH ? 'Mika' : profile?.display_name?.trim() || 'Student';
+  const displayGrade = IS_PITCH ? 8 : (profile?.grade ?? null);
 
   const loading = useSocial((s) => s.loading);
   const myCode = useSocial((s) => s.myCode);
@@ -78,12 +94,24 @@ export default function FriendsScreen() {
   const conversations = useSocial((s) => s.conversations);
   const archipelagos = useSocial((s) => s.archipelagos);
 
+  const normalizedRouteCode = typeof routeCode === 'string' ? normalizeFriendCode(routeCode).slice(0, 6) : '';
+  const [seenRouteCode, setSeenRouteCode] = useState(normalizedRouteCode);
+
+  const scrollRef = useRef<ComponentRef<typeof ScrollView> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [codeInput, setCodeInput] = useState('');
+  const [codeInput, setCodeInput] = useState(normalizedRouteCode);
   const [codeBusy, setCodeBusy] = useState(false);
-  const [codeFeedback, setCodeFeedback] = useState<{ text: string; tone: 'danger' | 'success' } | null>(null);
+  const [codeFeedback, setCodeFeedback] = useState<{ text: string; tone: 'danger' | 'success' } | null>(
+    normalizedRouteCode.length >= 4 ? { text: t.friends.deepLinkBanner(normalizedRouteCode), tone: 'success' } : null,
+  );
   const [actionErr, setActionErr] = useState<string | null>(null);
+
+  // QR Pass, Share Sheet & Live Camera Scanner modals
+  const [passTheme, setPassTheme] = useState<PassThemeId>(() => (isNight ? 'parola' : 'sunrise'));
+  const [shareOpen, setShareOpen] = useState(false);
+  const [fullQrOpen, setFullQrOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const [selectedFriend, setSelectedFriend] = useState<FriendProfile | null>(null);
   const [confirmUnfriend, setConfirmUnfriend] = useState(false);
@@ -93,6 +121,15 @@ export default function FriendsScreen() {
   const [reportReason, setReportReason] = useState<ReportReason>('profanity');
   const [reportDetails, setReportDetails] = useState('');
   const [reportDone, setReportDone] = useState(false);
+
+  // Sync incoming deep-link friend code (`learnshift://friends?code=AM4GAU`) cleanly.
+  if (normalizedRouteCode && normalizedRouteCode !== seenRouteCode) {
+    setSeenRouteCode(normalizedRouteCode);
+    setCodeInput(normalizedRouteCode);
+    if (normalizedRouteCode.length >= 4) {
+      setCodeFeedback({ text: t.friends.deepLinkBanner(normalizedRouteCode), tone: 'success' });
+    }
+  }
 
   useEffect(() => {
     void loadSocial(true);
@@ -112,30 +149,34 @@ export default function FriendsScreen() {
     setTimeout(() => setCopied(false), 1800);
   };
 
-  const handleShareCode = async () => {
-    if (!myCode) return;
-    haptic.select();
-    await Share.share({
-      message: `Add me on LearnShift Kapuluan! Friend code: ${myCode}`,
-    }).catch(() => {});
-  };
-
   const handleSendByCode = async () => {
-    const clean = codeInput.trim().toUpperCase();
+    const clean = normalizeFriendCode(codeInput);
     if (clean.length < 4) return;
     setCodeBusy(true);
     setCodeFeedback(null);
     try {
-      await sendFriendRequestByCode(clean);
+      const status = await sendFriendRequestByCode(clean);
       haptic.success();
       setCodeInput('');
-      setCodeFeedback({ text: t.friends.requestSent, tone: 'success' });
+      setCodeFeedback({
+        text: status === 'accepted' ? t.friends.scannerAdded : t.friends.requestSent,
+        tone: 'success',
+      });
     } catch (e) {
       haptic.warning();
       setCodeFeedback({ text: e instanceof Error ? e.message : 'Could not send request.', tone: 'danger' });
     } finally {
       setCodeBusy(false);
     }
+  };
+
+  const handleScanAddCode = async (scannedCode: string): Promise<'pending' | 'accepted'> => {
+    const status = await sendFriendRequestByCode(scannedCode);
+    setCodeFeedback({
+      text: status === 'accepted' ? t.friends.scannerAdded : t.friends.requestSent,
+      tone: 'success',
+    });
+    return status;
   };
 
   const handleOpenDm = async (friendId: string) => {
@@ -191,9 +232,22 @@ export default function FriendsScreen() {
         onBack={() => router.back()}
         backIcon={<CaretLeft size={18} weight="bold" color={c.text} />}
         backLabel={t.common.back}
+        right={
+          socialEnabled ? (
+            <IconButton
+              icon={<Scan size={20} weight="bold" color={c.accent} />}
+              onPress={() => {
+                haptic.select();
+                setScannerOpen(true);
+              }}
+              accessibilityLabel={t.friends.scanQr}
+            />
+          ) : null
+        }
       />
 
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 36 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent} />}
@@ -207,96 +261,153 @@ export default function FriendsScreen() {
             {!chatEnabled ? <Notice text={t.friends.chatPausedBanner} tone="success" /> : null}
             {actionErr ? <Notice text={actionErr} tone="danger" /> : null}
 
-            {/* My Friend Code */}
+            {/* Kapuluan Friend Pass (Live QR + 6-letter code + Scan & Share) */}
             <Stagger index={0}>
               <Card style={styles.gap}>
                 <View style={styles.rowBetween}>
                   <View style={styles.flex}>
                     <Text variant="headline">{t.friends.myCode}</Text>
-                    <Text variant="caption">{t.friends.myCodeSub}</Text>
+                    <Text variant="caption" color="textSecondary">
+                      {t.friends.myCodeSub}
+                    </Text>
                   </View>
-                  <QrCode size={22} weight="fill" color={c.accent} />
-                </View>
-
-                <View style={[styles.codeBox, { backgroundColor: c.inset, borderColor: c.hairline }]}>
-                  <Text
-                    variant="largeTitle"
-                    color="accent"
-                    tabular
-                    style={{ letterSpacing: 6 }}
-                    accessibilityLabel={myCode ?? ''}
-                  >
-                    {myCode ?? (loading ? '······' : '------')}
-                  </Text>
-                </View>
-
-                <View style={styles.chipRow}>
-                  <PillButton
-                    label={copied ? t.friends.copied : t.friends.copyCode}
-                    size="sm"
-                    kind="primary"
-                    icon={
-                      copied ? (
-                        <Check size={15} weight="bold" color={c.onAccent} />
-                      ) : (
-                        <CopySimple size={15} weight="bold" color={c.onAccent} />
-                      )
-                    }
-                    onPress={handleCopyCode}
+                  <PressableScale
+                    scaleTo={pressScale.button}
                     disabled={!myCode}
+                    onPress={() => {
+                      haptic.select();
+                      setFullQrOpen(true);
+                    }}
+                    accessibilityLabel={t.friends.showFullQr}
+                    hitSlop={8}
+                    style={[styles.qrCornerBtn, { backgroundColor: c.accentTint }]}
+                  >
+                    <QrCode size={18} weight="fill" color={c.accent} />
+                  </PressableScale>
+                </View>
+
+                {/* Centered Kapuluan QR Showcase: spacious on every phone from 360dp to 430pt */}
+                <View style={[styles.passPanel, { backgroundColor: c.inset, borderColor: c.hairline }]}>
+                  <PressableScale
+                    scaleTo={pressScale.card}
+                    disabled={!myCode}
+                    onPress={() => {
+                      haptic.select();
+                      setFullQrOpen(true);
+                    }}
+                    accessibilityLabel={`${t.friends.myQr}. ${t.friends.tapToEnlarge}`}
+                    style={[styles.qrPreviewTile, { borderColor: c.hairline }]}
+                  >
+                    {myCode ? (
+                      <FriendQrCode code={myCode} size={156} eyeColor={c.accent} showCenterBadge />
+                    ) : (
+                      <Skeleton width={156} height={156} r={16} />
+                    )}
+                    <View style={[styles.enlargeTag, { backgroundColor: c.accentTint }]}>
+                      <ArrowsOutSimple size={12} weight="bold" color={c.accent} />
+                      <Text variant="caption" color="accent" style={styles.enlargeLabel} numberOfLines={1}>
+                        {t.friends.tapToEnlarge}
+                      </Text>
+                    </View>
+                  </PressableScale>
+
+                  {/* Full-width code bar + instant copy & regenerate */}
+                  <View style={styles.codeBarRow}>
+                    <PressableScale
+                      scaleTo={pressScale.card}
+                      disabled={!myCode}
+                      onPress={() => void handleCopyCode()}
+                      accessibilityLabel={myCode ?? ''}
+                      accessibilityHint={t.friends.copyCode}
+                      style={[styles.codePill, { backgroundColor: c.card, borderColor: c.hairline }]}
+                    >
+                      <Text variant="largeTitle" color="accent" tabular style={styles.codePillText} numberOfLines={1}>
+                        {myCode ?? (loading ? '······' : '------')}
+                      </Text>
+                      <View style={[styles.copyPillTag, { backgroundColor: copied ? c.accentTint : c.inset }]}>
+                        {copied ? (
+                          <Check size={14} weight="bold" color={c.accent} />
+                        ) : (
+                          <CopySimple size={14} weight="bold" color={c.textSecondary} />
+                        )}
+                      </View>
+                    </PressableScale>
+
+                    <PressableScale
+                      scaleTo={pressScale.button}
+                      onPress={() => {
+                        haptic.select();
+                        void regenerateFriendCode();
+                      }}
+                      accessibilityLabel={t.friends.newCode}
+                      hitSlop={6}
+                      style={[styles.regenBtn, { backgroundColor: c.card, borderColor: c.hairline }]}
+                    >
+                      <ArrowsClockwise size={18} weight="bold" color={c.text} />
+                    </PressableScale>
+                  </View>
+                </View>
+
+                {/* Primary Symmetrical Actions: Scan QR & Share (with QR option) */}
+                <View style={styles.primaryPair}>
+                  <PillButton
+                    label={t.friends.scanQr}
+                    size="md"
+                    kind="primary"
+                    icon={<Scan size={17} weight="bold" color={c.onAccent} />}
+                    onPress={() => {
+                      haptic.select();
+                      setScannerOpen(true);
+                    }}
+                    style={styles.flex}
                   />
                   <PillButton
                     label={t.common.share}
-                    size="sm"
+                    size="md"
                     kind="secondary"
-                    icon={<ShareNetwork size={15} weight="bold" color={c.accent} />}
-                    onPress={handleShareCode}
-                    disabled={!myCode}
-                  />
-                  <PillButton
-                    label={t.friends.newCode}
-                    size="sm"
-                    kind="neutral"
-                    icon={<ArrowsClockwise size={15} weight="bold" color={c.text} />}
+                    icon={<ShareNetwork size={17} weight="bold" color={c.accent} />}
                     onPress={() => {
                       haptic.select();
-                      void regenerateFriendCode();
+                      setShareOpen(true);
                     }}
+                    disabled={!myCode}
+                    style={styles.flex}
                   />
                 </View>
-
-                <Text variant="caption" color="textTertiary">
-                  {t.friends.qrNote}
-                </Text>
               </Card>
             </Stagger>
 
             {/* Add by Friend Code */}
             <Stagger index={1}>
               <Card style={styles.gap}>
+                <View style={styles.rowBetween}>
+                  <Text variant="headline">{t.friends.addByCode}</Text>
+                  <Chip
+                    label={t.friends.scanQr}
+                    kind="tinted"
+                    icon={<Scan size={13} weight="bold" color={c.accent} />}
+                    onPress={() => {
+                      haptic.select();
+                      setScannerOpen(true);
+                    }}
+                  />
+                </View>
                 <TextField
-                  label={t.friends.addByCode}
+                  accessibilityLabel={t.friends.addByCode}
                   placeholder={t.friends.codePlaceholder}
                   value={codeInput}
-                  onChangeText={(txt) =>
-                    setCodeInput(
-                      txt
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, '')
-                        .slice(0, 6),
-                    )
-                  }
+                  onChangeText={(txt) => setCodeInput(normalizeFriendCode(txt).slice(0, 6))}
                   code
                   maxLength={6}
                   autoCapitalize="characters"
                   returnKeyType="send"
-                  onSubmitEditing={handleSendByCode}
+                  onSubmitEditing={() => void handleSendByCode()}
                 />
                 {codeFeedback ? <Notice text={codeFeedback.text} tone={codeFeedback.tone} /> : null}
                 <PillButton
                   label={t.friends.sendRequest}
                   icon={<UserPlus size={18} weight="fill" color={c.onAccent} />}
-                  onPress={handleSendByCode}
+                  onPress={() => void handleSendByCode()}
                   disabled={codeBusy || codeInput.trim().length < 4}
                   block
                 />
@@ -523,6 +634,53 @@ export default function FriendsScreen() {
         )}
       </ScrollView>
 
+      {/* Share Sheet with Kapuluan QR Card Option */}
+      {myCode ? (
+        <FriendShareSheet
+          visible={shareOpen}
+          code={myCode}
+          displayName={displayName}
+          grade={displayGrade}
+          themeId={passTheme}
+          onThemeChange={setPassTheme}
+          onClose={() => setShareOpen(false)}
+          onShowFullQr={() => setFullQrOpen(true)}
+        />
+      ) : null}
+
+      {/* Full-Screen Face-to-Face QR Pass Modal */}
+      {myCode ? (
+        <FullScreenQrModal
+          visible={fullQrOpen}
+          code={myCode}
+          displayName={displayName}
+          grade={displayGrade}
+          themeId={passTheme}
+          onThemeChange={setPassTheme}
+          onClose={() => setFullQrOpen(false)}
+          onOpenScanner={() => {
+            setFullQrOpen(false);
+            setScannerOpen(true);
+          }}
+        />
+      ) : null}
+
+      {/* Live Camera QR Scanner Modal */}
+      <QrScannerModal
+        visible={scannerOpen}
+        myCode={myCode}
+        onClose={() => setScannerOpen(false)}
+        onOpenMyQr={() => {
+          setScannerOpen(false);
+          if (myCode) setFullQrOpen(true);
+        }}
+        onTypeCode={() => {
+          setScannerOpen(false);
+          scrollRef.current?.scrollTo({ y: 260, animated: true });
+        }}
+        onAddByCode={handleScanAddCode}
+      />
+
       {/* Friend Actions BottomSheet */}
       <BottomSheet visible={!!selectedFriend} onClose={() => setSelectedFriend(null)}>
         <SheetHeader
@@ -655,7 +813,7 @@ export default function FriendsScreen() {
             label={t.friends.submitReport}
             kind="destructive"
             icon={<ShieldWarning size={18} weight="fill" color={c.danger} />}
-            onPress={handleSubmitReport}
+            onPress={() => void handleSubmitReport()}
             block
           />
         </View>
@@ -670,13 +828,88 @@ const styles = StyleSheet.create({
   body: { padding: space.screen, gap: space.gap },
   gap: { gap: 12 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  codeBox: {
-    borderRadius: radius.inset,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
+  qrCornerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  passPanel: {
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: radius.inset,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  qrPreviewTile: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 10,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  enlargeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+  },
+  enlargeLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    ...fontFor(700),
+  },
+  codeBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  codePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: radius.inset - 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    minHeight: 50,
+  },
+  codePillText: {
+    letterSpacing: 5,
+    fontSize: 24,
+    lineHeight: 30,
+  },
+  copyPillTag: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  regenBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: radius.inset - 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryPair: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   personRow: {

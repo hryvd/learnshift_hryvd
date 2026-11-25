@@ -34,7 +34,7 @@ LearnShift turns passive entertainment scrolling into brief, high-leverage learn
   - **Pact groups (a):** Each streak pact is a named archipelago ("barkada") capped at **5 islands max**. A student can belong to multiple archipelagos.
   - **Messaging & Guardian control:** Full text chat (plus Paty stickers, quick encouragement phrases, and "study with me" invites) with English + Filipino profanity filtering on client and server, rate limiting, block, and report. Guardians can switch social and/or chat off and see the friend list, **never message contents**.
   - **Drift scoring:** **Agos** combines effort + accuracy + personal improvement over 7 days so hardworking struggling learners do not drift solely for low accuracy, while consistently excelling students pull ahead. Earned buildings are never lost.
-  - **Friend discovery safety:** Minor-safe by design—add friends only via 6-character friend codes, QR codes (friend codes shipped immediately; camera QR deferred until next native APK build), or shared class rosters. No public user directory search.
+  - **Friend discovery safety:** Minor-safe by design—add friends only via 6-character friend codes, Kapuluan QR friend passes (live SVG QR display, shareable QR card image, in-app `expo-camera` scanner, and `learnshift://friends?code=` deep links), or shared class rosters. No public user directory search.
   - **Quiet hours:** Social push notifications respect student bedtime wind-down windows.
 - **Technical constraints:** Expo SDK 58, React Native 0.88, React 19 with React Compiler (`eslint` rules enforced), Reanimated 4 (`.get()`/`.set()`), TypeScript strict, SVG-based illustrations (`react-native-svg`) kept smooth on budget Android phones (`alive={false}` on non-focused islands).
 

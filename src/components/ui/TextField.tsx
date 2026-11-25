@@ -9,7 +9,7 @@ import { fontFor } from '@/design/typography';
 import { Text } from './Text';
 
 type Props = Omit<TextInputProps, 'style'> & {
-  label: string;
+  label?: string;
   error?: string | null;
   /** Password field with a show / hide button. */
   secret?: boolean;
@@ -24,9 +24,11 @@ export function TextField({ label, error, secret, code, ...rest }: Props) {
   const [shown, setShown] = useState(false);
   return (
     <View style={styles.wrap}>
-      <Text variant="subhead" color="text">
-        {label}
-      </Text>
+      {label ? (
+        <Text variant="subhead" color="text">
+          {label}
+        </Text>
+      ) : null}
       <View
         style={[
           styles.box,
@@ -38,7 +40,7 @@ export function TextField({ label, error, secret, code, ...rest }: Props) {
           secureTextEntry={secret && !shown}
           autoCapitalize={secret || code ? 'none' : rest.autoCapitalize}
           autoCorrect={false}
-          accessibilityLabel={label}
+          accessibilityLabel={rest.accessibilityLabel ?? label}
           {...rest}
           onFocus={(e) => {
             setFocused(true);
