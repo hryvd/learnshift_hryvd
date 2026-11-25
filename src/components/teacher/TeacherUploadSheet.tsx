@@ -17,7 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
-import { BookOpenText, CheckCircle, FileArrowUp, Plus, Sparkle, WifiHigh } from 'phosphor-react-native';
+import { BookOpenText, CheckCircle, FileArrowUp, Plus, Sparkle, WifiHigh } from '@/components/ui/icons';
 
 import { Chip, IconButton, Notice, PillButton, PressableScale, Text } from '@/components/ui';
 import { haptic } from '@/design/haptics';

@@ -1,5 +1,5 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Minus, Plus } from 'phosphor-react-native';
+import { Minus, Plus } from '@/components/ui/icons';
 
 import { useTheme } from '@/design/theme';
 

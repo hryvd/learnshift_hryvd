@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
-import { Eye, EyeSlash, WarningCircle } from 'phosphor-react-native';
+import { Eye, EyeSlash, WarningCircle } from '@/components/ui/icons';
 
 import { useTheme } from '@/design/theme';
 import { radius } from '@/design/tokens';

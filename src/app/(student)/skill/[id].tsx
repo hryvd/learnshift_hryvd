@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CalendarCheck, Target } from 'phosphor-react-native';
+import { CalendarCheck, Target } from '@/components/ui/icons';
 
 import { BarChart, Card, Chip, PillButton, Ring, SheetHeader, Text } from '@/components/ui';
 import { SKILL_BY_ID, type SkillId } from '@/data/skills';

@@ -17,7 +17,7 @@ import {
   Monitor,
   ShieldCheck,
   Timer,
-} from 'phosphor-react-native';
+} from '@/components/ui/icons';
 
 import { Screen } from '@/components/student/Screen';
 import { Card, Chip, LargeTitleHeader, ListGroup, NavBar, PillButton, Stagger, Text, Toggle } from '@/components/ui';
@@ -258,6 +258,9 @@ export default function Privacy() {
           onPress={exportData}
         />
       </Stagger>
+      <Text variant="caption" style={styles.credit}>
+        {t.privacy.iconCredit}
+      </Text>
     </Screen>
   );
 }
@@ -278,6 +281,7 @@ function Caret({ open }: { open: boolean }) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  credit: { textAlign: 'center', marginTop: 8 },
   title: { paddingHorizontal: 0, marginBottom: 8 },
   row: { flexDirection: 'row', gap: space.gap },
   gap: { gap: 10 },
