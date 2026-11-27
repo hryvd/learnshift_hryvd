@@ -16,7 +16,7 @@ export type TextProps = RNTextProps & {
 
 const defaultColor: Partial<Record<Variant, ColorKey>> = {
   overline: 'textSecondary',
-  caption: 'textSecondary',
+  caption: 'textTertiary',
   subhead: 'textSecondary',
 };
 

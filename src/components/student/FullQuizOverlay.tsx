@@ -92,6 +92,7 @@ function LearningFeed({
   const moving = useRef(false);
   const answered = useRef(false);
   const completed = useRef(false);
+  const advanceRef = useRef<(() => void) | null>(null);
   const [translateY] = useState(() => new Animated.Value(0));
   const [fade] = useState(() => new Animated.Value(1));
   const [enter] = useState(() => new Animated.Value(animateIn ? Dimensions.get('window').height : 0));
@@ -156,6 +157,19 @@ function LearningFeed({
     } else haptic.light();
   };
 
+  // Web: a mouse-wheel or trackpad scroll down also moves to the next card.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    let last = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 30 || e.timeStamp - last < 700) return;
+      last = e.timeStamp;
+      advanceRef.current?.();
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, []);
+
   const advance = () => {
     if (moving.current || done) return;
     if (picked == null) {
@@ -205,7 +219,10 @@ function LearningFeed({
         moving.current = false;
       });
     });
-  };
+  };  useEffect(() => {
+    advanceRef.current = advance;
+  });
+
 
   // Whole-card upward swipe: question, options, and cue fit cleanly in one viewport.
   const swipe = usePanGesture({
@@ -389,12 +406,16 @@ function LearningFeed({
               </View>
 
               <View style={[styles.swipeCueWrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-                <View style={[styles.swipeCue, picked != null ? styles.swipeCueReady : styles.swipeCueMuted]}>
+                <Pressable
+                  onPress={advance}
+                  accessibilityRole="button"
+                  style={[styles.swipeCue, picked != null ? styles.swipeCueReady : styles.swipeCueMuted]}
+                >
                   <ArrowUp size={16} color={picked != null ? GREEN : '#50675F'} weight="bold" />
                   <Text variant="subhead" color={picked != null ? GREEN : '#50675F'}>
                     {fil ? 'Mag-swipe pataas kapag tapos na' : 'Swipe up when finished'}
                   </Text>
-                </View>
+                </Pressable>
               </View>
             </View>
           </GestureDetector>

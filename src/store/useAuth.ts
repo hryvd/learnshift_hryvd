@@ -59,6 +59,25 @@ async function cachedProfile(id: string): Promise<Profile | null> {
   }
 }
 
+/** Startup must never wait on the network forever. */
+const BOOT_TIMEOUT_MS = 4000;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error('timeout')), ms);
+    p.then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(id);
+        reject(e);
+      },
+    );
+  });
+}
+
 async function apply(session: Session | null) {
   if (!session) {
     useAuth.setState({ status: 'signedOut', session: null, profile: null, error: null });
@@ -66,7 +85,8 @@ async function apply(session: Session | null) {
     return;
   }
   try {
-    const profile = await loadProfile(session);
+    // Slow network: fall back to the cached profile below instead of hanging.
+    const profile = await withTimeout(loadProfile(session), BOOT_TIMEOUT_MS);
     if (!profile) {
       // The account exists but its profile is gone (deleted elsewhere).
       await supabase.auth.signOut();
@@ -94,9 +114,20 @@ export function startAuth() {
     useAuth.setState({ status: 'signedOut', error: 'Account services are not configured in this build.' });
     return;
   }
-  supabase.auth.getSession().then(({ data }) => apply(data.session)).catch(() => {
-    useAuth.setState({ status: 'signedOut', session: null, profile: null, error: 'Could not restore your session. Please sign in again.' });
-  });
+  const boot = supabase.auth.getSession();
+  withTimeout(boot, BOOT_TIMEOUT_MS)
+    .then(({ data }) => apply(data.session))
+    .catch(() => {
+      if (useAuth.getState().status !== 'loading') return;
+      useAuth.setState({
+        status: 'signedOut',
+        session: null,
+        profile: null,
+        error: 'Could not restore your session. Check your connection and sign in again.',
+      });
+      // If the session turns up late, still sign the user back in.
+      boot.then(({ data }) => (data.session ? apply(data.session) : undefined)).catch(() => {});
+    });
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'INITIAL_SESSION') return;
     if (event === 'TOKEN_REFRESHED') {

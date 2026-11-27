@@ -15,6 +15,8 @@ import type {
   TideBand,
 } from '@/data/kapuluan';
 import type { BuildingId } from '@/data/seed';
+import { Platform } from 'react-native';
+
 import { errorText, functionError, supabase } from '@/lib/supabase';
 import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import type { Lang, Role } from '@/store/useAppStore';
@@ -62,7 +64,10 @@ export async function signOut() {
 
 export async function resetPassword(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-    redirectTo: 'learnshift://reset',
+    redirectTo:
+      Platform.OS === 'web' && typeof window !== 'undefined'
+        ? `${window.location.origin}/reset-password`
+        : 'learnshift://reset',
   });
   if (error) fail(error);
 }
@@ -160,8 +165,9 @@ export async function saveClassModule(input: {
       title: input.title.trim().slice(0, 120),
       subject: input.subject.trim().slice(0, 40) || 'general',
       source_name: input.sourceName,
-      // Keep raw source text off cloud tables; full decks stream directly from teacher phones.
-      source_excerpt: '',
+      // The column requires 1+ chars. Store a short excerpt only, never the full lesson file.
+      source_excerpt:
+        (input.sourceExcerpt?.trim() || input.summary.trim() || input.title.trim() || 'Lesson module').slice(0, 600),
       summary: input.summary,
       flashcards: input.flashcards,
       questions: input.questions,

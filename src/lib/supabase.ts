@@ -31,7 +31,9 @@ export function errorText(e: unknown, fallback = 'Something went wrong. Try agai
   if (/network|fetch|Failed to fetch|timeout/i.test(msg)) return 'No connection. Check your internet and try again.';
   if (/Invalid login credentials/i.test(msg)) return 'Wrong email or password.';
   if (/already registered/i.test(msg)) return 'That email already has an account. Sign in instead.';
-  if (/Password should be/i.test(msg)) return 'Use at least 6 characters for the password.';
+  if (/same password|different from the old password/i.test(msg)) return 'Choose a password that is different from your current one.';
+  if (/reauthenticat|recent login|nonce/i.test(msg)) return 'For security, sign out and sign back in, then change your password.';
+  if (/Password should be|weak password/i.test(msg)) return 'Use at least 8 characters for the password.';
   if (/valid email|invalid format/i.test(msg)) return 'Check the email address.';
   if (/rate limit|Too many/i.test(msg)) return msg.includes('Too many') ? msg : 'Too many tries. Wait a minute.';
   if (/grade_check/i.test(msg)) return 'That grade is not supported yet. Choose a grade from 1 to 10.';

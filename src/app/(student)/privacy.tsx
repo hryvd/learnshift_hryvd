@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/icons';
 
 import { Screen } from '@/components/student/Screen';
-import { Card, Chip, LargeTitleHeader, ListGroup, NavBar, PillButton, Stagger, Text, Toggle } from '@/components/ui';
+import { AnimatedReveal, Card, Chip, LargeTitleHeader, ListGroup, NavBar, PillButton, Stagger, Text, Toggle } from '@/components/ui';
 import { haptic } from '@/design/haptics';
 import { spring } from '@/design/motion';
 import { useTheme } from '@/design/theme';
@@ -191,7 +191,7 @@ export default function Privacy() {
             </Text>
             <Caret open={open} />
           </Pressable>
-          {open ? (
+          <AnimatedReveal visible={open}>
             <View style={styles.holdList}>
               {holdItems.map(([k, v]) => (
                 <View key={k} style={[styles.holdRow, { borderColor: c.hairline }]}>
@@ -202,7 +202,7 @@ export default function Privacy() {
                 </View>
               ))}
             </View>
-          ) : null}
+          </AnimatedReveal>
         </Card>
       </Stagger>
 
@@ -233,7 +233,9 @@ export default function Privacy() {
           <View style={styles.pauseRow}>
             <View style={styles.flex}>
               <Text variant="body">{t.privacy.pause}</Text>
-              {paused ? <Text variant="caption">{t.privacy.paused}</Text> : null}
+              <AnimatedReveal visible={paused}>
+                <Text variant="caption">{t.privacy.paused}</Text>
+              </AnimatedReveal>
             </View>
             <Toggle
               value={paused}

@@ -9,6 +9,7 @@ import { Stagger, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 import { usePullRefresh } from '@/hooks/useAutoRefresh';
+import { useDesktop } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH } from '@/lib/config';
 import { refreshTeacher } from '@/services/backend/teacher';
@@ -17,13 +18,18 @@ export default function TeacherReview() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
+  const { isDesktop } = useDesktop();
 
   return (
     <BarBlurHost>
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
         <BarBlurTarget>
           <ScrollView
-            contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
+            contentContainerStyle={[
+              styles.body,
+              { paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+              isDesktop && styles.bodyDesktop,
+            ]}
             refreshControl={
               IS_PITCH ? undefined : (
                 <RefreshControl
@@ -57,6 +63,7 @@ export default function TeacherReview() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bodyDesktop: { maxWidth: 1400, paddingHorizontal: 28, paddingTop: 12 },
   flex: { flex: 1 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', maxWidth: 680, alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },

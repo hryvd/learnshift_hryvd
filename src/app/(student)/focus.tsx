@@ -68,6 +68,9 @@ export default function Focus() {
       <View style={styles.center}>
         {/* Long-press the ring to finish instantly during a live demo. */}
         <Pressable
+          onPressIn={() => {
+            if (state !== 'setup' && state !== 'done') haptic.holdStart();
+          }}
           onLongPress={() => state !== 'setup' && state !== 'done' && complete()}
           delayLongPress={800}
           accessibilityLabel={`${mm}:${ss} ${t.focus.left}`}

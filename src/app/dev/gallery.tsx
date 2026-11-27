@@ -22,6 +22,7 @@ import { Paty, type Expression } from '@/components/mascot/Paty';
 import { PatySpark } from '@/components/mascot/PatySpark';
 import {
   BottomSheet,
+  AnimatedReveal,
   BarChart,
   Card,
   Chip,
@@ -29,6 +30,7 @@ import {
   DarkTile,
   DevChip,
   EmptyState,
+  HoldButton,
   Heatmap,
   InsetCard,
   LargeTitleHeader,
@@ -145,6 +147,7 @@ function Column() {
   const { c } = useTheme();
   const [seg, setSeg] = useState<'you' | 'skills'>('you');
   const [on, setOn] = useState(true);
+  const [held, setHeld] = useState<string | null>(null);
   const [mins, setMins] = useState(25);
   const [hour, setHour] = useState(9);
   const [minute, setMinute] = useState(0);
@@ -192,6 +195,7 @@ function Column() {
                 'text',
                 'textSecondary',
                 'accent',
+                'accentLight',
                 'accentTint',
                 'spark',
                 'success',
@@ -348,6 +352,20 @@ function Column() {
             <Text variant="body">Late-night alerts</Text>
             <Toggle value={on} onChange={setOn} accessibilityLabel="Late-night alerts" />
           </View>
+          <AnimatedReveal visible={on} gap={16}>
+            <Text variant="subhead">Alerts arrive after 10:00 PM. This row springs in and out with the switch.</Text>
+          </AnimatedReveal>
+          <HoldButton
+            label="Hold to delete account"
+            holdingLabel="Keep holding… release to cancel"
+            onTapShort={() => setHeld('Released early: nothing happened.')}
+            onComplete={() => setHeld('Held for 1.5 s: confirmed.')}
+          />
+          {held ? (
+            <Text variant="caption" align="center">
+              {held}
+            </Text>
+          ) : null}
           <WheelGroup>
             <WheelPicker
               items={Array.from({ length: 12 }, (_, k) => String(k + 1))}

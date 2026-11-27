@@ -31,6 +31,7 @@ export default function StudentLayout() {
       <Stack.Screen name="privacy" />
       <Stack.Screen name="nudges" />
       <Stack.Screen name="offline" />
+      <Stack.Screen name="advanced" />
       <Stack.Screen name="bedtime" options={sheet} />
       <Stack.Screen name="share" options={sheet} />
     </Stack>

@@ -30,7 +30,7 @@ export function DarkTile({ title, status, statusAccent, art, onPress, style, hei
           {title}
         </Text>
         {status ? (
-          <Text variant="subhead" color={statusAccent ? c.spark : c.tileDarkSecondary} numberOfLines={1}>
+          <Text variant="subhead" color={statusAccent ? c.accentLight : c.tileDarkSecondary} numberOfLines={1}>
             {status}
           </Text>
         ) : null}
