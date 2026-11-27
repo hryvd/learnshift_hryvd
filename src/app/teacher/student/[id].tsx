@@ -6,8 +6,11 @@ import { CaretLeft, LockKey } from '@/components/ui/icons';
 
 import { MasteryRow } from '@/components/learn/MasteryRow';
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
-import { BarChart, Card, Chip, EmptyState, ListGroup, ListRow, NavBar, Ring, Skeleton, Text } from '@/components/ui';
+import { BarChart, Card, Chip, EmptyState, ListGroup, ListRow, NavBar, PillButton, Ring, Skeleton, Text } from '@/components/ui';
 import { useDesktop } from '@/hooks/useDesktop';
+import { printDocument } from '@/lib/exportFile';
+import { useShortcut } from '@/lib/shortcuts';
+import { QUESTION_BY_ID } from '@/data/questions';
 import { buildSections } from '@/data/class';
 import { SKILL_BY_ID, SKILLS } from '@/data/skills';
 import { useTheme } from '@/design/theme';
@@ -37,6 +40,18 @@ export default function TeacherStudent() {
   );
   const section = sectionParam ?? foundIn;
   const className = useTeacher((s) => s.classes.find((x) => x.id === section)?.name);
+  // Prev / next within the same class, alphabetical (matches the heatmap's A–Z).
+  const roster = useTeacher((s) => (section ? s.students[section] : undefined));
+  const order = useMemo(() => (roster ?? []).slice().sort((a, b) => a.name.localeCompare(b.name)), [roster]);
+  const idx = order.findIndex((x) => x.id === id);
+  const prev = idx > 0 ? order[idx - 1] : null;
+  const next = idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
+  const go = (to: { id: string } | null) => {
+    if (to && section) router.replace({ pathname: '/teacher/student/[id]', params: { id: to.id, section } });
+  };
+  // This student's tutor answers that need (or got) a teacher check — already loaded, no extra query.
+  const allReview = useTeacher((s) => s.review);
+  const flagged = useMemo(() => allReview.filter((r) => r.studentId === id).slice(0, 5), [allReview, id]);
   const pitch = useMemo(() => {
     if (!IS_PITCH) return undefined;
     const secs = buildSections(mika);
@@ -59,6 +74,9 @@ export default function TeacherStudent() {
       alive = false;
     };
   }, [live, sectionParam]);
+
+  useShortcut('ArrowLeft', () => go(prev), { mod: false, enabled: isDesktop && !!prev });
+  useShortcut('ArrowRight', () => go(next), { mod: false, enabled: isDesktop && !!next });
 
   // Deterministic back: a direct link has no history to go back to.
   const back = () => (router.canGoBack() ? router.back() : router.replace('/teacher'));
@@ -91,13 +109,38 @@ export default function TeacherStudent() {
   const extra = student as Partial<LiveStudent>;
   const history = student.history.length ? student.history : [avg];
 
+  const print = () =>
+    printDocument(
+      `${student.name} — learning summary`,
+      `${className ?? ''} · printed ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · average mastery ${Math.round(avg * 100)}%`,
+      [
+        {
+          heading: 'Skill mastery (weakest first)',
+          head: ['Skill', 'Mastery'],
+          rows: sorted.map((k) => [k.name.en + (k.id === root ? ' (root gap)' : ''), `${Math.round(student.mastery[k.id] * 100)}%`]),
+        },
+        {
+          heading: 'Weekly average',
+          head: history.map((_, k) => `Week ${k + 1}`),
+          rows: [history.map((h) => `${Math.round(h * 100)}%`)],
+        },
+      ],
+    );
+
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-      <NavBar
-        onBack={back}
-        backIcon={<CaretLeft size={20} weight="bold" color={c.text} />}
-        title={isDesktop && className ? `${className} › ${student.name}` : student.name}
-      />
+      {!isDesktop ? (
+        <NavBar onBack={back} backIcon={<CaretLeft size={20} weight="bold" color={c.text} />} title={student.name} />
+      ) : (
+        <View style={styles.deskNav}>
+          <PillButton label="← Previous" kind="neutral" size="sm" disabled={!prev} onPress={() => go(prev)} accessibilityLabel={prev ? `Previous student: ${prev.name}` : 'No previous student'} />
+          <Text variant="caption" style={styles.flex} align="center">
+            {idx >= 0 ? `${idx + 1} of ${order.length} in ${className ?? 'class'} · ← → to switch` : className ?? ''}
+          </Text>
+          <PillButton label="Print summary" kind="neutral" size="sm" onPress={print} />
+          <PillButton label="Next →" kind="neutral" size="sm" disabled={!next} onPress={() => go(next)} accessibilityLabel={next ? `Next student: ${next.name}` : 'No next student'} />
+        </View>
+      )}
       <ScrollView
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32, maxWidth: wide ? 1000 : 560 }]}
       >
@@ -134,6 +177,23 @@ export default function TeacherStudent() {
                 </Text>
               ) : null}
             </Card>
+            {!IS_PITCH && flagged.length ? (
+              <Card style={styles.gap}>
+                <Text variant="headline">Tutor answers to check</Text>
+                {flagged.map((r) => (
+                  <View key={r.id} style={styles.flagRow}>
+                    <Text variant="subhead" color="text" style={styles.flex} numberOfLines={2}>
+                      {QUESTION_BY_ID[r.questionId]?.prompt.en ?? 'Practice question'}
+                    </Text>
+                    <Chip
+                      label={r.status === 'needs_review' ? 'Needs review' : r.status === 'approved' ? T.approved : T.edited}
+                      kind={r.status === 'needs_review' ? 'tinted' : 'outline'}
+                    />
+                  </View>
+                ))}
+                <PillButton label="Open review queue" kind="secondary" size="sm" onPress={() => router.replace('/teacher/review')} />
+              </Card>
+            ) : null}
             <View style={[styles.note, { backgroundColor: c.inset }]}>
               <LockKey size={16} weight="fill" color={c.textSecondary} />
               <Text variant="subhead" style={styles.flex}>
@@ -189,5 +249,7 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   gap: { gap: 10 },
   gapLg: { gap: 16 },
+  deskNav: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 28, paddingVertical: 12 },
+  flagRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, borderRadius: radius.inset },
 });

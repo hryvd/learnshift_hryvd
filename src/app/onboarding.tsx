@@ -46,6 +46,7 @@ import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { formatClock, useL, useT } from '@/i18n/useT';
 import { BEDTIME_STARTS, bedtimeStartIndex } from '@/lib/bedtime';
+import { useDesktop } from '@/hooks/useDesktop';
 import { IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 import { mulberry32 } from '@/services/ai/interventionPolicy';
@@ -291,6 +292,25 @@ function Shell({
   children?: ReactNode;
   footer?: ReactNode;
 }) {
+  const { isDesktop } = useDesktop();
+  const { c } = useTheme();
+  // Laptop: one centered card, actions right under the fields (Enter submits).
+  if (isDesktop) {
+    return (
+      <ScrollView style={styles.flex} contentContainerStyle={styles.deskWrap} keyboardShouldPersistTaps="handled">
+        <View style={[styles.deskCard, { backgroundColor: c.card, borderColor: c.hairline }]}>
+          <Text variant="title">{title}</Text>
+          {sub ? (
+            <Text variant="body" color="textSecondary">
+              {sub}
+            </Text>
+          ) : null}
+          <View style={styles.content}>{children}</View>
+          {footer ? <View style={styles.deskFooter}>{footer}</View> : null}
+        </View>
+      </ScrollView>
+    );
+  }
   return (
     <View style={styles.flex}>
       <ScrollView
@@ -1050,6 +1070,9 @@ function PitchUsage({ next }: { next: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  deskWrap: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  deskCard: { width: '100%', maxWidth: 460, borderRadius: 20, borderWidth: 1, padding: 32, gap: 12 },
+  deskFooter: { marginTop: 8, gap: 10 },
   root: { flex: 1 },
   flex: { flex: 1 },
   center: { alignItems: 'center' },

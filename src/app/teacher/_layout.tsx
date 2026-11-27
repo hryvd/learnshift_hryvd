@@ -1,15 +1,21 @@
-import { StyleSheet, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { router, Stack } from 'expo-router';
 
 import { TeacherSidebar } from '@/components/teacher/TeacherSidebar';
+import { TeacherTopBar } from '@/components/teacher/TeacherTopBar';
+import { TeacherUploadDialog } from '@/components/teacher/TeacherUploadDialog';
 import { TeacherUploadSheet } from '@/components/teacher/TeacherUploadSheet';
-import { Text } from '@/components/ui';
+import { DesktopDialog } from '@/components/teacher/DesktopOverlay';
+import { PillButton, Text } from '@/components/ui';
 import { WifiSlash } from '@/components/ui/icons';
 import { useTheme } from '@/design/theme';
 import { useDesktop, useOnline } from '@/hooks/useDesktop';
 import { useRoleGate } from '@/hooks/useRoleGate';
 import { IS_PITCH } from '@/lib/config';
-import { useTeacher, useTeacherLive } from '@/services/backend/teacher';
+import * as api from '@/services/backend/api';
+import { clearTeacherCache, useTeacher, useTeacherLive } from '@/services/backend/teacher';
+import { useIdleTimer, useSharedLaptop } from '@/services/teacher/sharedLaptop';
 
 export default function TeacherLayout() {
   const gate = useRoleGate('teacher');
@@ -41,13 +47,64 @@ function TeacherStack() {
   // Laptop: persistent sidebar + workspace. The phone tab bar hides itself.
   return (
     <View style={[styles.row, { backgroundColor: c.bg }]}>
+      <SkipLink />
       <TeacherSidebar width={sidebar} />
-      <View style={styles.main} role="main" nativeID="main">
+      <View style={styles.main} role="main" nativeID="main" {...({ tabIndex: -1 } as object)}>
+        <TeacherTopBar />
         <OfflineBanner />
         <View style={styles.main}>{stack}</View>
-        <TeacherUploadSheet />
+        <TeacherUploadDialog />
+        <IdleGuard />
       </View>
     </View>
+  );
+}
+
+/** Shared laptop mode: warn after inactivity, then sign out and wipe local data. */
+function IdleGuard() {
+  const shared = useSharedLaptop();
+  const [warning, setWarning] = useState(false);
+  useIdleTimer(
+    shared && !IS_PITCH,
+    () => setWarning(true),
+    () => setWarning(false),
+    async () => {
+      clearTeacherCache();
+      await api.signOut();
+      router.replace('/onboarding');
+    },
+  );
+  return (
+    <DesktopDialog
+      visible={warning}
+      onClose={() => setWarning(false)}
+      title="Still there?"
+      maxWidth={420}
+      footer={<PillButton label="Keep me signed in" onPress={() => setWarning(false)} />}
+    >
+      <Text variant="body">
+        This is a shared laptop. You&apos;ll be signed out in one minute to protect your students&apos; data.
+      </Text>
+    </DesktopDialog>
+  );
+}
+
+/** First Tab stop: jumps past the sidebar (WCAG 2.4.1). */
+function SkipLink() {
+  const { c } = useTheme();
+  const [on, setOn] = useState(false);
+  return (
+    <Pressable
+      accessibilityRole="link"
+      onFocus={() => setOn(true)}
+      onBlur={() => setOn(false)}
+      onPress={() => (document.getElementById('main') as HTMLElement | null)?.focus()}
+      style={[styles.skip, { backgroundColor: c.accent }, on ? styles.skipOn : null]}
+    >
+      <Text variant="subhead" color="onAccent">
+        Skip to main content
+      </Text>
+    </Pressable>
   );
 }
 
@@ -74,5 +131,7 @@ function OfflineBanner() {
 const styles = StyleSheet.create({
   row: { flex: 1, flexDirection: 'row', height: '100%' },
   main: { flex: 1, minWidth: 0 },
+  skip: { position: 'absolute', left: 12, top: -100, zIndex: 100, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
+  skipOn: { top: 12 },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 10 },
 });

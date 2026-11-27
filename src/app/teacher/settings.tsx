@@ -6,13 +6,15 @@ import { GearSix, Plus } from '@/components/ui/icons';
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
-import { Card, PillButton, SegmentedControl, Stagger, Text } from '@/components/ui';
+import { Card, PillButton, SegmentedControl, Stagger, Text, Toggle } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 import { useDesktop, useInstallPrompt, useOnline } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
+import { ManageClassesCard } from '@/components/teacher/ManageClassesCard';
 import { clearTeacherCache, useTeacher } from '@/services/backend/teacher';
+import { setSharedLaptop, useSharedLaptop } from '@/services/teacher/sharedLaptop';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
@@ -42,20 +44,22 @@ export default function TeacherSettings() {
             ]}
             keyboardShouldPersistTaps="handled"
           >
-            <Stagger index={0} style={styles.header}>
-              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-                <GearSix size={22} weight="fill" color="#FFFFFF" />
-              </View>
-              <View style={styles.flex}>
-                <Text variant="largeTitle">{T.settings}</Text>
-                <Text variant="subhead">{T.settingsSub}</Text>
-              </View>
-            </Stagger>
+            {!isDesktop ? (
+              <Stagger index={0} style={styles.header}>
+                <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                  <GearSix size={22} weight="fill" color="#FFFFFF" />
+                </View>
+                <View style={styles.flex}>
+                  <Text variant="largeTitle">{T.settings}</Text>
+                  <Text variant="subhead">{T.settingsSub}</Text>
+                </View>
+              </Stagger>
+            ) : null}
 
             {!IS_PITCH ? (
               <View style={isDesktop ? styles.columns : styles.stack}>
               <View style={[styles.stack, isDesktop && styles.col]}>
-                {classes.length > 1 ? (
+                {classes.length > 1 && !isDesktop ? (
                   <SegmentedControl
                     options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
                     value={active?.id ?? ''}
@@ -64,6 +68,7 @@ export default function TeacherSettings() {
                 ) : null}
 
                 {active ? <JoinCodeCard code={active.join_code} className={active.name} /> : null}
+                {isDesktop ? <ManageClassesCard /> : null}
 
                 {creating ? (
                   <CreateClassCard
@@ -85,22 +90,51 @@ export default function TeacherSettings() {
               <View style={[styles.stack, isDesktop && styles.col]}>
                 <AppearanceCard />
                 {isDesktop ? <LaptopAppCard /> : null}
+                {isDesktop ? <SharedLaptopCard /> : null}
                 <TeacherAccountCard classId={active?.id} />
               </View>
               </View>
             ) : (
-              <Card style={styles.gap}>
-                <Text variant="title">Grade 8 – {PITCH_NAMES.section}</Text>
-                <Text variant="subhead">
-                  {me?.display_name ?? T.teacher} · {T.learningOnly}
-                </Text>
-              </Card>
+              <View style={styles.stack}>
+                <Card style={styles.gap}>
+                  <Text variant="title">Grade 8 – {PITCH_NAMES.section}</Text>
+                  <Text variant="subhead">
+                    {me?.display_name ?? T.teacher} · {T.learningOnly}
+                  </Text>
+                </Card>
+                <AppearanceCard />
+              </View>
             )}
           </ScrollView>
         </BarBlurTarget>
         <TeacherTabBar active="settings" />
       </KeyboardAvoidingView>
     </BarBlurHost>
+  );
+}
+
+function SharedLaptopCard() {
+  const on = useSharedLaptop();
+  return (
+    <Card style={styles.gap}>
+      <View style={styles.rowBetween}>
+        <View style={styles.flex}>
+          <Text variant="headline">Shared laptop mode</Text>
+          <Text variant="subhead">
+            For faculty rooms and labs: no class data is saved on this laptop, and you&apos;re signed out after 20
+            minutes without activity.
+          </Text>
+        </View>
+        <Toggle
+          value={on}
+          onChange={(v: boolean) => {
+            setSharedLaptop(v);
+            if (v) clearTeacherCache();
+          }}
+          accessibilityLabel="Shared laptop mode"
+        />
+      </View>
+    </Card>
   );
 }
 
@@ -173,6 +207,7 @@ const styles = StyleSheet.create({
   columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
   col: { flex: 1, minWidth: 0 },
   stack: { gap: space.gap },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   flex: { flex: 1 },
   gap: { gap: 12 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', maxWidth: 680, alignSelf: 'center' },

@@ -2,10 +2,29 @@
 import { createClient, type SupabaseClient, type User } from 'npm:@supabase/supabase-js@2.119.0';
 
 export const cors = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-device-token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  Vary: 'Origin',
 };
+
+// Browsers may call these functions only from LearnShift's own sites (production,
+// EAS preview deployments, local dev). Native apps send no Origin and are unaffected.
+const EXTRA_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((o) => o.trim()).filter(Boolean);
+export function allowedOrigin(origin: string | null): string | null {
+  if (!origin) return null;
+  if (EXTRA_ORIGINS.includes(origin)) return origin;
+  if (/^https:\/\/learnshift(--[a-z0-9-]+)?\.expo\.app$/.test(origin)) return origin;
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+  return null;
+}
+
+function withCors(res: Response, origin: string | null): Response {
+  const ok = allowedOrigin(origin);
+  if (!ok) return res;
+  const headers = new Headers(res.headers);
+  headers.set('Access-Control-Allow-Origin', ok);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
 
 export function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...cors, 'content-type': 'application/json' } });
@@ -44,14 +63,15 @@ export async function rateTake(user: string, kind: string, max: number, windowS:
 
 export function serve(handler: (req: Request) => Promise<Response>) {
   Deno.serve(async (req) => {
-    if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-    if (req.method !== 'POST') return json({ error: 'POST only' }, 405);
+    const origin = req.headers.get('origin');
+    if (req.method === 'OPTIONS') return withCors(new Response('ok', { headers: cors }), origin);
+    if (req.method !== 'POST') return withCors(json({ error: 'POST only' }, 405), origin);
     try {
-      return await handler(req);
+      return withCors(await handler(req), origin);
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
+      if (e instanceof HttpError) return withCors(json({ error: e.message }, e.status), origin);
       console.error(e);
-      return json({ error: 'Something went wrong' }, 500);
+      return withCors(json({ error: 'Something went wrong' }, 500), origin);
     }
   });
 }

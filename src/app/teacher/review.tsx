@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChatTeardropText } from '@/components/ui/icons';
 
 import { TeacherReviewQueueCard } from '@/components/teacher/ReviewQueueCard';
+import { ReviewWorkbench } from '@/components/teacher/ReviewWorkbench';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Stagger, Text } from '@/components/ui';
@@ -19,6 +20,14 @@ export default function TeacherReview() {
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
   const { isDesktop } = useDesktop();
+
+  if (isDesktop) {
+    return (
+      <View style={[styles.root, styles.desk, { backgroundColor: c.bg }]}>
+        <ReviewWorkbench />
+      </View>
+    );
+  }
 
   return (
     <BarBlurHost>
@@ -63,6 +72,7 @@ export default function TeacherReview() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  desk: { paddingHorizontal: 28, paddingVertical: 16 },
   bodyDesktop: { maxWidth: 1400, paddingHorizontal: 28, paddingTop: 12 },
   flex: { flex: 1 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', maxWidth: 680, alignSelf: 'center' },

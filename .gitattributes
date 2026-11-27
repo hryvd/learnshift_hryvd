@@ -1,0 +1,3 @@
+
+# Vendored build file: must stay byte-identical to node_modules/pdfjs-dist
+public/pdf.worker.min.mjs -text

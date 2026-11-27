@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
+import { ProjectorDialog } from '@/components/teacher/ProjectorDialog';
+import { useDesktop } from '@/hooks/useDesktop';
 import { Copy, Monitor, Trash } from '@/components/ui/icons';
 
 import { AccountManageSection } from '@/components/account/AccountManageSection';
@@ -108,22 +110,7 @@ export function JoinCodeCard({ code, className }: { code: string; className?: st
         />
       </View>
     </Card>
-    <Modal visible={projecting} transparent animationType="fade" onRequestClose={() => setProjecting(false)}>
-      <Pressable style={styles.projector} onPress={() => setProjecting(false)} accessibilityLabel="Close projector view">
-        <Text variant="title" color="#ECE8E1" align="center">
-          {className ? `Join ${className}` : 'Join our class'}
-        </Text>
-        <Text color="#F2A65A" align="center" style={styles.projCode} selectable>
-          {code}
-        </Text>
-        <Text variant="title" color="#ECE8E1" align="center" style={styles.projSub}>
-          Open LearnShift › Profile › Join a class, then type this code.
-        </Text>
-        <Text variant="caption" color="#9A9AB0" align="center">
-          Click anywhere or press Esc to close
-        </Text>
-      </Pressable>
-    </Modal>
+    <ProjectorDialog visible={projecting} code={code} className={className} onClose={() => setProjecting(false)} />
     </>
   );
 }
@@ -134,7 +121,9 @@ export function TeacherAccountCard({ classId }: { classId?: string }) {
   const [confirm, setConfirm] = useState<'class' | null>(null);
   const className = useTeacher((s) => s.classes.find((x) => x.id === classId)?.name);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deskDelete, setDeskDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isDesktop } = useDesktop();
   if (!me) return null;
   return (
     <View style={styles.gap}>
@@ -144,7 +133,7 @@ export function TeacherAccountCard({ classId }: { classId?: string }) {
       <AccountManageSection copy={MANAGE_EN} />
       {error ? <Notice text={error} /> : null}
       <ListGroup>
-        {classId ? (
+        {classId && !isDesktop ? (
           <ListRow title={T.deleteClass} destructive chevron={false} onPress={() => setConfirm('class')} />
         ) : null}
         <ListRow
@@ -164,7 +153,7 @@ export function TeacherAccountCard({ classId }: { classId?: string }) {
           title={T.deleteAccount}
           icon={<Trash size={20} weight="bold" color={c.danger} />}
           destructive
-          onPress={() => setDeleteOpen(true)}
+          onPress={() => (isDesktop ? setDeskDelete(true) : setDeleteOpen(true))}
         />
       </ListGroup>
       <ConfirmDialog
@@ -177,6 +166,19 @@ export function TeacherAccountCard({ classId }: { classId?: string }) {
         onConfirm={async () => {
           await api.deleteClass(classId!);
           await loadClasses();
+        }}
+      />
+      <ConfirmDialog
+        visible={deskDelete}
+        title="Delete your teacher account?"
+        body="This deletes your account, all your classes and their modules. Students keep their own learning history. This can't be undone."
+        confirmLabel="Delete account"
+        typeToConfirm={me.email ?? undefined}
+        onClose={() => setDeskDelete(false)}
+        onConfirm={async () => {
+          await api.deleteAccount();
+          clearTeacherCache();
+          router.replace('/onboarding');
         }}
       />
       <DeleteAccountSheet
