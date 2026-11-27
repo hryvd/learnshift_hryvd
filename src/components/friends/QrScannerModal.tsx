@@ -21,7 +21,8 @@ import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { useT } from '@/i18n/useT';
-import { normalizeFriendCode, parseFriendCodeFromScan } from '@/lib/qr';
+import { router } from 'expo-router';
+import { normalizeFriendCode, parseClassCodeFromScan, parseFriendCodeFromScan } from '@/lib/qr';
 
 type ExpoCameraModule = typeof import('expo-camera');
 
@@ -135,6 +136,14 @@ function LiveCameraScanner({
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     if (outcome.kind !== 'idle') return;
+    // A teacher's class invite: hand off to the join page.
+    const classCode = parseClassCodeFromScan(data);
+    if (classCode) {
+      haptic.success();
+      onClose();
+      router.push({ pathname: '/join/[code]', params: { code: classCode } });
+      return;
+    }
     const parsed = parseFriendCodeFromScan(data);
     setSubmitErr(null);
     if (!parsed) {

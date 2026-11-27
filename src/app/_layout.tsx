@@ -117,6 +117,10 @@ function Shell() {
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
           <Stack.Screen name="reset-password" options={{ animation: 'fade' }} />
+          <Stack.Screen name="auth/callback" options={{ animation: 'fade' }} />
+          <Stack.Screen name="teachers-only" options={{ animation: 'fade' }} />
+          <Stack.Screen name="join/[code]" options={{ animation: 'fade' }} />
+          <Stack.Screen name="privacy-policy" options={{ animation: 'fade' }} />
           <Stack.Screen name="account" options={{ presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
           <Stack.Screen name="(student)" />
           <Stack.Screen name="guardian" options={{ animation: 'fade' }} />
