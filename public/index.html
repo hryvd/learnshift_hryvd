@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>%WEB_TITLE%</title>
     <meta name="theme-color" content="#C8400F" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Baseline CSP: only this site's scripts run (react-native-web needs inline styles); no plugins; no base/form hijacking.
+         Network, media and frames stay open for Supabase and learning videos. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' https: data: blob: wss:; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline' https:; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
     <meta name="description" content="LearnShift: learning breaks for students, a class workspace for teachers." />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -35,10 +42,14 @@
         outline: 2px solid #c8400f;
         outline-offset: 2px;
       }
-      @media (prefers-color-scheme: dark) {
-        :focus-visible {
-          outline-color: #f2a65a;
-        }
+      [data-theme='night'] :focus-visible {
+        outline-color: #f2a65a;
+      }
+      [data-theme='night'] {
+        scrollbar-color: #3a3f58 transparent;
+      }
+      [data-theme='day'] {
+        scrollbar-color: #c9c4ba transparent;
       }
       [role='button'],
       [role='link'],

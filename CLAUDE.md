@@ -25,7 +25,8 @@ node --env-file=.env scripts/backend-test.mjs   # end-to-end checks against the 
   - `--profile pitch`: the offline demo build, `EXPO_PUBLIC_PITCH=1`.
   - JS-only fixes: `npx eas-cli@latest update --channel preview`.
   - Ask before building an APK; the user prefers batching native changes.
-- **Website:** `npx expo export -p web && npx eas-cli@latest deploy --prod` publishes https://learnshift.expo.app.
+- **Website:** `npm run export:web && npx eas-cli@latest deploy --prod` publishes https://learnshift.expo.app. `export:web` checks the PDF worker matches `pdfjs-dist` and writes `dist/precache.json` for the offline service worker; plain `expo export` skips both.
+- **Teacher laptop E2E:** `npm run export:web`, then `node --env-file=.env scripts/e2e-teacher-desktop.mjs` (Playwright, throwaway `@learnshift-test.com` accounts, deleted at the end; screenshots in `e2e-shots/`).
 - **After editing `src/data/questions.ts` or `skills.ts`,** regenerate the server copy: `npx -y tsx --tsconfig tsconfig.json scripts/export-content.ts`. This writes `supabase/functions/_shared/content.json`. Then redeploy `tutor`.
 
 ## Architecture

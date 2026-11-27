@@ -55,6 +55,7 @@
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
+    "playwright": "^1.65.1",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3"
   },
@@ -67,7 +68,9 @@
     "format": "prettier --write src",
     "typecheck": "tsc --noEmit",
     "test:local": "node scripts/validate-content.mjs && node scripts/validate-learning-videos.mjs && npx -y tsx --tsconfig tsconfig.json scripts/test-question-rotation.ts && node scripts/test-learning-break.mjs && npx -y tsx --tsconfig tsconfig.json scripts/test-mirror-selector.ts && node scripts/test-credential-storage.mjs && node scripts/test-friend-qr.mjs",
-    "test:database": "node scripts/test-database.mjs"
+    "test:database": "node scripts/test-database.mjs",
+    "export:web": "node scripts/sync-web-assets.mjs --check && expo export -p web && node scripts/web-postexport.mjs",
+    "test:web-assets": "node scripts/sync-web-assets.mjs --check"
   },
   "private": true
 }

@@ -14,6 +14,7 @@ import { IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import * as api from '@/services/backend/api';
+import { isSharedLaptop } from '@/services/teacher/sharedLaptop';
 import {
   broadcastClassModules,
   loadTeacherLocalModules,
@@ -75,7 +76,8 @@ export const useTeacher = create<TeacherState>()((set) => ({
   setUploadOpen: (uploadOpen) => set({ uploadOpen }),
 }));
 
-export function resetTeacher() {
+export function resetTeacher(opts?: { signedOut?: boolean }) {
+  if (opts?.signedOut) clearTeacherCache();
   shutdownTeacherPeerHost();
   useTeacher.setState({
     loading: true,
@@ -113,7 +115,7 @@ function webStorage(): Storage | null {
 function saveSnapshot() {
   const store = webStorage();
   const userId = useAuth.getState().profile?.id;
-  if (!store || !userId || IS_PITCH) return;
+  if (!store || !userId || IS_PITCH || isSharedLaptop()) return;
   const s = useTeacher.getState();
   if (s.fromCache) return;
   const snap: Snapshot = {
@@ -341,14 +343,18 @@ export async function loadModules(classId: string) {
       createdAt: m.created_at,
     }))
     : [];
+  // The server is the source of truth: a module deleted elsewhere must not come back.
+  // Only phone-only drafts (`local-*`, Android fallback) are kept from the local copy;
+  // when the server can't be reached, show the last local copy unchanged.
   const byId = new Map<string, ClassModule>();
-  for (const r of remoteRows) byId.set(r.id, r);
-  for (const l of localRows) byId.set(l.id, l);
+  if (error) for (const l of localRows) byId.set(l.id, l);
+  else {
+    for (const r of remoteRows) byId.set(r.id, r);
+    for (const l of localRows) if (l.id.startsWith('local-')) byId.set(l.id, l);
+  }
   const merged = [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   useTeacher.setState((s) => ({ modules: { ...s.modules, [classId]: merged } }));
-  if (merged.length > 0) {
-    void persistTeacherLocalModules({ ...useTeacher.getState().modules, [classId]: merged });
-  }
+  if (!error) void persistTeacherLocalModules({ ...useTeacher.getState().modules, [classId]: merged });
 }
 
 export function addLocalModule(mod: ClassModule) {
@@ -373,6 +379,49 @@ export function removeLocalModule(classId: string, id: string) {
   });
 }
 
+async function findRecentDuplicate(classId: string, title: string): Promise<ClassModule | null> {
+  const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const { data } = await supabase
+    .from('class_modules')
+    .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+    .eq('class_id', classId)
+    .eq('title', title.trim().slice(0, 120))
+    .gte('created_at', since)
+    .limit(1);
+  const m = data?.[0];
+  if (!m) return null;
+  return {
+    id: m.id,
+    classId: m.class_id,
+    title: m.title,
+    subject: m.subject,
+    sourceName: m.source_name,
+    summary: m.summary ?? '',
+    flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+    questions: (m.questions ?? []) as ModuleQuestion[],
+    published: !!m.published,
+    createdAt: m.created_at,
+  };
+}
+
+/** Saves teacher edits to a published module; students get the new version on their next sync. */
+export async function updateModule(mod: ClassModule) {
+  if (!IS_PITCH && !mod.id.startsWith('local-')) await api.updateClassModule(mod);
+  addLocalModule(mod);
+}
+
+/** Publishes a copy of a module to other classes. */
+export async function copyModuleToClasses(mod: ClassModule, classIds: string[]) {
+  return publishModulesToClasses(classIds, {
+    title: mod.title,
+    subject: mod.subject,
+    sourceName: mod.sourceName,
+    summary: mod.summary,
+    flashcards: mod.flashcards,
+    questions: mod.questions,
+  });
+}
+
 /**
  * Approves a generated module deck, saves full content locally on the teacher's phone,
  * serves it over LAN HTTP + P2P broadcast to every chosen class, and stores only lightweight
@@ -393,6 +442,13 @@ export async function publishModulesToClasses(
   const saved: ClassModule[] = [];
   for (const classId of uniqueIds) {
     let mod: ClassModule;
+    // Retry after a partial failure: don't create a second copy in classes that already got it.
+    const already = !IS_PITCH ? await findRecentDuplicate(classId, input.title) : null;
+    if (already) {
+      addLocalModule(already);
+      saved.push(already);
+      continue;
+    }
     if (IS_PITCH) {
       mod = {
         id: `mod-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
@@ -537,7 +593,12 @@ export function useTeacherLive(enabled = true) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'class_modules', filter: `class_id=eq.${selected}` }, () =>
         loadModules(selected),
       )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mastery' }, reload)
+      // RLS sends mastery for every class this teacher has; reload only for this roster.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mastery' }, (p) => {
+        const sid = ((p.new ?? p.old) as { student_id?: string } | null)?.student_id;
+        const roster = useTeacher.getState().students[selected];
+        if (!sid || !roster || roster.some((x) => x.id === sid)) reload();
+      })
       .subscribe();
     return () => {
       if (t) clearTimeout(t);

@@ -246,9 +246,11 @@ export function TeacherUploadSheet() {
       haptic.success();
       const clsWord = saved.length === 1 ? '1 class' : `${saved.length} classes`;
       setDoneBanner(
-        lanUrl
-          ? `Approved for ${clsWord}. Students download directly from your phone (${lanUrl}).`
-          : `Approved for ${clsWord}. Hosted locally on your phone & synced directly to students.`,
+        Platform.OS === 'web'
+          ? `Published to ${clsWord}. Students get it on their next sync.`
+          : lanUrl
+            ? `Approved for ${clsWord}. Students download directly from your phone (${lanUrl}).`
+            : `Approved for ${clsWord}. Hosted locally on your phone & synced directly to students.`,
       );
       setTimeout(() => {
         resetForm();
@@ -362,7 +364,9 @@ export function TeacherUploadSheet() {
                       <Text variant="caption" color="rgba(255,255,255,0.92)" align="center">
                         {content
                           ? `${content.length.toLocaleString('en-US')} chars ready for flashcards & quiz`
-                          : 'Supports .txt, .md, .csv, .html'}
+                          : Platform.OS === 'web'
+                            ? 'Supports PDF, Word (.docx), .txt, .md, .csv, .html'
+                            : 'Supports .txt, .md, .csv, .html'}
                       </Text>
                     </View>
                   </PressableScale>
@@ -526,7 +530,9 @@ export function TeacherUploadSheet() {
                   <View style={styles.p2pNote}>
                     <WifiHigh size={16} weight="bold" color="#187B43" />
                     <Text variant="caption" color="#187B43" style={styles.flex}>
-                      Saved on your phone & downloaded directly by students to save cloud storage.
+                      {Platform.OS === 'web'
+                        ? 'Saved to LearnShift cloud and synced to your students.'
+                        : 'Saved on your phone & downloaded directly by students to save cloud storage.'}
                     </Text>
                   </View>
 
@@ -589,7 +595,7 @@ export function TeacherUploadSheet() {
                   ))}
 
                   <PillButton
-                    label={publishing ? 'Sharing to class phones...' : 'Approve & Send to Class'}
+                    label={publishing ? (Platform.OS === 'web' ? 'Publishing…' : 'Sharing to class phones...') : 'Approve & Send to Class'}
                     block
                     size="lg"
                     disabled={publishing || targetIds.length === 0}

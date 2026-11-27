@@ -19,16 +19,20 @@ async function readPdf(file: File): Promise<ExtractResult> {
   const pdfjs = await import('pdfjs-dist');
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   let doc;
+  const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   try {
-    doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    doc = await task.promise;
   } catch (e) {
     const name = (e as { name?: string }).name;
+    void task.destroy();
     if (name === 'PasswordException') return { error: 'This PDF is password-protected. Remove the password, then try again.' };
     return { error: 'Could not open this PDF. Try saving it again, or paste the lesson text.' };
   }
   const pages = Math.min(doc.numPages, MAX_PAGES);
+  const total_pages = doc.numPages;
   const parts: string[] = [];
   let total = 0;
+  try {
   for (let i = 1; i <= pages && total < MAX_CHARS; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
@@ -41,6 +45,11 @@ async function readPdf(file: File): Promise<ExtractResult> {
       parts.push(line);
       total += line.length;
     }
+    page.cleanup();
+  }
+  } finally {
+    // Free the worker's copy of the file (large PDFs otherwise stay in memory).
+    void task.destroy();
   }
   const text = parts.join('\n\n');
   if (text.trim().length < 30) {
@@ -48,7 +57,7 @@ async function readPdf(file: File): Promise<ExtractResult> {
       error: 'This PDF has no readable text. It may be a scanned image. Paste the lesson text instead.',
     };
   }
-  const more = doc.numPages > pages ? ` (first ${pages} of ${doc.numPages} pages)` : '';
+  const more = total_pages > pages ? ` (first ${pages} of ${total_pages} pages)` : '';
   return { text, note: `Read ${pages} ${pages === 1 ? 'page' : 'pages'}${more}.` };
 }
 
@@ -68,6 +77,13 @@ async function readDocx(file: File): Promise<ExtractResult> {
   }
 }
 
+/** Visible text only: no scripts, styles or markup. DOMParser never runs scripts. */
+function htmlToText(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script, style, noscript, template, iframe').forEach((n) => n.remove());
+  return (doc.body?.innerText || doc.body?.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 export async function extractLessonFile(file: File): Promise<ExtractResult> {
   if (file.size > MAX_BYTES) return { error: 'That file is over 15 MB. Choose a smaller file or paste the lesson text.' };
   const e = ext(file.name);
@@ -75,6 +91,7 @@ export async function extractLessonFile(file: File): Promise<ExtractResult> {
     if (e === 'pdf' || file.type === 'application/pdf') return await readPdf(file);
     if (e === 'docx') return await readDocx(file);
     if (e === 'doc') return { error: 'Old .doc files are not supported. Save it as .docx or PDF, then try again.' };
+    if (e === 'html' || e === 'htm' || file.type === 'text/html') return { text: htmlToText(await file.text()), note: null };
     return { text: await file.text(), note: null };
   } catch {
     return { error: 'Could not read that file. Try another file or paste the lesson text.' };
