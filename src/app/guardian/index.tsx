@@ -52,6 +52,7 @@ import {
   PressableScale,
   Ring,
   SegmentedControl,
+  Skeleton,
   Stagger,
   StatTile,
   Text,
@@ -451,11 +452,29 @@ function GuardianReal() {
   const v = useRealView(setError);
   const loading = useGuardian((s) => s.loading);
   const children = useGuardian((s) => s.children);
+  const selected = useGuardian((s) => s.selected);
+  const childError = useGuardian((s) => (s.selected ? (s.childErrors[s.selected] ?? null) : null));
+  // Only an empty child list means "link a child". Anything else still loading
+  // keeps the dashboard shell (header, switcher) and shows skeletons instead.
   if (!loading && children.length === 0) return <Layout v={null} error={error} />;
-  return <Layout v={v} error={error} />;
+  const child = children.find((k) => k.id === selected) ?? null;
+  const pending: Pending | null = v
+    ? null
+    : {
+        name: child ? child.name.split(' ')[0] : null,
+        sub: child?.grade ? `Grade ${child.grade}` : ' ',
+        failed: childError,
+        retry: () => {
+          if (selected) loadChild(selected);
+          else loadChildren();
+        },
+      };
+  return <Layout v={v} error={error} pending={pending} />;
 }
 
-function Layout({ v, error }: { v: GView | null; error?: string | null }) {
+type Pending = { name: string | null; sub: string; failed: string | null; retry: () => void };
+
+function Layout({ v, error, pending }: { v: GView | null; error?: string | null; pending?: Pending | null }) {
   const { c } = useTheme();
   const g = useGuardianT();
   const t = useT();
@@ -510,15 +529,17 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
           {g.roleLabel}
         </Text>
         <Text variant="largeTitle" numberOfLines={1}>
-          {v ? g.hello(v.childName) : g.linkTitle}
+          {v ? g.hello(v.childName) : pending ? (pending.name ? g.hello(pending.name) : ' ') : g.linkTitle}
         </Text>
-        <Text variant="subhead">{v ? v.childSub || ' ' : me?.display_name}</Text>
+        <Text variant="subhead">{v ? v.childSub || ' ' : pending ? pending.sub : me?.display_name}</Text>
       </View>
       {IS_PITCH ? <DevChip label={t.demo.title} onPress={() => router.push('/demo')} /> : null}
     </Stagger>
   );
 
-  const body = !v ? (
+  const body = pending ? (
+    <ChildPending pending={pending} />
+  ) : !v ? (
     <View style={styles.col}>
       <LinkChild first />
       <AccountCard onAskDanger={askDanger} />
@@ -581,6 +602,32 @@ function Layout({ v, error }: { v: GView | null; error?: string | null }) {
 
       <ConfirmDangerSheet sheet={dangerSheet} onClose={() => setDangerSheet((prev) => ({ ...prev, open: false }))} />
     </KeyboardAvoidingView>
+  );
+}
+
+/** Shown while a linked child's data loads, or if it failed: never the link form. */
+function ChildPending({ pending }: { pending: Pending }) {
+  const g = useGuardianT();
+  if (pending.failed) {
+    return (
+      <Card style={styles.gap}>
+        <Text variant="headline">{g.loadFailTitle}</Text>
+        <Text variant="subhead">{g.loadFailSub}</Text>
+        <PillButton label={g.retry} onPress={pending.retry} />
+      </Card>
+    );
+  }
+  return (
+    <View style={styles.col} accessibilityLabel={g.loadingChild} accessibilityState={{ busy: true }}>
+      {[0, 1, 2].map((i) => (
+        <Card key={i} style={styles.gap}>
+          <Skeleton width="35%" height={12} />
+          <Skeleton width="80%" height={22} />
+          <Skeleton height={56} r={14} />
+          {i === 0 ? <Skeleton width="60%" height={14} /> : null}
+        </Card>
+      ))}
+    </View>
   );
 }
 

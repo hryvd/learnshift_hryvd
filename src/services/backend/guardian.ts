@@ -74,6 +74,8 @@ type GuardianState = {
   children: Child[];
   selected: string | null;
   data: Record<string, ChildData>;
+  /** Per-child load failure, so one child's error never hides the others. */
+  childErrors: Record<string, string>;
   select: (id: string) => void;
 };
 
@@ -83,6 +85,7 @@ export const useGuardian = create<GuardianState>()((set) => ({
   children: [],
   selected: null,
   data: {},
+  childErrors: {},
   select: (selected) => set({ selected }),
 }));
 
@@ -93,6 +96,7 @@ export function resetGuardian() {
     children: [],
     selected: null,
     data: {},
+    childErrors: {},
   });
 }
 
@@ -121,6 +125,15 @@ export async function loadChildren() {
     loading: false,
     error: null,
   });
+  // Warm every other child in the background so switching is instant.
+  const loaded = useGuardian.getState().data;
+  for (const c of children) {
+    if (c.id !== useGuardian.getState().selected && !loaded[c.id]) loadChild(c.id);
+  }
+}
+
+function setChildError(id: string, message: string) {
+  useGuardian.setState((s) => ({ childErrors: { ...s.childErrors, [id]: message } }));
 }
 
 const LEARNER_STYLES = new Set<LearnerStyle>([
@@ -152,7 +165,16 @@ function parseLearningProfile(raw: unknown): LearningProfile | null {
   };
 }
 
+/** Loads one child. Never throws: failures land in `childErrors[id]`. */
 export async function loadChild(id: string) {
+  try {
+    await fetchChild(id);
+  } catch (e) {
+    setChildError(id, e instanceof Error ? e.message : 'Could not load this child.');
+  }
+}
+
+async function fetchChild(id: string) {
   const since = todayKey(new Date(Date.now() - 13 * DAY_MS));
   const [usage, nudges, requests, accountReqs, controls, settings, apps, live, profileRes, friendsRes] =
     await Promise.all([
@@ -185,7 +207,7 @@ export async function loadChild(id: string) {
     ]);
   const err = [usage, nudges, requests, controls, settings, apps, live].find((r) => r.error)?.error;
   if (err) {
-    useGuardian.setState({ error: err.message });
+    setChildError(id, err.message);
     return;
   }
   const c = controls.data;
@@ -261,7 +283,10 @@ export async function loadChild(id: string) {
       limitStyle: (st?.limit_style ?? 'adaptive') as 'adaptive' | 'fixed',
     },
   };
-  useGuardian.setState((s) => ({ data: { ...s.data, [id]: d }, error: null }));
+  useGuardian.setState((s) => {
+    const { [id]: _gone, ...childErrors } = s.childErrors;
+    return { data: { ...s.data, [id]: d }, childErrors, error: null };
+  });
 }
 
 /** Optimistic local edit while a write is in flight. */
