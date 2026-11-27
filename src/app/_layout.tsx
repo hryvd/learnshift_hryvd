@@ -5,16 +5,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import {
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
-  useFonts,
-} from '@expo-google-fonts/inter';
+import { useFonts } from 'expo-font';
+import { Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
 
 import { ease, timing, useReducedMotion } from '@/design/motion';
 import { ThemeProvider, useTheme } from '@/design/theme';
+import { FONT_MAIN, FONT_SECONDARY } from '@/design/typography';
 import { Paty } from '@/components/mascot/Paty';
 import { SplashTransition } from '@/components/mascot/SplashTransition';
 import { PhoneFrame, SHOW_FRAME } from '@/components/web/PhoneFrame';
@@ -40,7 +36,7 @@ function App() {
     Inter_600SemiBold,
     Inter_700Bold,
     Inter_800ExtraBold,
-    Bungee_400Regular: require('../../assets/fonts/Bungee-Regular.ttf'),
+    [FONT_MAIN]: require('../../assets/fonts/Bungee-Regular.ttf'),
   });
   const [hydrated, setHydrated] = useState(() => useAppStore.persist.hasHydrated());
   const authReady = useAuth((s) => s.status !== 'loading');
@@ -183,8 +179,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 14,
   },
-  errTitle: { fontSize: 22, fontWeight: '800', color: '#2B2D31', textAlign: 'center' },
-  errSub: { fontSize: 15, color: '#62666C', textAlign: 'center', lineHeight: 22 },
+  errTitle: { fontSize: 22, fontFamily: FONT_MAIN, fontWeight: 'normal', color: '#2B2D31', textAlign: 'center' },
+  errSub: { fontSize: 15, fontFamily: 'Inter_500Medium', color: '#575C63', textAlign: 'center', lineHeight: 22 },
   errBtn: {
     minWidth: 220,
     minHeight: 48,
@@ -194,7 +190,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  errBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  errBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: FONT_SECONDARY, fontWeight: 'normal' },
   errSecondary: { backgroundColor: '#EAE8E2' },
-  errSecondaryText: { color: '#2B2D31', fontSize: 15, fontWeight: '600' },
+  errSecondaryText: { color: '#2B2D31', fontSize: 15, fontFamily: FONT_SECONDARY, fontWeight: 'normal' },
 });

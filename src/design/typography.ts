@@ -2,6 +2,11 @@ import type { TextStyle } from 'react-native';
 
 export type Weight = 500 | 600 | 700 | 800;
 
+/** Display face, embedded natively under this name (app.json expo-font). */
+export const FONT_MAIN = 'Bungee-Regular';
+/** Bold UI face (Inter). Name kept from main for existing callers. */
+export const FONT_SECONDARY = 'Inter_700Bold';
+
 /**
  * Inter carries every label, control and paragraph. Bungee is reserved for
  * display moments (hero clocks, screen titles, big stats) and is opted into
@@ -14,7 +19,11 @@ const familyByWeight: Record<Weight, string> = {
   800: 'Inter_800ExtraBold',
 };
 
-export const DISPLAY_FONT = 'Bungee_400Regular';
+export const DISPLAY_FONT = FONT_MAIN;
+
+export function familyFor(weight: Weight): string {
+  return familyByWeight[weight];
+}
 
 export function fontFor(weight: Weight): TextStyle {
   return { fontFamily: familyByWeight[weight], fontWeight: 'normal' };
