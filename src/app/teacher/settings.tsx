@@ -4,8 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GearSix, Plus } from '@/components/ui/icons';
 
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
-import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
-import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Card, PillButton, SegmentedControl, Stagger, Text, Toggle } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
@@ -30,12 +28,10 @@ export default function TeacherSettings() {
   const active = classes.find((x) => x.id === selected) ?? classes[0] ?? null;
 
   return (
-    <BarBlurHost>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
       >
-        <BarBlurTarget>
           <ScrollView
             contentContainerStyle={[
               styles.body,
@@ -106,10 +102,7 @@ export default function TeacherSettings() {
               </View>
             )}
           </ScrollView>
-        </BarBlurTarget>
-        <TeacherTabBar active="settings" />
       </KeyboardAvoidingView>
-    </BarBlurHost>
   );
 }
 

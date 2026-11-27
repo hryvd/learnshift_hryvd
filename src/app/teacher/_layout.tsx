@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useSegments } from 'expo-router';
 
+import { TeacherTabBar, type TeacherTab } from '@/components/teacher/TeacherTabBar';
+import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { TeacherSidebar } from '@/components/teacher/TeacherSidebar';
 import { TeacherTopBar } from '@/components/teacher/TeacherTopBar';
 import { TeacherUploadDialog } from '@/components/teacher/TeacherUploadDialog';
@@ -26,6 +28,7 @@ export default function TeacherLayout() {
 function TeacherStack() {
   const { c } = useTheme();
   const { isDesktop, sidebar } = useDesktop();
+  const segments = useSegments() as string[];
   useTeacherLive(!IS_PITCH);
   const stack = (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
@@ -38,10 +41,15 @@ function TeacherStack() {
   );
   if (!isDesktop) {
     return (
-      <View style={{ flex: 1, backgroundColor: c.bg }}>
-        {stack}
-        <TeacherUploadSheet />
-      </View>
+      // One bar for the whole teacher area: it (and its Android blur) stays mounted
+      // across tab switches instead of being rebuilt per screen, which flashed black.
+      <BarBlurHost>
+        <View style={{ flex: 1, backgroundColor: c.bg }}>
+          <BarBlurTarget>{stack}</BarBlurTarget>
+          {segments.includes('student') ? null : <TeacherTabBar active={activeTab(segments)} />}
+          <TeacherUploadSheet />
+        </View>
+      </BarBlurHost>
     );
   }
   // Laptop: persistent sidebar + workspace. The phone tab bar hides itself.
@@ -58,6 +66,11 @@ function TeacherStack() {
       </View>
     </View>
   );
+}
+
+function activeTab(segments: string[]): TeacherTab {
+  const last = segments.at(-1);
+  return last === 'modules' || last === 'review' || last === 'settings' ? last : 'classes';
 }
 
 /** Shared laptop mode: warn after inactivity, then sign out and wipe local data. */
