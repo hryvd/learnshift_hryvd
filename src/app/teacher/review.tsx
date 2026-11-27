@@ -4,8 +4,6 @@ import { ChatTeardropText } from '@/components/ui/icons';
 
 import { TeacherReviewQueueCard } from '@/components/teacher/ReviewQueueCard';
 import { ReviewWorkbench } from '@/components/teacher/ReviewWorkbench';
-import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
-import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Stagger, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
@@ -30,9 +28,7 @@ export default function TeacherReview() {
   }
 
   return (
-    <BarBlurHost>
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-        <BarBlurTarget>
           <ScrollView
             contentContainerStyle={[
               styles.body,
@@ -63,10 +59,7 @@ export default function TeacherReview() {
               <TeacherReviewQueueCard />
             </Stagger>
           </ScrollView>
-        </BarBlurTarget>
-        <TeacherTabBar active="review" />
       </View>
-    </BarBlurHost>
   );
 }
 
