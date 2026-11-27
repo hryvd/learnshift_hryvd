@@ -25,6 +25,6 @@
     { "src": "/screenshots/classes.png", "sizes": "1366x768", "type": "image/png", "form_factor": "wide", "label": "Class mastery at a glance" },
     { "src": "/screenshots/studio.png", "sizes": "1366x768", "type": "image/png", "form_factor": "wide", "label": "Turn a lesson file into flashcards and a quiz" },
     { "src": "/screenshots/invite.png", "sizes": "1366x768", "type": "image/png", "form_factor": "wide", "label": "Invite students with a QR code" },
-    { "src": "/screenshots/signin.png", "sizes": "1366x768", "type": "image/png", "form_factor": "wide", "label": "Sign in with Google or email" }
+    { "src": "/screenshots/signin.png", "sizes": "1366x768", "type": "image/png", "form_factor": "wide", "label": "Sign in or create a teacher account" }
   ]
 }

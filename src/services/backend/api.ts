@@ -58,31 +58,6 @@ export async function signIn(email: string, password: string) {
   return data.session;
 }
 
-/** Google sign-in (web). Returns to /auth/callback, which finishes the session. */
-export async function signInWithGoogle() {
-  if (Platform.OS !== 'web' || typeof window === 'undefined') {
-    throw new Error('Google sign-in is available in the teacher app on a computer.');
-  }
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: 'select_account' } },
-  });
-  if (error) {
-    if (/provider is not enabled|unsupported provider/i.test(error.message)) {
-      throw new Error('Google sign-in isn’t switched on yet. Use your email for now.');
-    }
-    fail(error);
-  }
-}
-
-/** First Google sign-in from the teacher app: make this new account a teacher. */
-export async function claimTeacherRole() {
-  const { data, error } = await supabase.rpc('claim_teacher_role');
-  if (error) fail(error);
-  if (data?.error) throw new Error(data.error);
-  await refreshProfile();
-}
-
 export async function signOut() {
   await supabase.auth.signOut().catch(() => {});
 }

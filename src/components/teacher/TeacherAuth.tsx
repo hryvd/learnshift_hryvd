@@ -3,11 +3,10 @@ import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 're
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
 
 import { Paty } from '@/components/mascot/Paty';
 import { masteryColor, masteryInk } from '@/components/teacher/ClassHeatmap';
-import { Pop, Rise, Shake } from '@/components/teacher/Motion';
+import { Rise, Shake } from '@/components/teacher/Motion';
 import { Notice, PillButton, Text, TextField } from '@/components/ui';
 import { LockKey } from '@/components/ui/icons';
 import { useReducedMotion } from '@/design/motion';
@@ -21,7 +20,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Sign in / create account for LearnShift for Teachers (desktop). Teachers only. */
 export function TeacherAuth() {
-  const { c, isNight } = useTheme();
+  const { c } = useTheme();
   const { width } = useWindowDimensions();
   const split = width >= 900;
   const [mode, setMode] = useState<Mode>(() => {
@@ -39,7 +38,7 @@ export function TeacherAuth() {
             <Text variant="headline">{TEACHER_APP_NAME}</Text>
           </Rise>
         ) : null}
-        <AuthCard mode={mode} setMode={setMode} night={isNight} />
+        <AuthCard mode={mode} setMode={setMode} />
       </ScrollView>
     </View>
   );
@@ -158,12 +157,12 @@ function Cell({ m, delay, night, c }: { m: number; delay: number; night: boolean
 
 // ── Right: the form ──────────────────────────────────────────────────────
 
-function AuthCard({ mode, setMode, night }: { mode: Mode; setMode: (m: Mode) => void; night: boolean }) {
+function AuthCard({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void }) {
   const { c } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState<null | 'email' | 'google'>(null);
+  const [busy, setBusy] = useState<null | 'email'>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [tries, setTries] = useState(0);
@@ -215,18 +214,6 @@ function AuthCard({ mode, setMode, night }: { mode: Mode; setMode: (m: Mode) => 
     }
   };
 
-  const google = async () => {
-    if (busy) return;
-    setError(null);
-    setBusy('google');
-    try {
-      await api.signInWithGoogle(); // leaves the page on success
-    } catch (e) {
-      fail((e as Error).message);
-      setBusy(null);
-    }
-  };
-
   const forgot = async () => {
     setTouched(true);
     setError(null);
@@ -253,16 +240,6 @@ function AuthCard({ mode, setMode, night }: { mode: Mode; setMode: (m: Mode) => 
               ? 'Sign in to see your classes.'
               : 'Free for teachers. Set up a class in under a minute.'}
           </Text>
-        </Rise>
-
-        <Rise delay={140}>
-          <GoogleButton onPress={google} busy={busy === 'google'} disabled={!!busy} night={night} />
-        </Rise>
-
-        <Rise delay={180} style={styles.divider}>
-          <View style={[styles.rule, { backgroundColor: c.hairline }]} />
-          <Text variant="caption">or with email</Text>
-          <View style={[styles.rule, { backgroundColor: c.hairline }]} />
         </Rise>
 
         {error ? <Notice text={error} /> : null}
@@ -350,55 +327,6 @@ function AuthCard({ mode, setMode, night }: { mode: Mode; setMode: (m: Mode) => 
   );
 }
 
-function GoogleButton({ onPress, busy, disabled, night }: { onPress: () => void; busy: boolean; disabled: boolean; night: boolean }) {
-  const { c } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel="Continue with Google"
-      style={({ hovered, pressed }) => [
-        styles.google,
-        {
-          borderColor: c.hairline,
-          backgroundColor: night ? '#FFFFFF' : c.card,
-          opacity: disabled && !busy ? 0.6 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }, { translateY: hovered && !pressed ? -1 : 0 }],
-        },
-        hovered && styles.googleHover,
-      ]}
-    >
-      {busy ? (
-        <Pop>
-          <Text variant="headline" color="#1F1F1F">
-            Opening Google…
-          </Text>
-        </Pop>
-      ) : (
-        <>
-          <GoogleG />
-          <Text variant="headline" color="#1F1F1F">
-            Continue with Google
-          </Text>
-        </>
-      )}
-    </Pressable>
-  );
-}
-
-/** Google's "G" mark, in its own colours. */
-function GoogleG() {
-  return (
-    <Svg width={20} height={20} viewBox="0 0 48 48" accessibilityElementsHidden>
-      <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-    </Svg>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1, flexDirection: 'row' },
   flex: { flex: 1 },
@@ -426,10 +354,6 @@ const styles = StyleSheet.create({
   card: { borderRadius: 24, borderWidth: 1, padding: 32, gap: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } },
   cardTitle: { fontFamily: 'Inter_800ExtraBold', fontSize: 26, lineHeight: 32, letterSpacing: -0.6 },
   cardSub: { marginTop: 4, fontSize: 14.5 },
-  google: { height: 52, borderRadius: 14, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  googleHover: { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rule: { flex: 1, height: 1 },
   fields: { gap: 12 },
   forgot: { alignSelf: 'flex-end', paddingVertical: 2 },
   meterRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

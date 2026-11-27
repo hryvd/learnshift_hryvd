@@ -26,7 +26,7 @@ export const SHOW_FRAME: boolean = (() => {
     if (q.has('full')) return false;
     if (window.localStorage.getItem('ls-full') === '1') return false;
     // Teachers and guardians work on laptops: their screens get the full window.
-    if (/^\/(teacher|guardian|reset-password|privacy-policy|auth)(\/|$)/.test(window.location.pathname)) return false;
+    if (/^\/(teacher|guardian|reset-password|privacy-policy)(\/|$)/.test(window.location.pathname)) return false;
     if (window.localStorage.getItem(STAFF_KEY) === '1') return false;
     if (q.get('mode') === 'signin') return false;
   } catch {
