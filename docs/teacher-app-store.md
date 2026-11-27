@@ -11,29 +11,12 @@ npx eas-cli@latest deploy --alias teacher --export-dir dist-teacher
 
 Students keep using https://learnshift.expo.app (class QR codes open `…/join/CODE` there).
 
-## 1. Turn on Google sign-in (one time, about 15 minutes)
+## 1. Sign-in
 
-1. **Google Cloud Console** → APIs & Services → **OAuth consent screen**
-   - User type: External. App name: *LearnShift for Teachers*. Support email: yours.
-   - Scopes: only the defaults (`email`, `profile`, `openid`). No verification review is needed for these.
-   - App domain / privacy policy: `https://learnshift--teacher.expo.app/privacy-policy`.
-   - Publish the app (Testing mode only allows listed test users).
-2. **Credentials** → Create credentials → **OAuth client ID** → *Web application*
-   - Authorized redirect URI: `https://awajvyyqlafxyngwhuml.supabase.co/auth/v1/callback`
-   - Copy the Client ID and Client secret.
-3. **Supabase dashboard** → Authentication → **Sign In / Providers** → Google
-   - Enable, paste the Client ID and secret, save.
-4. **Supabase dashboard** → Authentication → **URL Configuration** → Redirect URLs, add:
-   - `https://learnshift--teacher.expo.app/auth/callback`
-   - `https://learnshift--teacher.expo.app/reset-password`
-   - `http://localhost:8081/auth/callback` (local development)
-
-Until step 3 is done, the Google button shows "Google sign-in isn't switched on yet. Use your email for now."
-
-How roles work: a first Google sign-in creates a student profile (the database default), then
-the app calls `claim_teacher_role()`, which turns it into a teacher only if the account is new
-(under 30 minutes), has no email/password identity, and has no class, guardian link or answers.
-`scripts/backend-test.mjs` covers the refusals.
+Teachers sign in with email and password. Google sign-in was removed for now; the
+`claim_teacher_role()` database function from that work is still in place (unused) if it returns.
+Add `https://learnshift--teacher.expo.app/reset-password` to Supabase → Authentication →
+URL Configuration → Redirect URLs so password-reset emails open the teacher app.
 
 ## 2. Package for the Microsoft Store (PWABuilder)
 
