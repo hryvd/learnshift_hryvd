@@ -52,6 +52,16 @@ object OverlayController {
   private var pausedByUs = false
   private val focusListener = AudioManager.OnAudioFocusChangeListener { }
   private var pendingRunnable: Runnable? = null
+  @Volatile private var cachedMainFont: Typeface? = null
+  @Volatile private var cachedSecondaryFont: Typeface? = null
+
+  private fun mainTypeface(ctx: Context): Typeface =
+    cachedMainFont ?: (runCatching { Typeface.createFromAsset(ctx.assets, "fonts/Bungee-Regular.ttf") }.getOrNull()
+      ?: Typeface.DEFAULT_BOLD).also { cachedMainFont = it }
+
+  private fun secondaryTypeface(ctx: Context): Typeface =
+    cachedSecondaryFont ?: (runCatching { Typeface.createFromAsset(ctx.assets, "fonts/Poppins-Bold.ttf") }.getOrNull()
+      ?: Typeface.DEFAULT_BOLD).also { cachedSecondaryFont = it }
 
   /** Fast start, long soft landing: the sheet glides in like it has weight. */
   private val glide = PathInterpolator(0.16f, 1f, 0.3f, 1f)
@@ -461,6 +471,7 @@ object OverlayController {
         val touchSlop = ViewConfiguration.get(appCtx).scaledTouchSlop
         fun label(value: String, size: Float = 15f) = TextView(appCtx).apply {
           text = value
+          typeface = secondaryTypeface(appCtx)
           setTextColor(ink)
           setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
         }
@@ -480,7 +491,6 @@ object OverlayController {
           14f,
         ).apply {
           gravity = Gravity.CENTER
-          setTypeface(typeface, Typeface.BOLD)
           setTextColor(Color.parseColor("#50675F"))
           background = roundedBox(Color.parseColor("#E8EFE9"), 999, ctx = appCtx)
           setPadding(dp(appCtx, 16), dp(appCtx, 9), dp(appCtx, 16), dp(appCtx, 9))
@@ -521,10 +531,9 @@ object OverlayController {
         }
         val overline = label("", 11f).apply {
           setTextColor(green)
-          setTypeface(typeface, Typeface.BOLD)
         }
         val topic = label("", 17f).apply {
-          setTypeface(typeface, Typeface.BOLD)
+          typeface = mainTypeface(appCtx)
           maxLines = 1
         }
         val progressBar = LinearLayout(appCtx).apply {
@@ -532,7 +541,6 @@ object OverlayController {
         }
         val visualView = QuestionVisualView(appCtx)
         val prompt = label("", 19f).apply {
-          setTypeface(typeface, Typeface.BOLD)
           setPadding(0, dp(appCtx, 6), 0, dp(appCtx, 10))
         }
         val choices = LinearLayout(appCtx).apply { orientation = LinearLayout.VERTICAL }
@@ -651,7 +659,6 @@ object OverlayController {
         val helpBtn = label("?", 15f).apply {
           contentDescription = if (cfg.fil) "Tulong" else "Help"
           gravity = Gravity.CENTER
-          setTypeface(typeface, Typeface.BOLD)
           setTextColor(green)
           background = roundedBox(Color.parseColor("#E1EEDF"), 999, ctx = appCtx)
           setOnClickListener {

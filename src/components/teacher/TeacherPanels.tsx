@@ -10,7 +10,7 @@ import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 
 import { Card, ListGroup, ListRow, Notice, PillButton, PressableScale, Text, TextField } from '@/components/ui';
 import { useTheme } from '@/design/theme';
-import { fontFor } from '@/design/typography';
+import { FONT_MAIN, fontFor } from '@/design/typography';
 import { teacherStrings as T } from '@/i18n/staff';
 import { stringsFor } from '@/i18n/useT';
 import * as api from '@/services/backend/api';
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     gap: 28,
     backgroundColor: '#0D1020',
   },
-  projCode: { fontFamily: 'Bungee_400Regular', fontSize: 120, lineHeight: 140, letterSpacing: 16 },
+  projCode: { fontFamily: FONT_MAIN, fontSize: 120, lineHeight: 140, letterSpacing: 16 },
   projSub: { maxWidth: 760 },
   codeText: { letterSpacing: 4, fontSize: 30, lineHeight: 36 },
   label: { paddingHorizontal: 4, marginTop: 8 },

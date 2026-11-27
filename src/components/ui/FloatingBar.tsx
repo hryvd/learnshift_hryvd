@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { Platform, Pressable, StyleSheet, Text as RNText, View, type StyleProp, type ViewStyle } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   interpolate,
@@ -16,7 +15,7 @@ import { haptic } from '@/design/haptics';
 import { spring, useReducedMotion } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius } from '@/design/tokens';
-import { fontFor } from '@/design/typography';
+import { FONT_MAIN, fontFor } from '@/design/typography';
 
 import type { IconProps } from './icons';
 import { PressableScale } from './PressableScale';
@@ -48,8 +47,35 @@ export function useFloatingBar(): { bottom: number; inset: number } {
  * - `android`: live RenderNode blur (Android 12+) of the content wrapped in
  *   `BarBlurTarget`; Android 11 and below get the tinted frost layer only.
  */
+type GlassModule = typeof import('expo-glass-effect');
+
+/**
+ * expo-glass-effect is iOS-only and its native module is not linked in every iOS
+ * build (the CI sideload build leaves it out). A missing module must never crash
+ * the app at launch, so it is loaded defensively and the blur bar is the fallback.
+ */
+function loadGlass(): GlassModule | null {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-glass-effect') as GlassModule;
+  } catch {
+    return null;
+  }
+}
+const glassModule = loadGlass();
+const GlassView = glassModule?.GlassView ?? null;
+
+function liquidGlassAvailable(): boolean {
+  try {
+    return !!glassModule && !!glassModule.isLiquidGlassAvailable();
+  } catch {
+    return false;
+  }
+}
+
 const GLASS: 'liquid' | 'blur' | 'android' =
-  Platform.OS === 'android' ? 'android' : Platform.OS === 'ios' && isLiquidGlassAvailable() ? 'liquid' : 'blur';
+  Platform.OS === 'android' ? 'android' : Platform.OS === 'ios' && GlassView && liquidGlassAvailable() ? 'liquid' : 'blur';
 
 /** Ref to the content behind the bar, so Android's blur knows what to blur. */
 const BlurTargetContext = createContext<RefObject<ComponentRef<typeof View> | null> | null>(null);
@@ -99,7 +125,7 @@ export function FloatingBarShell({ children, inline }: { children: ReactNode; in
   const t = isNight ? TONE.night : TONE.day;
 
   let surface: ReactNode;
-  if (GLASS === 'liquid') {
+  if (GLASS === 'liquid' && GlassView) {
     surface = (
       <GlassView
         style={[StyleSheet.absoluteFill, styles.round]}
@@ -308,7 +334,8 @@ const styles = StyleSheet.create({
   },
   plusBox: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   plus: {
-    fontFamily: 'Bungee_400Regular',
+    fontFamily: FONT_MAIN,
+    fontWeight: 'normal',
     fontSize: 34,
     lineHeight: 40,
     textAlign: 'center',
