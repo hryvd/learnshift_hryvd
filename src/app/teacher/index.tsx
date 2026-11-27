@@ -16,8 +16,6 @@ import { Paty } from '@/components/mascot/Paty';
 import { ClassHeatmap, MasteryLegend, masteryColor, masteryInk } from '@/components/teacher/ClassHeatmap';
 import { RightDrawer } from '@/components/teacher/DesktopOverlay';
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
-import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
-import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import {
   BottomSheet,
   Card,
@@ -91,7 +89,7 @@ function RealTeacher() {
 
   if (loading && classes.length === 0) {
     return (
-      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs>
+      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher}>
         <Card style={styles.gap} accessibilityLabel="Loading your classes">
           <Skeleton width="40%" height={22} />
           <Skeleton height={14} width="60%" />
@@ -105,7 +103,7 @@ function RealTeacher() {
 
   if (error && classes.length === 0) {
     return (
-      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs>
+      <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher}>
         <Notice text={error} />
         <PillButton label="Try again" block onPress={() => void refreshTeacher()} />
         <TeacherAccountCard />
@@ -118,7 +116,6 @@ function RealTeacher() {
       <Frame
         title={classes.length === 0 ? T.createTitle : T.newClass}
         subtitle={me?.display_name ?? T.teacher}
-        showTabs
       >
         {classes.length === 0 ? (
           <Card style={styles.welcomeCard}>
@@ -141,7 +138,7 @@ function RealTeacher() {
       </Frame>
     );
   }
-  if (!cls) return <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs />;
+  if (!cls) return <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} />;
 
   const section = sections.find((s) => s.id === cls.id)!;
   return (
@@ -162,12 +159,10 @@ function RealTeacher() {
 function Frame({
   title,
   subtitle,
-  showTabs,
   children,
 }: {
   title: string;
   subtitle: string;
-  showTabs?: boolean;
   children?: React.ReactNode;
 }) {
   const { c } = useTheme();
@@ -175,12 +170,10 @@ function Frame({
   const pull = usePullRefresh(refreshTeacher);
   const { isDesktop } = useDesktop();
   return (
-    <BarBlurHost>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
       >
-        <BarBlurTarget>
           <ScrollView
             contentContainerStyle={[
               styles.body,
@@ -211,10 +204,7 @@ function Frame({
             </View>
             {children}
           </ScrollView>
-        </BarBlurTarget>
-        {showTabs ? <TeacherTabBar active="classes" /> : null}
       </KeyboardAvoidingView>
-    </BarBlurHost>
   );
 }
 
@@ -474,9 +464,7 @@ function Dashboard({
   );
 
   return (
-    <BarBlurHost>
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-        <BarBlurTarget>
           <ScrollView
             contentContainerStyle={[
               styles.body,
@@ -567,7 +555,6 @@ function Dashboard({
               </>
             )}
           </ScrollView>
-        </BarBlurTarget>
 
         {isDesktop ? (
           <RightDrawer
@@ -633,9 +620,7 @@ function Dashboard({
         </BottomSheet>
         )}
 
-        <TeacherTabBar active="classes" />
       </View>
-    </BarBlurHost>
   );
 }
 

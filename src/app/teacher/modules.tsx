@@ -13,8 +13,6 @@ import { BookOpenText, Plus, WifiHigh } from '@/components/ui/icons';
 
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
 import { CopyModuleDialog, EditModuleDialog } from '@/components/teacher/ModuleEditDialogs';
-import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
-import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import {
   BottomSheet,
   Card,
@@ -94,12 +92,10 @@ export default function TeacherModules() {
   };
 
   return (
-    <BarBlurHost>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
       >
-        <BarBlurTarget>
           <ScrollView
             contentContainerStyle={[
               styles.body,
@@ -254,7 +250,6 @@ export default function TeacherModules() {
               {isDesktop && selectedMod ? <ModulePreview mod={selectedMod} /> : null}
             </Stagger>
           </ScrollView>
-        </BarBlurTarget>
 
         <EditModuleDialog mod={editing} onClose={() => setEditing(null)} />
         <CopyModuleDialog mod={copying} onClose={() => setCopying(null)} />
@@ -285,9 +280,7 @@ export default function TeacherModules() {
           ) : null}
         </BottomSheet>
 
-        <TeacherTabBar active="modules" />
       </KeyboardAvoidingView>
-    </BarBlurHost>
   );
 }
 

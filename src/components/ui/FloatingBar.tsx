@@ -156,6 +156,9 @@ export function FloatingBarShell({ children, inline }: { children: ReactNode; in
       );
     surface = (
       <View style={styles.clip} pointerEvents="none">
+        {/* Opaque frost under the live blur: if the blur hasn't sampled yet (or
+            can't), the bar shows frosted glass, never black. */}
+        {GLASS === 'android' ? <View style={[StyleSheet.absoluteFill, { backgroundColor: t.frost }]} /> : null}
         {blur}
         {/* Brand-tinted wash keeps icons readable over busy content. */}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: t.wash }]} />
