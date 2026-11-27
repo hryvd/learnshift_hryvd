@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowRight, BookOpenText, ChalkboardTeacher, Plus, TrendDown, Warning } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
-import { ClassHeatmap, MasteryLegend, masteryColor } from '@/components/teacher/ClassHeatmap';
+import { ClassHeatmap, MasteryLegend, masteryColor, masteryInk } from '@/components/teacher/ClassHeatmap';
+import { RightDrawer } from '@/components/teacher/DesktopOverlay';
 import { CreateClassCard, JoinCodeCard, TeacherAccountCard } from '@/components/teacher/TeacherPanels';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
@@ -31,6 +32,8 @@ import {
   Text,
 } from '@/components/ui';
 import { useDesktop } from '@/hooks/useDesktop';
+import { downloadFile, toCsv } from '@/lib/exportFile';
+import { MOD, useShortcut } from '@/lib/shortcuts';
 import { buildSections, needsSupport, type Section, type Student } from '@/data/class';
 import { SKILL_BY_ID, SKILLS, type SkillId } from '@/data/skills';
 import { useTheme } from '@/design/theme';
@@ -239,27 +242,23 @@ function Dashboard({
   const { c, isNight } = useTheme();
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
-  const { contentWidth: width, isDesktop } = useDesktop();
+  const { contentWidth: width, isDesktop, height: winH } = useDesktop();
   const wide = width >= 900;
   const [cell, setCell] = useState<{ s: Student; skill: SkillId } | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'support' | 'none'>('all');
+  const [gapSkill, setGapSkill] = useState<SkillId | null>(null);
   const [sort, setSort] = useState<'name' | 'low' | 'high'>('name');
+  const [sortSkill, setSortSkill] = useState<SkillId | null>(null);
   const searchRef = useRef<React.ComponentRef<typeof TextInput>>(null);
-  const pendingReview = useTeacher((s) => s.review.filter((r) => r.status === 'needs_review').length);
+  const realPending = useTeacher((s) => s.review.filter((r) => r.status === 'needs_review').length);
+  const pitchReview = useAppStore((s) => s.review);
+  const pitchReviewed = useAppStore((s) => s.reviewed);
+  const pendingReview = IS_PITCH ? pitchReview.filter((r) => !pitchReviewed[r.id]).length : realPending;
 
-  // Ctrl/Cmd+K jumps to the student search on a laptop.
-  useEffect(() => {
-    if (!isDesktop || typeof window === 'undefined') return;
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isDesktop]);
+  // ⌘/Ctrl+K or "/" jumps to the student search on a laptop.
+  useShortcut('k', () => searchRef.current?.focus(), { mod: true, enabled: isDesktop, allowInInput: true });
+  useShortcut('/', () => searchRef.current?.focus(), { enabled: isDesktop });
 
   const active = useMemo(() => section.students.filter((s) => (s as { answered?: number }).answered !== 0), [section]);
   const support = useMemo(
@@ -282,14 +281,38 @@ function Dashboard({
     const list = section.students.filter((st) => {
       if (q && !st.name.toLowerCase().includes(q)) return false;
       if (filter === 'support' && !supportIds.has(st.id)) return false;
+      if (gapSkill && !(gapEngine.rootGap(st.mastery) === gapSkill && st.mastery[gapSkill] < 0.5)) return false;
       if (filter === 'none' && (st as { answered?: number }).answered !== 0) return false;
       return true;
     });
-    if (sort === 'low') list.sort((a, b) => avgOf(a) - avgOf(b));
+    if (sortSkill) list.sort((a, b) => a.mastery[sortSkill] - b.mastery[sortSkill]);
+    else if (sort === 'low') list.sort((a, b) => avgOf(a) - avgOf(b));
     else if (sort === 'high') list.sort((a, b) => avgOf(b) - avgOf(a));
     else list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [section, query, filter, sort, supportIds]);
+  }, [section, query, filter, sort, sortSkill, gapSkill, supportIds]);
+
+  const exportCsv = () => {
+    const rows = [
+      ['Student', ...SKILLS.map((k) => k.name.en), 'Average', 'Root gap', 'Answers (30 days)', 'Last active (UTC)'],
+      ...section.students
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((st) => {
+          const x = st as Partial<LiveStudent>;
+          return [
+            st.name,
+            ...SKILLS.map((k) => Math.round(st.mastery[k.id] * 100)),
+            Math.round(avgOf(st) * 100),
+            SKILL_BY_ID[gapEngine.rootGap(st.mastery)].name.en,
+            x.answered ?? '',
+            x.lastActive ?? '',
+          ];
+        }),
+    ];
+    const day = new Date().toISOString().slice(0, 10);
+    downloadFile(`${section.name.replace(/[^\w\- ]+/g, '').trim() || 'class'} mastery ${day}.csv`, toCsv(rows));
+  };
   const classAvg = active.length ? active.reduce((a, st) => a + avgOf(st), 0) / active.length : null;
 
   const maxW = isDesktop ? 1400 : wide ? 1240 : 560;
@@ -306,6 +329,9 @@ function Dashboard({
           <Text variant="title">{T.classTitle}</Text>
           <Text variant="subhead">{T.classSub(section.students.length)}</Text>
         </View>
+        {isDesktop && section.students.length > 0 ? (
+          <PillButton label="Export CSV" kind="neutral" size="sm" onPress={exportCsv} accessibilityHint="Downloads mastery for every student as a spreadsheet" />
+        ) : null}
         <MasteryLegend low={T.low2} high={T.high} />
       </View>
       {rootCounts ? (
@@ -316,13 +342,20 @@ function Dashboard({
           </Text>
         </View>
       ) : null}
+      {gapSkill ? (
+        <Chip
+          label={`Root gap: ${SKILL_BY_ID[gapSkill].name.en} · clear`}
+          kind="tinted"
+          onPress={() => setGapSkill(null)}
+        />
+      ) : null}
       {!empty && section.students.length > 0 ? (
         <View style={styles.toolbar}>
           <TextInput
             ref={searchRef}
             value={query}
             onChangeText={setQuery}
-            placeholder={isDesktop ? 'Search students (Ctrl K)' : 'Search students'}
+            placeholder={isDesktop ? `Search students (${MOD} K)` : 'Search students'}
             placeholderTextColor={c.textTertiary}
             accessibilityLabel="Search students"
             style={[styles.search, { color: c.text, backgroundColor: c.inset, borderColor: c.hairline }]}
@@ -361,6 +394,7 @@ function Dashboard({
             onPress: () => {
               setQuery('');
               setFilter('all');
+              setGapSkill(null);
             },
           }}
         />
@@ -368,8 +402,14 @@ function Dashboard({
         <ClassHeatmap
           students={shown}
           showValues={isDesktop}
+          sortSkill={sortSkill}
+          onSortSkill={isDesktop ? (k) => setSortSkill((cur) => (cur === k ? null : k)) : undefined}
           width={heatInner}
-          height={Math.min(wide ? 620 : 470, 90 + shown.length * 40)}
+          height={
+            isDesktop
+              ? Math.max(320, Math.min(winH - 330, 90 + shown.length * 40))
+              : Math.min(wide ? 620 : 470, 90 + shown.length * 40)
+          }
           highlight={rootCounts?.[0]}
           onCell={(s, skill) => setCell({ s, skill })}
           onStudent={openStudent}
@@ -454,6 +494,7 @@ function Dashboard({
               )
             }
           >
+            {!isDesktop ? (
             <Stagger index={0} style={styles.header}>
               <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
                 <ChalkboardTeacher size={22} weight="fill" color="#FFFFFF" />
@@ -468,8 +509,9 @@ function Dashboard({
               </View>
               {IS_PITCH ? <DevChip onPress={() => router.push('/demo')} /> : null}
             </Stagger>
+            ) : null}
             <Stagger index={1} style={styles.segRow}>
-              {sections.length > 1 ? (
+              {sections.length > 1 && !isDesktop ? (
                 <SegmentedControl
                   options={sections.map((s) => ({ value: s.id, label: s.name }))}
                   value={section.id}
@@ -503,11 +545,11 @@ function Dashboard({
                   label="Top root gap"
                   value={rootCounts ? SKILL_BY_ID[rootCounts[0]].name.en : 'None'}
                   sub={rootCounts ? `${rootCounts[1]} ${rootCounts[1] === 1 ? 'student' : 'students'} · show` : 'No shared gap'}
-                  onPress={rootCounts ? () => setFilter('support') : undefined}
+                  onPress={rootCounts ? () => setGapSkill((g) => (g ? null : rootCounts[0])) : undefined}
                 />
                 <Kpi
                   label="Review queue"
-                  value={IS_PITCH ? '—' : String(pendingReview)}
+                  value={String(pendingReview)}
                   sub="Tutor answers to check"
                   onPress={() => router.replace('/teacher/review')}
                 />
@@ -527,6 +569,28 @@ function Dashboard({
           </ScrollView>
         </BarBlurTarget>
 
+        {isDesktop ? (
+          <RightDrawer
+            visible={!!cell}
+            onClose={() => setCell(null)}
+            subtitle={cell ? SKILL_BY_ID[cell.skill].name.en : undefined}
+            title={cell?.s.name ?? ''}
+            footer={
+              cell ? (
+                <PillButton
+                  label={T.open}
+                  onPress={() => {
+                    const s = cell.s;
+                    setCell(null);
+                    openStudent(s);
+                  }}
+                />
+              ) : null
+            }
+          >
+            {cell ? <CellDetail s={cell.s} skill={cell.skill} /> : null}
+          </RightDrawer>
+        ) : (
         <BottomSheet visible={!!cell} onClose={() => setCell(null)} accessibilityLabel="Cell detail">
           {cell ? (
             <View style={styles.sheet}>
@@ -540,7 +604,7 @@ function Dashboard({
                 >
                   <Text
                     variant="title"
-                    color={cell.s.mastery[cell.skill] < 0.35 || cell.s.mastery[cell.skill] >= 0.8 ? '#FFFFFF' : 'text'}
+                    color={masteryInk(cell.s.mastery[cell.skill], c, isNight)}
                     style={fontFor(800)}
                   >
                     {Math.round(cell.s.mastery[cell.skill] * 100)}%
@@ -567,10 +631,50 @@ function Dashboard({
             </View>
           ) : null}
         </BottomSheet>
+        )}
 
         <TeacherTabBar active="classes" />
       </View>
     </BarBlurHost>
+  );
+}
+
+/** Laptop inspector body: the cell, why it's low, and the prerequisites behind it. */
+function CellDetail({ s, skill }: { s: Student; skill: SkillId }) {
+  const { c, isNight } = useTheme();
+  const m = s.mastery[skill];
+  const root = gapEngine.rootGap(s.mastery, skill);
+  const prereqs = SKILLS.filter((k) => SKILL_BY_ID[skill].prereqs.includes(k.id));
+  return (
+    <>
+      <View style={[styles.bigCell, styles.bigCellWide, { backgroundColor: masteryColor(m, c, isNight) }]}>
+        <Text variant="title" color={masteryInk(m, c, isNight)} style={fontFor(800)}>
+          {Math.round(m * 100)}% mastery
+        </Text>
+      </View>
+      <Text variant="body">
+        {root === skill
+          ? `${SKILL_BY_ID[skill].name.en} itself is where ${s.name.split(' ')[0]} needs practice.`
+          : T.rootGap(SKILL_BY_ID[root].name.en)}
+      </Text>
+      {prereqs.length ? (
+        <>
+          <Text variant="overline">Builds on</Text>
+          {prereqs.map((k) => (
+            <View key={k.id} style={styles.rowBetween}>
+              <Text variant="subhead" color="text">
+                {k.name.en}
+              </Text>
+              <Text variant="subhead" style={styles.tabular}>
+                {Math.round(s.mastery[k.id] * 100)}%
+              </Text>
+            </View>
+          ))}
+        </>
+      ) : (
+        <Text variant="subhead">This is a starting skill with no prerequisites.</Text>
+      )}
+    </>
   );
 }
 
@@ -637,4 +741,5 @@ const styles = StyleSheet.create({
   smallChip: { height: 26, paddingHorizontal: 10 },
   sheet: { gap: 14, paddingBottom: 8 },
   bigCell: { width: 76, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  bigCellWide: { width: '100%', height: 64 },
 });

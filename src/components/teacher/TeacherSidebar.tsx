@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 
@@ -22,6 +22,7 @@ import { useOnline } from '@/hooks/useDesktop';
 import { useNow } from '@/hooks/useNow';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH } from '@/lib/config';
+import { useShortcut } from '@/lib/shortcuts';
 import * as api from '@/services/backend/api';
 import { clearTeacherCache, refreshTeacher, useTeacher } from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
@@ -63,18 +64,8 @@ export function TeacherSidebar({ width }: { width: number }) {
     : review.filter((r) => r.status === 'needs_review').length;
   const [refreshing, setRefreshing] = useState(false);
 
-  // Ctrl/Cmd+U opens the upload dialog from anywhere in the workspace.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-        e.preventDefault();
-        setUploadOpen(true);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [setUploadOpen]);
+  // "U" (outside text fields) opens upload. Ctrl/⌘+U is the browser's View Source.
+  useShortcut('u', () => setUploadOpen(true));
 
   const active = (href: Href) => (href === '/teacher' ? path === '/teacher' || path.startsWith('/teacher/student') : path.startsWith(href));
 
@@ -87,6 +78,11 @@ export function TeacherSidebar({ width }: { width: number }) {
 
   const signOut = async () => {
     clearTeacherCache();
+    try {
+      window.localStorage.removeItem('ls-staff');
+    } catch {
+      // storage blocked
+    }
     await api.signOut();
     router.replace('/onboarding');
   };
@@ -118,7 +114,7 @@ export function TeacherSidebar({ width }: { width: number }) {
         <Pressable
           onPress={() => setUploadOpen(true)}
           accessibilityRole="button"
-          accessibilityLabel="Upload module (Ctrl+U)"
+          accessibilityLabel="Upload module (shortcut U)"
           style={({ pressed, hovered }) => [
             styles.cta,
             { backgroundColor: c.accent, opacity: pressed ? 0.85 : hovered ? 0.94 : 1 },
@@ -129,7 +125,7 @@ export function TeacherSidebar({ width }: { width: number }) {
             Upload module
           </Text>
           <Text variant="caption" color="onAccent" style={styles.kbd}>
-            Ctrl U
+            U
           </Text>
         </Pressable>
 

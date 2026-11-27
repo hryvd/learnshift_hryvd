@@ -58,3 +58,6 @@ dist-app/
 /.c/
 *.ipa
 /artifacts/
+
+# Playwright laptop E2E output
+e2e-shots/
