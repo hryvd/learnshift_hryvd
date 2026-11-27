@@ -14,7 +14,7 @@ const SECTIONS: [string, string[]][] = [
   [
     'What we store about teachers',
     [
-      'Your name and email address, and your password (stored only as a secure hash by our sign-in provider). If you sign in with Google, we receive only your name and email address from Google.',
+      'Your name and email address, and your password (stored only as a secure hash by our sign-in provider).',
       'The classes you create, their join codes, and the lesson modules, flashcards and quiz questions you publish.',
       'Your reviews of the AI tutor’s explanations.',
     ],

@@ -45,7 +45,7 @@ try {
   const title = await p.title();
   log('Signed out → teacher sign-in, no role picker, no phone frame', /onboarding/.test(p.url()) && (await p.getByText('Who’s here?').count()) === 0 && (await p.locator('iframe').count()) === 0, `${p.url()} · title "${title}"`);
   log('App title is LearnShift for Teachers', title === 'LearnShift for Teachers', title);
-  log('Google button present', (await p.getByRole('button', { name: 'Continue with Google' }).count()) === 1);
+  log('No Google button', (await p.getByRole('button', { name: /Google/ }).count()) === 0);
   await p.screenshot({ path: `${OUT}/signin-1366.png` });
   if (STORE) await p.screenshot({ path: 'web-teacher/screenshots/signin.png' });
   for (const [w, h] of [[1280, 720], [1920, 1080], [960, 600], [390, 844]]) {
