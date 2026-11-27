@@ -391,6 +391,28 @@ try {
   ok(!!blockedMsgErr, 'blocked user cannot send DM messages');
   const blockedSee = await rows(student.c.from('messages').select('*').eq('conversation_id', dmId));
   ok(Array.isArray(blockedSee) && blockedSee.length === 0, 'blocked user messages are hidden from blocker');
+
+  console.log('Teacher app: claim_teacher_role');
+  {
+    // Email sign-ups chose their role already; only fresh OAuth accounts may claim it.
+    const st = await user('student', 'Claim Student');
+    all.push(st);
+    const { data: sd } = await st.c.rpc('claim_teacher_role');
+    const { data: sp } = await st.c.from('profiles').select('role').eq('id', st.id).single();
+    ok(!!sd?.error && sp?.role === 'student', 'email student cannot claim the teacher role', sd);
+    const te = await user('teacher', 'Claim Teacher');
+    all.push(te);
+    const { data: td } = await te.c.rpc('claim_teacher_role');
+    ok(td?.role === 'teacher', 'teacher calling claim stays a teacher', td);
+    const gu = await user('guardian', 'Claim Guardian');
+    all.push(gu);
+    const { data: gd } = await gu.c.rpc('claim_teacher_role');
+    const { data: gp } = await gu.c.from('profiles').select('role').eq('id', gu.id).single();
+    ok(gd?.code === 'role_taken' && gp?.role === 'guardian', 'guardian cannot claim the teacher role', gd);
+    const anon = createClient(URL, KEY, { auth: { persistSession: false } });
+    const { error: ae } = await anon.rpc('claim_teacher_role');
+    ok(!!ae, 'signed-out caller cannot claim a role');
+  }
 } catch (e) {
   failed++;
   console.log('  ✗ crashed:', e.message);

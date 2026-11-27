@@ -67,7 +67,7 @@ export default function TeacherSettings() {
                   />
                 ) : null}
 
-                {active ? <JoinCodeCard code={active.join_code} className={active.name} /> : null}
+                {active ? <JoinCodeCard code={active.join_code} className={active.name} classId={active.id} /> : null}
                 {isDesktop ? <ManageClassesCard /> : null}
 
                 {creating ? (

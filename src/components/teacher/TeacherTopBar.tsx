@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
 
-import { ProjectorDialog } from '@/components/teacher/ProjectorDialog';
+import { InviteDialog } from '@/components/teacher/InviteDialog';
 import { Text } from '@/components/ui';
 import { ArrowsClockwise, CaretLeft, LockKey, Monitor } from '@/components/ui/icons';
 import { useTheme } from '@/design/theme';
@@ -82,7 +82,7 @@ export function TeacherTopBar() {
         <Pressable
           onPress={() => setProjecting(true)}
           accessibilityRole="button"
-          accessibilityLabel={`Show join code ${cls.join_code} for the projector`}
+          accessibilityLabel={`Invite students with code ${cls.join_code}`}
           style={({ hovered }) => [styles.action, { borderColor: c.hairline }, hovered && { backgroundColor: c.inset }]}
         >
           <Monitor size={15} weight="bold" color={c.accent} />
@@ -105,8 +105,9 @@ export function TeacherTopBar() {
       ) : null}
 
       {cls ? (
-        <ProjectorDialog
+        <InviteDialog
           visible={projecting}
+          classId={IS_PITCH ? undefined : (selected ?? undefined)}
           code={cls.join_code}
           className={cls.name}
           onClose={() => setProjecting(false)}

@@ -4,7 +4,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const dir = 'dist/_expo/static/js/web';
+const out = process.argv[2] ?? 'dist';
+const dir = `${out}/_expo/static/js/web`;
 if (!fs.existsSync(dir)) {
   console.error('FAIL: run `npx expo export -p web` first.');
   process.exit(1);
@@ -13,5 +14,5 @@ const files = fs
   .readdirSync(dir)
   .filter((f) => f.endsWith('.js'))
   .map((f) => `/${path.posix.join('_expo/static/js/web', f)}`);
-fs.writeFileSync('dist/precache.json', JSON.stringify({ built: new Date().toISOString(), files }, null, 0));
+fs.writeFileSync(`${out}/precache.json`, JSON.stringify({ built: new Date().toISOString(), files }, null, 0));
 console.log(`PASS: precache.json lists ${files.length} chunks.`);

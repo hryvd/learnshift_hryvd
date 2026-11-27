@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 
-import { IS_PITCH } from '@/lib/config';
+import { IS_PITCH, IS_TEACHER_APP } from '@/lib/config';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
@@ -13,6 +13,8 @@ export default function Index() {
   const role = IS_PITCH ? storeRole : profileRole;
 
   if (!IS_PITCH && status !== 'signedIn') return <Redirect href="/onboarding" />;
+  // Teacher desktop app: teachers only.
+  if (IS_TEACHER_APP) return role === 'teacher' ? <Redirect href="/teacher" /> : <Redirect href="/teachers-only" />;
   if (role === 'guardian') return <Redirect href="/guardian" />;
   if (role === 'teacher') return <Redirect href="/teacher" />;
   if (!onboarded) return <Redirect href="/onboarding" />;

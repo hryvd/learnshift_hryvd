@@ -30,6 +30,44 @@ export function buildFriendShareMessage(code: string, name?: string | null): str
   return `${who} on LearnShift Kapuluan!\nFriend code: ${clean}\n${buildFriendQrPayload(clean)}`;
 }
 
+/** Site students open from a class invite QR (the student app's web build). */
+export const STUDENT_SITE = 'https://learnshift.expo.app';
+
+/** The link a class QR encodes: opens the join page with the code filled in. */
+export function buildClassJoinUrl(code: string): string {
+  return `${STUDENT_SITE}/join/${normalizeFriendCode(code)}`;
+}
+
+/** Invite text a teacher can paste into a group chat. */
+export function buildClassInviteMessage(code: string, className?: string | null): string {
+  const clean = normalizeFriendCode(code);
+  const cls = className?.trim() ? ` ${className.trim()}` : ' our class';
+  return `Join${cls} on LearnShift!
+Class code: ${clean}
+Open: ${buildClassJoinUrl(clean)}
+Or in the app: Profile › Join a class.`;
+}
+
+/** A class code from a scanned class invite (`…/join/CODE` or `learnshift://join?code=`), else null. */
+export function parseClassCodeFromScan(raw: string): string | null {
+  try {
+    const u = new URL(raw.trim());
+    const host = u.hostname.toLowerCase();
+    const ours =
+      u.protocol === 'learnshift:' ||
+      ((u.protocol === 'https:' || u.protocol === 'http:') &&
+        (host === 'learnshift.expo.app' || /^learnshift--[a-z0-9-]+\.expo\.app$/.test(host)));
+    if (!ours) return null;
+    const segs = `${host}${u.pathname}`.split('/').filter(Boolean);
+    const i = segs.findIndex((s) => s.toLowerCase() === 'join');
+    if (i < 0) return null;
+    const code = normalizeFriendCode(u.searchParams.get('code') ?? segs[i + 1] ?? '');
+    return STRICT_CODE_RE.test(code) ? code : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Extracts a valid LearnShift friend code from any scanned QR payload:
  * - `learnshift://friends?code=AM4GAU`
@@ -56,6 +94,8 @@ export function parseFriendCodeFromScan(raw: string): string | null {
 
       if (!isLearnShiftScheme && !isLearnShiftWeb) return null;
 
+      // Class invites (…/join/CODE) are not friend codes.
+      if (/(^|\/)join(\/|$)/i.test(`${parsed.hostname}${parsed.pathname}`)) return null;
       const param = parsed.searchParams.get('code') ?? parsed.searchParams.get('friendCode');
       if (param) {
         const clean = normalizeFriendCode(param);
