@@ -67,7 +67,7 @@ export const teacherStrings = {
   modules: 'Modules',
   modulesSub: 'Upload a lesson file or paste text. AI creates student flashcards and quiz breaks.',
   uploadModule: 'Upload module file',
-  uploadHint: 'Supports .txt, .md, .csv, .html, or paste lesson notes below.',
+  uploadHint: 'Supports PDF, Word (.docx), .txt, .md, .csv, .html, or paste lesson notes below.',
   sampleModule: 'Load sample lesson',
   moduleTitle: 'Module title',
   moduleTitlePh: 'e.g. Linear Equations & Slope',

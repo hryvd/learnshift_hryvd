@@ -1,11 +1,15 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 
+import { TeacherSidebar } from '@/components/teacher/TeacherSidebar';
 import { TeacherUploadSheet } from '@/components/teacher/TeacherUploadSheet';
+import { Text } from '@/components/ui';
+import { WifiSlash } from '@/components/ui/icons';
 import { useTheme } from '@/design/theme';
+import { useDesktop, useOnline } from '@/hooks/useDesktop';
 import { useRoleGate } from '@/hooks/useRoleGate';
 import { IS_PITCH } from '@/lib/config';
-import { useTeacherLive } from '@/services/backend/teacher';
+import { useTeacher, useTeacherLive } from '@/services/backend/teacher';
 
 export default function TeacherLayout() {
   const gate = useRoleGate('teacher');
@@ -15,17 +19,60 @@ export default function TeacherLayout() {
 
 function TeacherStack() {
   const { c } = useTheme();
+  const { isDesktop, sidebar } = useDesktop();
   useTeacherLive(!IS_PITCH);
+  const stack = (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+      <Stack.Screen name="index" options={{ animation: 'none' }} />
+      <Stack.Screen name="modules" options={{ animation: 'none' }} />
+      <Stack.Screen name="review" options={{ animation: 'none' }} />
+      <Stack.Screen name="settings" options={{ animation: 'none' }} />
+      <Stack.Screen name="student/[id]" options={isDesktop ? { animation: 'none' } : undefined} />
+    </Stack>
+  );
+  if (!isDesktop) {
+    return (
+      <View style={{ flex: 1, backgroundColor: c.bg }}>
+        {stack}
+        <TeacherUploadSheet />
+      </View>
+    );
+  }
+  // Laptop: persistent sidebar + workspace. The phone tab bar hides itself.
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
-        <Stack.Screen name="index" options={{ animation: 'none' }} />
-        <Stack.Screen name="modules" options={{ animation: 'none' }} />
-        <Stack.Screen name="review" options={{ animation: 'none' }} />
-        <Stack.Screen name="settings" options={{ animation: 'none' }} />
-        <Stack.Screen name="student/[id]" />
-      </Stack>
-      <TeacherUploadSheet />
+    <View style={[styles.row, { backgroundColor: c.bg }]}>
+      <TeacherSidebar width={sidebar} />
+      <View style={styles.main} role="main" nativeID="main">
+        <OfflineBanner />
+        <View style={styles.main}>{stack}</View>
+        <TeacherUploadSheet />
+      </View>
     </View>
   );
 }
+
+function OfflineBanner() {
+  const { c } = useTheme();
+  const online = useOnline();
+  const fromCache = useTeacher((s) => s.fromCache);
+  const syncedAt = useTeacher((s) => s.syncedAt);
+  if (IS_PITCH || (online && !fromCache)) return null;
+  const when = syncedAt
+    ? new Date(syncedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+    : null;
+  return (
+    <View style={[styles.banner, { backgroundColor: c.accentTint }]} accessibilityLiveRegion="polite" role="status">
+      <WifiSlash size={16} weight="bold" color={c.warning} />
+      <Text variant="subhead" color="text" style={styles.main}>
+        You’re offline{when ? ` — showing data saved ${when}` : ''}. Creating classes, publishing and reviewing need
+        internet.
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: { flex: 1, flexDirection: 'row', height: '100%' },
+  main: { flex: 1, minWidth: 0 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 10 },
+});

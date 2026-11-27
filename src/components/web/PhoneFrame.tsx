@@ -9,6 +9,9 @@ import { PatyAvatar } from '@/components/mascot/Paty';
  * site, so every screen lays itself out for phone width. Phones, embedded
  * pages and `?full` / "Full width" skip the frame.
  */
+/** Set while a teacher or guardian is signed in on this browser. */
+export const STAFF_KEY = 'ls-staff';
+
 export const SHOW_FRAME: boolean = (() => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
   try {
@@ -18,6 +21,10 @@ export const SHOW_FRAME: boolean = (() => {
     if (q.has('phone')) window.localStorage.removeItem('ls-full');
     if (q.has('full')) return false;
     if (window.localStorage.getItem('ls-full') === '1') return false;
+    // Teachers and guardians work on laptops: their screens get the full window.
+    if (/^\/(teacher|guardian|reset-password)(\/|$)/.test(window.location.pathname)) return false;
+    if (window.localStorage.getItem(STAFF_KEY) === '1') return false;
+    if (q.get('mode') === 'signin') return false;
   } catch {
     return false;
   }
@@ -49,6 +56,10 @@ export function PhoneFrame() {
     window.location.href = `${window.location.pathname}?full`;
   };
 
+  const staffSignIn = () => {
+    window.location.href = '/onboarding?mode=signin&full';
+  };
+
   const bezel = 12;
   return (
     <div style={styles.page}>
@@ -63,7 +74,10 @@ export function PhoneFrame() {
             Paty notices long scrolls and turns them into 45-second lessons. One app for students, guardians and
             teachers.
           </p>
-          <button type="button" onClick={fullWidth} style={styles.button}>
+          <button type="button" onClick={staffSignIn} style={styles.button}>
+            Teacher sign in
+          </button>
+          <button type="button" onClick={fullWidth} style={styles.secondary}>
             Open full width
           </button>
         </div>
@@ -85,9 +99,14 @@ export function PhoneFrame() {
           />
         </div>
         {!wide ? (
-          <button type="button" onClick={fullWidth} style={styles.link}>
-            Open full width
-          </button>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button type="button" onClick={staffSignIn} style={styles.link}>
+              Teacher sign in
+            </button>
+            <button type="button" onClick={fullWidth} style={styles.link}>
+              Open full width
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
@@ -118,6 +137,18 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 20px',
     background: '#C8400F',
     color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  secondary: {
+    marginTop: 18,
+    marginLeft: 10,
+    border: '1px solid #C8400F',
+    borderRadius: 999,
+    padding: '11px 20px',
+    background: 'transparent',
+    color: '#C8400F',
     fontSize: 15,
     fontWeight: 700,
     cursor: 'pointer',

@@ -24,16 +24,21 @@ type Props = {
   onCell: (s: Student, skill: SkillId) => void;
   onStudent: (s: Student) => void;
   highlight?: SkillId | null;
+  /** Laptop: print each percentage and the column average (not color alone). */
+  showValues?: boolean;
 };
 
 /**
  * Students (rows) × Grade 7 Math skills (columns). Sticky skill header,
  * cells sized to fit the card so nothing scrolls sideways at 360 dp.
  */
-export function ClassHeatmap({ students, width, height, onCell, onStudent, highlight }: Props) {
+export function ClassHeatmap({ students, width, height, onCell, onStudent, highlight, showValues }: Props) {
   const { c, isNight } = useTheme();
-  const nameW = Math.min(150, Math.max(78, width * 0.26));
-  const cell = Math.max(20, Math.min(52, Math.floor((width - nameW) / SKILLS.length)));
+  const nameW = showValues ? Math.min(200, Math.max(120, width * 0.24)) : Math.min(150, Math.max(78, width * 0.26));
+  const cell = Math.max(20, Math.min(showValues ? 72 : 52, Math.floor((width - nameW) / SKILLS.length)));
+  const values = showValues && cell >= 36;
+  const colAvg = (id: SkillId) =>
+    students.length ? Math.round((students.reduce((a, st) => a + st.mastery[id], 0) / students.length) * 100) : 0;
   const [focus, setFocus] = useState<string | null>(null);
 
   return (
@@ -46,12 +51,23 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
               <Text
                 variant="caption"
                 color={highlight === s.id ? 'accent' : 'textSecondary'}
-                style={styles.headText}
+                style={[styles.headText, values && styles.headTextLg]}
                 numberOfLines={1}
                 accessibilityLabel={s.name.en}
+                {...({ title: s.name.en } as object)}
               >
                 {s.abbr}
               </Text>
+              {values ? (
+                <Text
+                  variant="caption"
+                  color={highlight === s.id ? 'accent' : 'textTertiary'}
+                  style={styles.avgText}
+                  accessibilityLabel={`Class average ${colAvg(s.id)}%`}
+                >
+                  {colAvg(s.id)}%
+                </Text>
+              ) : null}
             </View>
           ))}
         </View>
@@ -85,10 +101,11 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={`${st.name}, ${s.name.en}, ${Math.round(st.mastery[s.id] * 100)}%`}
-                style={({ pressed }) => [
+                style={({ pressed, hovered }) => [
                   styles.cellWrap,
-                  { width: cell, height: Math.min(cell, 30) + 4, opacity: pressed ? 0.6 : 1 },
+                  { width: cell, height: Math.min(cell, 30) + 4, opacity: pressed ? 0.6 : hovered ? 0.82 : 1 },
                 ]}
+                {...({ title: `${st.name} · ${s.name.en} · ${Math.round(st.mastery[s.id] * 100)}%` } as object)}
               >
                 <View
                   style={[
@@ -96,7 +113,17 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
                     { backgroundColor: masteryColor(st.mastery[s.id], c, isNight) },
                     highlight === s.id && styles.cellHi,
                   ]}
-                />
+                >
+                  {values ? (
+                    <Text
+                      variant="caption"
+                      color={st.mastery[s.id] < 0.35 || st.mastery[s.id] >= 0.8 ? '#FFFFFF' : c.text}
+                      style={styles.cellText}
+                    >
+                      {Math.round(st.mastery[s.id] * 100)}
+                    </Text>
+                  ) : null}
+                </View>
               </Pressable>
             ))}
           </View>
@@ -123,10 +150,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', paddingBottom: 6 },
   headCell: { alignItems: 'center' },
   headText: { fontSize: 10, letterSpacing: 0.3 },
+  headTextLg: { fontSize: 12, fontWeight: '700' },
+  avgText: { fontSize: 11, fontVariant: ['tabular-nums'] },
+  cellText: { fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
   row: { flexDirection: 'row', alignItems: 'center', borderRadius: 8 },
   name: { paddingRight: 6, minHeight: 30, justifyContent: 'center' },
   cellWrap: { padding: 2 },
-  cell: { flex: 1, borderRadius: 5 },
+  cell: { flex: 1, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
   cellHi: { borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.25)' },
   legend: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendCell: { width: 14, height: 14, borderRadius: 4 },

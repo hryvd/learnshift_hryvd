@@ -21,6 +21,7 @@ import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import expo.modules.usagemonitor.mirror.InterventionDispatcher
+import expo.modules.usagemonitor.mirror.LearningMirrorSelector
 import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
 import expo.modules.usagemonitor.mirror.OfflineContextCollector
 import expo.modules.usagemonitor.mirror.PilotTelemetryRecorder
@@ -218,6 +219,7 @@ class MonitorService : Service() {
   private var lastAdaptiveStreak = 0
   private val riskScorer = SessionRiskScorer()
   private val contextCollector by lazy { OfflineContextCollector(this) }
+  private val mirrorSelector by lazy { LearningMirrorSelector(this) }
   private val mirrorDispatcher by lazy { InterventionDispatcher(this) }
   private var lastMirrorDispatchAt = 0L
 
@@ -421,14 +423,50 @@ class MonitorService : Service() {
 
     // 3. Active external target app monitoring using configured overlayIntervalSec.
     if (activePkg != null && Categories.isTargetApp(this, activePkg, cfg.monitorAllApps)) {
-      if (OverlayController.isGateShowing() && activePkg == lastTargetPkg) {
-        lastTickAt = now
-        return idle
-      }
       if (now < Store.getLong(this, "snoozeUntil")) {
         activeAccumMs = 0L
         ScrollGate.clear()
         if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
+        lastTickAt = now
+        return idle
+      }
+
+      // Option C Attention Mirror auto-shift when behavioral risk exceeds 0.75.
+      // Evaluated before the swipe-gate early return so short break intervals do not starve Mirror.
+      val mirrorAuto = getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+        .getBoolean("mirror_auto_enabled", false)
+      val elapsed = SystemClock.elapsedRealtime()
+      if (mirrorAuto && elapsed - lastMirrorDispatchAt >= 180_000L) {
+        val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
+        val vec = riskScorer.buildVector((live.sessionMin * 60_000.0).toLong(), swipes)
+        val risk = riskScorer.computeRiskProbability(vec)
+        if (risk >= 0.60f) contextCollector.captureSingleGravityReading()
+        if (risk > 0.75f && !SmartStudyGuardService.evaluateSingleFrameIfEnabledSync(this)) {
+          lastMirrorDispatchAt = elapsed
+          val snap = contextCollector.buildSnapshot(vec.scrollCadencePerMin, vec.sessionMinutes, vec.dwellVarianceSecSq)
+          val capturedPkg = activePkg
+          val selectedVideo = mirrorSelector.selectVideoForSession(capturedPkg, snap, cfg)
+          val isFil = cfg.fil
+          ScrollGate.clear()
+          activeAccumMs = 0L
+          lastTickAt = now
+          android.os.Handler(mainLooper).post {
+            if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
+            val tier = mirrorDispatcher.dispatchWithLearningVideo(capturedPkg, snap, selectedVideo, isFil)
+            SentinelBus.lastInterventionTimeMs = elapsed
+            SentinelBus.lastInterventionStrategy = tier
+            SentinelBus.lastActivePackage = capturedPkg
+            SentinelBus.lastInterventionVideoId = selectedVideo?.id ?: ""
+            SentinelBus.lastInterventionVideoTitle = selectedVideo?.titleOrTopic ?: ""
+            if (selectedVideo != null) {
+              SentinelBus.lastInterventionTopicTag = selectedVideo.subjectTag
+            }
+          }
+          return idle
+        }
+      }
+
+      if (OverlayController.isGateShowing() && activePkg == lastTargetPkg) {
         lastTickAt = now
         return idle
       }
@@ -453,28 +491,6 @@ class MonitorService : Service() {
         if (canOverlay()) {
           val mins = maxOf(1, live.sessionMin.roundToInt())
           OverlayController.armSwipeTrigger(this, cfg, label, activePkg, mins)
-        }
-      }
-
-      // Option C Attention Mirror auto-shift when behavioral risk exceeds 0.75.
-      val mirrorAuto = getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
-        .getBoolean("mirror_auto_enabled", false)
-      val elapsed = SystemClock.elapsedRealtime()
-      if (mirrorAuto && elapsed - lastMirrorDispatchAt >= 180_000L && activePkg != null) {
-        val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
-        val vec = riskScorer.buildVector((live.sessionMin * 60_000.0).toLong(), swipes)
-        val risk = riskScorer.computeRiskProbability(vec)
-        if (risk >= 0.60f) contextCollector.captureSingleGravityReading()
-        if (risk > 0.75f && !SmartStudyGuardService.evaluateSingleFrameIfEnabledSync(this)) {
-          lastMirrorDispatchAt = elapsed
-          val snap = contextCollector.buildSnapshot(vec.scrollCadencePerMin, vec.sessionMinutes, vec.dwellVarianceSecSq)
-          val capturedPkg = activePkg
-          android.os.Handler(mainLooper).post {
-            val tier = mirrorDispatcher.dispatch(capturedPkg, snap)
-            SentinelBus.lastInterventionTimeMs = elapsed
-            SentinelBus.lastInterventionStrategy = tier
-            SentinelBus.lastActivePackage = capturedPkg
-          }
         }
       }
     } else {

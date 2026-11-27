@@ -41,7 +41,6 @@ function App() {
     Inter_700Bold,
     Inter_800ExtraBold,
     Bungee_400Regular: require('../../assets/fonts/Bungee-Regular.ttf'),
-    Poppins_700Bold: require('../../assets/fonts/Poppins-Bold.ttf'),
   });
   const [hydrated, setHydrated] = useState(() => useAppStore.persist.hasHydrated());
   const authReady = useAuth((s) => s.status !== 'loading');
@@ -111,6 +110,7 @@ function Shell() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+          <Stack.Screen name="reset-password" options={{ animation: 'fade' }} />
           <Stack.Screen name="account" options={{ presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
           <Stack.Screen name="(student)" />
           <Stack.Screen name="guardian" options={{ animation: 'fade' }} />
@@ -183,18 +183,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 14,
   },
-  errTitle: { fontSize: 22, fontWeight: '800', color: '#111111', textAlign: 'center' },
+  errTitle: { fontSize: 22, fontWeight: '800', color: '#2B2D31', textAlign: 'center' },
   errSub: { fontSize: 15, color: '#62666C', textAlign: 'center', lineHeight: 22 },
   errBtn: {
     minWidth: 220,
     minHeight: 48,
     borderRadius: 999,
-    backgroundColor: '#C8400F',
+    backgroundColor: '#C2410C',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   errBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   errSecondary: { backgroundColor: '#EAE8E2' },
-  errSecondaryText: { color: '#111111', fontSize: 15, fontWeight: '600' },
+  errSecondaryText: { color: '#2B2D31', fontSize: 15, fontWeight: '600' },
 });

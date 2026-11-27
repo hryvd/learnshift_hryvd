@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Redirect } from 'expo-router';
 
 import { IS_PITCH } from '@/lib/config';
@@ -13,6 +14,8 @@ export function useRoleGate(role: Role) {
   const mine = useAuth((s) => s.profile?.role);
   if (IS_PITCH) return null;
   if (status !== 'signedIn') return <Redirect href="/onboarding" />;
-  if (mine && mine !== role) return <Redirect href="/" />;
+  // Profile still loading: render nothing rather than flash another role's screens.
+  if (!mine) return <View style={{ flex: 1 }} />;
+  if (mine !== role) return <Redirect href="/" />;
   return null;
 }

@@ -3,7 +3,7 @@
  * review queue. Live: a student's answer updates the heatmap in seconds.
  */
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { create } from 'zustand';
 
@@ -50,6 +50,11 @@ type TeacherState = {
   students: Record<string, LiveStudent[]>;
   modules: Record<string, ClassModule[]>;
   review: ReviewRow[];
+  reviewError: string | null;
+  /** When the data on screen was last loaded from the server (ISO, UTC). */
+  syncedAt: string | null;
+  /** True when the screen shows the saved copy because the server can't be reached. */
+  fromCache: boolean;
   select: (id: string) => void;
   setUploadOpen: (open: boolean) => void;
 };
@@ -63,6 +68,9 @@ export const useTeacher = create<TeacherState>()((set) => ({
   students: {},
   modules: {},
   review: [],
+  reviewError: null,
+  syncedAt: null,
+  fromCache: false,
   select: (selected) => set({ selected }),
   setUploadOpen: (uploadOpen) => set({ uploadOpen }),
 }));
@@ -78,7 +86,102 @@ export function resetTeacher() {
     students: {},
     modules: {},
     review: [],
+    reviewError: null,
+    syncedAt: null,
+    fromCache: false,
   });
+}
+
+// ── Offline copy (laptop web) ────────────────────────────────────────────
+// A read-only snapshot of the last good load, scoped to one teacher, so a
+// dropped connection still shows classes, rosters, modules and the queue.
+// Sign out deletes it, so a shared school laptop keeps no student data.
+const CACHE_KEY = 'learnshift:teacher-cache:v1';
+
+type Snapshot = Pick<TeacherState, 'classes' | 'selected' | 'students' | 'modules' | 'review' | 'syncedAt'> & {
+  userId: string;
+};
+
+function webStorage(): Storage | null {
+  try {
+    return Platform.OS === 'web' && typeof window !== 'undefined' ? window.localStorage : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSnapshot() {
+  const store = webStorage();
+  const userId = useAuth.getState().profile?.id;
+  if (!store || !userId || IS_PITCH) return;
+  const s = useTeacher.getState();
+  if (s.fromCache) return;
+  const snap: Snapshot = {
+    userId,
+    classes: s.classes,
+    selected: s.selected,
+    students: s.students,
+    modules: s.modules,
+    review: s.review,
+    syncedAt: s.syncedAt,
+  };
+  try {
+    store.setItem(CACHE_KEY, JSON.stringify(snap));
+  } catch {
+    // quota or private mode: the live view still works
+  }
+}
+
+/** Shows the saved copy for this teacher, if any. Returns whether it did. */
+function restoreSnapshot(): boolean {
+  const store = webStorage();
+  const userId = useAuth.getState().profile?.id;
+  if (!store || !userId) return false;
+  try {
+    const raw = store.getItem(CACHE_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw) as Snapshot;
+    if (snap.userId !== userId) {
+      store.removeItem(CACHE_KEY);
+      return false;
+    }
+    useTeacher.setState({
+      classes: snap.classes,
+      selected: snap.selected,
+      students: snap.students,
+      modules: snap.modules,
+      review: snap.review,
+      syncedAt: snap.syncedAt,
+      fromCache: true,
+      loading: false,
+      error: null,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Removes the offline copy. Call on sign out and account deletion. */
+export function clearTeacherCache() {
+  try {
+    webStorage()?.removeItem(CACHE_KEY);
+    // Module decks kept for phone-to-phone sharing; not needed on a laptop after sign out.
+    webStorage()?.removeItem('learnshift:teacher-local-modules:v1');
+  } catch {
+    // nothing stored
+  }
+}
+
+let snapTimer: ReturnType<typeof setTimeout> | null = null;
+function markSynced() {
+  useTeacher.setState({ syncedAt: new Date().toISOString(), fromCache: false });
+  if (snapTimer) clearTimeout(snapTimer);
+  snapTimer = setTimeout(saveSnapshot, 500);
+}
+
+function isOffline() {
+  return Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.onLine === false;
 }
 
 const DAY_MS = 24 * 3600 * 1000;
@@ -92,7 +195,12 @@ export async function loadClasses() {
     .eq('teacher_id', me)
     .order('created_at');
   if (error) {
-    useTeacher.setState({ loading: false, error: error.message });
+    if (useTeacher.getState().classes.length > 0) return; // keep what's on screen
+    if (restoreSnapshot()) return;
+    useTeacher.setState({
+      loading: false,
+      error: isOffline() ? 'You are offline. Connect to the internet to load your classes.' : error.message,
+    });
     return;
   }
   const classes = (data ?? []) as TeacherClass[];
@@ -103,6 +211,7 @@ export async function loadClasses() {
     loading: false,
     error: null,
   });
+  markSynced();
 }
 
 export async function loadRoster(classId: string) {
@@ -111,6 +220,7 @@ export async function loadRoster(classId: string) {
     .select('student_id, profiles(display_name)')
     .eq('class_id', classId);
   if (error) {
+    if (useTeacher.getState().students[classId]) return; // keep the last good roster
     useTeacher.setState({ error: error.message });
     return;
   }
@@ -166,6 +276,13 @@ export async function loadRoster(classId: string) {
   });
   students.sort((a, b) => a.name.localeCompare(b.name));
   useTeacher.setState((s) => ({ students: { ...s.students, [classId]: students }, error: null }));
+  markSynced();
+}
+
+/** Loads every class roster. Used when a student page is opened directly. */
+export async function loadAllRosters() {
+  if (useTeacher.getState().classes.length === 0) await loadClasses();
+  await Promise.all(useTeacher.getState().classes.map((c) => loadRoster(c.id)));
 }
 
 export async function loadReview() {
@@ -175,8 +292,14 @@ export async function loadReview() {
     .in('status', ['needs_review', 'approved', 'edited'])
     .order('created_at', { ascending: false })
     .limit(60);
-  if (error) return;
+  if (error) {
+    useTeacher.setState({
+      reviewError: isOffline() ? 'You are offline. Showing the last saved queue.' : 'Could not load the review queue.',
+    });
+    return;
+  }
   useTeacher.setState({
+    reviewError: null,
     review: (data ?? []).map((r) => ({
       id: r.id,
       studentId: r.student_id,
@@ -192,6 +315,7 @@ export async function loadReview() {
       at: r.created_at,
     })),
   });
+  markSynced();
 }
 
 export async function loadModules(classId: string) {
@@ -289,12 +413,22 @@ export async function publishModulesToClasses(
           title: input.title,
           subject: input.subject,
           sourceName: input.sourceName,
-          sourceExcerpt: '',
+          sourceExcerpt: input.summary,
           summary: input.summary,
           flashcards: input.flashcards,
           questions: input.questions,
         });
-      } catch {
+      } catch (e) {
+        // Laptops have no phone-to-phone path, so a failed save must say so.
+        if (Platform.OS !== 'android') {
+          throw new Error(
+            saved.length
+              ? `Published to ${saved.length} of ${uniqueIds.length} classes, then failed: ${(e as Error).message}`
+              : isOffline()
+                ? 'You are offline. Reconnect to publish; your draft stays open.'
+                : (e as Error).message,
+          );
+        }
         mod = {
           id: `local-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
           classId,

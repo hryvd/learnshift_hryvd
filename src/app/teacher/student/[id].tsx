@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CaretLeft, LockKey } from '@/components/ui/icons';
 
 import { MasteryRow } from '@/components/learn/MasteryRow';
-import { BarChart, Card, Chip, EmptyState, ListGroup, ListRow, NavBar, Ring, Text } from '@/components/ui';
+import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
+import { BarChart, Card, Chip, EmptyState, ListGroup, ListRow, NavBar, Ring, Skeleton, Text } from '@/components/ui';
+import { useDesktop } from '@/hooks/useDesktop';
 import { buildSections } from '@/data/class';
 import { SKILL_BY_ID, SKILLS } from '@/data/skills';
 import { useTheme } from '@/design/theme';
@@ -14,19 +16,27 @@ import { teacherStrings as T } from '@/i18n/staff';
 import { gapEngine } from '@/services/ai/gapEngine';
 import { IS_PITCH } from '@/lib/config';
 import { removeStudent } from '@/services/backend/api';
-import { loadRoster, useTeacher, type LiveStudent } from '@/services/backend/teacher';
+import { loadAllRosters, loadRoster, useTeacher, type LiveStudent } from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
 
 /** One student's learning picture. Learning data only — no screen-time data exists here. */
 export default function TeacherStudent() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
+  const { contentWidth: width, isDesktop } = useDesktop();
+  const { id, section: sectionParam } = useLocalSearchParams<{ id: string; section?: string }>();
   const mika = useAppStore((s) => s.mastery);
   const live = useTeacher((s) =>
-    section ? s.students[section]?.find((x) => x.id === id) : Object.values(s.students).flat().find((x) => x.id === id),
+    sectionParam
+      ? s.students[sectionParam]?.find((x) => x.id === id)
+      : Object.values(s.students).flat().find((x) => x.id === id),
   );
+  // Which of this teacher's classes the student is in (for direct links without ?section).
+  const foundIn = useTeacher((s) =>
+    sectionParam ?? Object.keys(s.students).find((k) => s.students[k]?.some((x) => x.id === id)),
+  );
+  const section = sectionParam ?? foundIn;
+  const className = useTeacher((s) => s.classes.find((x) => x.id === section)?.name);
   const pitch = useMemo(() => {
     if (!IS_PITCH) return undefined;
     const secs = buildSections(mika);
@@ -36,17 +46,39 @@ export default function TeacherStudent() {
   const student = IS_PITCH ? pitch : live;
   const wide = width >= 900;
   const [confirm, setConfirm] = useState(false);
+  const [resolving, setResolving] = useState(() => !IS_PITCH);
 
-  // Opened directly (e.g. after a refresh): load this class's roster.
+  // Opened directly (refresh, bookmark): load rosters, then decide.
   useEffect(() => {
-    if (!IS_PITCH && !live && section) loadRoster(section);
-  }, [live, section]);
+    if (IS_PITCH || live) return;
+    let alive = true;
+    (sectionParam ? loadRoster(sectionParam) : loadAllRosters()).finally(() => {
+      if (alive) setResolving(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [live, sectionParam]);
+
+  // Deterministic back: a direct link has no history to go back to.
+  const back = () => (router.canGoBack() ? router.back() : router.replace('/teacher'));
 
   if (!student) {
     return (
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
-        <NavBar onBack={() => router.back()} backIcon={<CaretLeft size={20} weight="bold" color={c.text} />} />
-        <EmptyState title="Student not found" />
+        <NavBar onBack={back} backIcon={<CaretLeft size={20} weight="bold" color={c.text} />} />
+        {resolving ? (
+          <View style={[styles.body, styles.stack, { maxWidth: 1000 }]} accessibilityLabel="Loading student">
+            <Skeleton height={120} r={20} />
+            <Skeleton height={200} r={20} />
+          </View>
+        ) : (
+          <EmptyState
+            title="Student not found"
+            subtitle="This student isn't in any of your classes, or was removed."
+            action={{ label: 'Back to classes', onPress: () => router.replace('/teacher') }}
+          />
+        )}
       </View>
     );
   }
@@ -62,9 +94,9 @@ export default function TeacherStudent() {
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
       <NavBar
-        onBack={() => router.back()}
+        onBack={back}
         backIcon={<CaretLeft size={20} weight="bold" color={c.text} />}
-        title={student.name}
+        title={isDesktop && className ? `${className} › ${student.name}` : student.name}
       />
       <ScrollView
         contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 32, maxWidth: wide ? 1000 : 560 }]}
@@ -110,19 +142,22 @@ export default function TeacherStudent() {
             </View>
             {!IS_PITCH && section ? (
               <ListGroup>
-                <ListRow
-                  title={confirm ? T.removeConfirm : T.remove}
-                  destructive
-                  chevron={false}
-                  onPress={() => {
-                    if (!confirm) return setConfirm(true);
-                    removeStudent(section, student.id)
-                      .then(() => loadRoster(section))
-                      .then(() => router.back())
-                      .catch(() => setConfirm(false));
-                  }}
-                />
+                <ListRow title={T.remove} destructive chevron={false} onPress={() => setConfirm(true)} />
               </ListGroup>
+            ) : null}
+            {!IS_PITCH && section ? (
+              <ConfirmDialog
+                visible={confirm}
+                title={`Remove ${student.name}?`}
+                body={`${student.name} leaves ${className ?? 'this class'}. Their learning history stays with them; they can rejoin with the join code.`}
+                confirmLabel="Remove student"
+                onClose={() => setConfirm(false)}
+                onConfirm={async () => {
+                  await removeStudent(section, student.id);
+                  await loadRoster(section);
+                  router.replace('/teacher');
+                }}
+              />
             ) : null}
           </View>
           <Card style={[styles.gapLg, wide && styles.flex]}>
