@@ -44,7 +44,7 @@ export function SessionEffects() {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     try {
       if (role === 'teacher' || role === 'guardian') window.localStorage.setItem('ls-staff', '1');
-      else if (role) window.localStorage.removeItem('ls-staff');
+      else window.localStorage.removeItem('ls-staff');
     } catch {
       // storage blocked: the URL rules still apply
     }
@@ -53,7 +53,8 @@ export function SessionEffects() {
   // Keep the store on the signed-in user; a different user starts clean.
   useEffect(() => {
     if (IS_PITCH) return;
-    resetTeacher();
+    // Signed out (or session expired): also drop the offline class copy.
+    resetTeacher({ signedOut: !id });
     resetGuardian();
     resetSocial();
     const s = useAppStore.getState();

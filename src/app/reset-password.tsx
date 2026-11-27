@@ -16,6 +16,8 @@ async function claimRecoverySession(): Promise<boolean> {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const query = new URLSearchParams(window.location.search);
+  // Supabase reports expired/used links in the URL instead of tokens.
+  if (hash.get('error') || query.get('error')) return false;
   try {
     const access = hash.get('access_token');
     const refresh = hash.get('refresh_token');
@@ -26,8 +28,8 @@ async function claimRecoverySession(): Promise<boolean> {
       const { error } = await supabase.auth.exchangeCodeForSession(query.get('code')!);
       if (error) return false;
     } else {
-      const { data } = await supabase.auth.getSession();
-      return !!data.session;
+      // No recovery token: this page only works from a reset email link.
+      return false;
     }
     // Drop the tokens from the address bar and history.
     window.history.replaceState(null, '', '/reset-password');

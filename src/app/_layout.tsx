@@ -1,5 +1,5 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text as RNText, View } from 'react-native';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +16,7 @@ import { SplashTransition } from '@/components/mascot/SplashTransition';
 import { PhoneFrame, SHOW_FRAME } from '@/components/web/PhoneFrame';
 import * as api from '@/services/backend/api';
 import { SessionEffects } from '@/services/backend/session';
+import { clearTeacherCache } from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
@@ -84,6 +85,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
         </Pressable>
         <Pressable
           onPress={async () => {
+            clearTeacherCache();
             await api.signOut().catch(() => {});
             this.setState({ error: null });
             router.replace('/onboarding');
@@ -99,6 +101,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 
 function Shell() {
   const { c, isNight } = useTheme();
+  // Web: browser chrome (focus rings, scrollbars, address bar) follows the in-app theme.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const root = document.documentElement;
+    root.dataset.theme = isNight ? 'night' : 'day';
+    root.style.colorScheme = isNight ? 'dark' : 'light';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.bg);
+  }, [isNight, c.bg]);
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
       <StatusBar style={isNight ? 'light' : 'dark'} />
@@ -166,7 +176,14 @@ function ThemeCrossfade() {
 
   const s = useAnimatedStyle(() => ({ opacity: o.get() }));
   if (!from) return null;
-  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: from }, s]} />;
+  // pointerEvents as a style: on web the prop form is ignored by Animated views,
+  // which left this (invisible) layer swallowing clicks after a theme switch.
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { backgroundColor: from, pointerEvents: 'none' }, s]}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

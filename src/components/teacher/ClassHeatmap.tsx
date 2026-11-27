@@ -26,13 +26,32 @@ type Props = {
   highlight?: SkillId | null;
   /** Laptop: print each percentage and the column average (not color alone). */
   showValues?: boolean;
+  /** Laptop: click a skill header to sort students by it. */
+  sortSkill?: SkillId | null;
+  onSortSkill?: (s: SkillId) => void;
 };
+
+/** Text on a mastery cell: dark ink on light/bright fills, white only on deep Day fills. */
+export function masteryInk(m: number, c: Palette, isNight: boolean): string {
+  if (isNight) return m < 0.5 || m >= 0.8 ? '#1A1410' : c.text;
+  return m < 0.35 || m >= 0.8 ? '#FFFFFF' : c.text;
+}
 
 /**
  * Students (rows) × Grade 7 Math skills (columns). Sticky skill header,
  * cells sized to fit the card so nothing scrolls sideways at 360 dp.
  */
-export function ClassHeatmap({ students, width, height, onCell, onStudent, highlight, showValues }: Props) {
+export function ClassHeatmap({
+  students,
+  width,
+  height,
+  onCell,
+  onStudent,
+  highlight,
+  showValues,
+  sortSkill,
+  onSortSkill,
+}: Props) {
   const { c, isNight } = useTheme();
   const nameW = showValues ? Math.min(200, Math.max(120, width * 0.24)) : Math.min(150, Math.max(78, width * 0.26));
   const cell = Math.max(20, Math.min(showValues ? 72 : 52, Math.floor((width - nameW) / SKILLS.length)));
@@ -43,11 +62,23 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
 
   return (
     <View style={{ height }}>
-      <ScrollView stickyHeaderIndices={[0]} showsVerticalScrollIndicator={false} nestedScrollEnabled>
+      <ScrollView stickyHeaderIndices={[0]} showsVerticalScrollIndicator={!!showValues} nestedScrollEnabled>
         <View style={[styles.header, { backgroundColor: c.card }]}>
           <View style={{ width: nameW }} />
           {SKILLS.map((s) => (
-            <View key={s.id} style={[styles.headCell, { width: cell }]}>
+            <Pressable
+              key={s.id}
+              disabled={!onSortSkill}
+              onPress={() => onSortSkill?.(s.id)}
+              accessibilityRole={onSortSkill ? 'button' : undefined}
+              accessibilityLabel={`${s.name.en}${onSortSkill ? `, sort by this skill${sortSkill === s.id ? ' (sorted, lowest first)' : ''}` : ''}`}
+              style={({ hovered }) => [
+                styles.headCell,
+                { width: cell },
+                hovered && onSortSkill ? { backgroundColor: c.inset } : null,
+                sortSkill === s.id ? { borderBottomWidth: 2, borderBottomColor: c.accent } : null,
+              ]}
+            >
               <Text
                 variant="caption"
                 color={highlight === s.id ? 'accent' : 'textSecondary'}
@@ -68,7 +99,7 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
                   {colAvg(s.id)}%
                 </Text>
               ) : null}
-            </View>
+            </Pressable>
           ))}
         </View>
         {students.map((st) => (
@@ -117,7 +148,7 @@ export function ClassHeatmap({ students, width, height, onCell, onStudent, highl
                   {values ? (
                     <Text
                       variant="caption"
-                      color={st.mastery[s.id] < 0.35 || st.mastery[s.id] >= 0.8 ? '#FFFFFF' : c.text}
+                      color={masteryInk(st.mastery[s.id], c, isNight)}
                       style={styles.cellText}
                     >
                       {Math.round(st.mastery[s.id] * 100)}
@@ -148,7 +179,7 @@ export function MasteryLegend({ low, high }: { low: string; high: string }) {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', paddingBottom: 6 },
-  headCell: { alignItems: 'center' },
+  headCell: { alignItems: 'center', borderRadius: 6, paddingVertical: 2 },
   headText: { fontSize: 10, letterSpacing: 0.3 },
   headTextLg: { fontSize: 12, fontWeight: '700' },
   avgText: { fontSize: 11, fontVariant: ['tabular-nums'] },

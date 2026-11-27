@@ -191,6 +191,33 @@ export async function saveClassModule(input: {
   };
 }
 
+export async function updateClassModule(mod: ClassModule) {
+  const { error } = await supabase
+    .from('class_modules')
+    .update({
+      title: mod.title.trim().slice(0, 120),
+      subject: mod.subject.trim().slice(0, 40) || 'general',
+      summary: mod.summary,
+      flashcards: mod.flashcards,
+      questions: mod.questions,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', mod.id);
+  if (error) fail(error);
+}
+
+export async function updateClass(id: string, patch: { name?: string; grade?: number }) {
+  if (patch.grade !== undefined && (!Number.isInteger(patch.grade) || patch.grade < 1 || patch.grade > 10)) {
+    throw new Error('Choose a grade from 1 to 10.');
+  }
+  if (patch.name !== undefined && !patch.name.trim()) throw new Error('Class name is required.');
+  const { error } = await supabase
+    .from('classes')
+    .update({ ...patch, ...(patch.name ? { name: patch.name.trim().slice(0, 60) } : {}) })
+    .eq('id', id);
+  if (error) fail(error);
+}
+
 export async function deleteClassModule(id: string) {
   const { error } = await supabase.from('class_modules').delete().eq('id', id);
   if (error) fail(error);

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+
+import { useFocusTrap } from '@/components/teacher/DesktopOverlay';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { Notice, PillButton, Text, TextField } from '@/components/ui';
@@ -31,6 +33,9 @@ function Dialog({ title, body, confirmLabel, typeToConfirm, destructive = true, 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ready = !typeToConfirm || typed.trim() === typeToConfirm.trim();
+  const trap = useFocusTrap(true, () => {
+    if (!busy) onClose();
+  });
 
   const run = async () => {
     if (!ready || busy) return;
@@ -54,6 +59,7 @@ function Dialog({ title, body, confirmLabel, typeToConfirm, destructive = true, 
           accessibilityLabel="Cancel"
         />
         <View
+          ref={trap}
           style={[styles.card, { backgroundColor: c.card, borderColor: c.hairline }]}
           accessibilityViewIsModal
           role="alertdialog"

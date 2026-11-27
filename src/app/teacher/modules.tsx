@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BookOpenText, Plus, WifiHigh } from '@/components/ui/icons';
 
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
+import { CopyModuleDialog, EditModuleDialog } from '@/components/teacher/ModuleEditDialogs';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import {
@@ -23,6 +24,7 @@ import {
   Notice,
   PillButton,
   SegmentedControl,
+  Skeleton,
   Stagger,
   Text,
 } from '@/components/ui';
@@ -53,6 +55,8 @@ export default function TeacherModules() {
   const setUploadOpen = useTeacher((s) => s.setUploadOpen);
   const selectedModules = useTeacher((s) => (s.selected ? s.modules[s.selected] : undefined));
   const realModules = selectedModules ?? EMPTY_MODULES;
+  // Modules for this class haven't arrived yet: show skeletons, not "No modules yet".
+  const modulesLoading = !IS_PITCH && !!selected && selectedModules === undefined;
   const pitchModules = useAppStore((s) => s.classModules);
 
   const activeClassId = IS_PITCH ? 'sampaguita' : (selected ?? classes[0]?.id ?? '');
@@ -65,6 +69,11 @@ export default function TeacherModules() {
   const [error, setError] = useState<string | null>(null);
   const [previewMod, setPreviewMod] = useState<ClassModule | null>(null);
   const [toDelete, setToDelete] = useState<ClassModule | null>(null);
+  const [editing, setEditing] = useState<ClassModule | null>(null);
+  const [copying, setCopying] = useState<ClassModule | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string>('All');
+  const subjects = ['All', ...Array.from(new Set(modules.map((m) => m.subject)))];
+  const listed = subjectFilter === 'All' ? modules : modules.filter((m) => m.subject === subjectFilter);
   // Laptop: the first module previews in the right pane until one is picked.
   const selectedMod = isDesktop ? (modules.find((m) => m.id === previewMod?.id) ?? modules[0] ?? null) : null;
 
@@ -109,15 +118,17 @@ export default function TeacherModules() {
               )
             }
           >
-            <Stagger index={0} style={styles.header}>
-              <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-                <BookOpenText size={22} weight="fill" color="#FFFFFF" />
-              </View>
-              <View style={styles.flex}>
-                <Text variant="largeTitle">{T.modules}</Text>
-                <Text variant="subhead">{activeClassName}</Text>
-              </View>
-            </Stagger>
+            {!isDesktop ? (
+              <Stagger index={0} style={styles.header}>
+                <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+                  <BookOpenText size={22} weight="fill" color="#FFFFFF" />
+                </View>
+                <View style={styles.flex}>
+                  <Text variant="largeTitle">{T.modules}</Text>
+                  <Text variant="subhead">{activeClassName}</Text>
+                </View>
+              </Stagger>
+            ) : null}
 
             {!IS_PITCH && classes.length === 0 ? (
               <Card style={styles.gap}>
@@ -129,7 +140,7 @@ export default function TeacherModules() {
               </Card>
             ) : null}
 
-            {!IS_PITCH && classes.length > 1 ? (
+            {!IS_PITCH && classes.length > 1 && !isDesktop ? (
               <SegmentedControl
                 options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
                 value={activeClassId}
@@ -150,7 +161,7 @@ export default function TeacherModules() {
                     : 'Tap the centered + button below to flip open the drag-and-drop card, approve flashcards & quizzes, and pick classes.'}
                 </Text>
                 <PillButton
-                  label={isDesktop ? 'Upload module (Ctrl U)' : 'Open Upload Card'}
+                  label={isDesktop ? 'Upload module  (U)' : 'Open Upload Card'}
                   icon={<Plus size={18} weight="bold" color={c.onAccent} />}
                   size="lg"
                   onPress={() => setUploadOpen(true)}
@@ -171,10 +182,23 @@ export default function TeacherModules() {
             <Stagger index={2} style={isDesktop ? styles.columns : undefined}>
               <Card style={[styles.gap, isDesktop && styles.listCol]}>
                 <Text variant="title">{T.publishedModules}</Text>
-                {modules.length === 0 ? (
+                {isDesktop && subjects.length > 2 ? (
+                  <View style={styles.chipRow}>
+                    {subjects.map((s) => (
+                      <Chip key={s} label={s} kind={subjectFilter === s ? 'tinted' : 'neutral'} selected={subjectFilter === s} onPress={() => setSubjectFilter(s)} />
+                    ))}
+                  </View>
+                ) : null}
+                {modulesLoading ? (
+                  <View style={styles.gap} accessibilityLabel="Loading modules">
+                    {[0, 1, 2].map((k) => (
+                      <Skeleton key={k} height={92} r={14} />
+                    ))}
+                  </View>
+                ) : modules.length === 0 ? (
                   <EmptyState title={T.noModules} subtitle={T.noModulesSub} expression="curious" />
                 ) : (
-                  modules.map((m) => (
+                  listed.map((m) => (
                     <Card
                       key={m.id}
                       onPress={() => setPreviewMod(m)}
@@ -197,9 +221,23 @@ export default function TeacherModules() {
                           {m.summary}
                         </Text>
                         <View style={styles.rowBetween}>
-                          <Text variant="caption" color="accent" style={fontFor(600)}>
+                          <Text variant="caption" color="accent" style={[fontFor(600), styles.flex]}>
                             {m.flashcards.length} {T.flashcards.toLowerCase()} · {m.questions.length} quiz Qs
+                            {isDesktop ? (
+                              <Text variant="caption">
+                                {'  ·  '}
+                                {new Date(m.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </Text>
+                            ) : null}
                           </Text>
+                          {isDesktop ? (
+                            <>
+                              <PillButton label="Edit" kind="neutral" size="sm" onPress={() => setEditing(m)} accessibilityLabel={`Edit ${m.title}`} />
+                              {!IS_PITCH && classes.length > 1 ? (
+                                <PillButton label="Copy" kind="neutral" size="sm" onPress={() => setCopying(m)} accessibilityLabel={`Copy ${m.title} to another class`} />
+                              ) : null}
+                            </>
+                          ) : null}
                           <IconButton
                             kind="remove"
                             tone="danger"
@@ -217,6 +255,9 @@ export default function TeacherModules() {
             </Stagger>
           </ScrollView>
         </BarBlurTarget>
+
+        <EditModuleDialog mod={editing} onClose={() => setEditing(null)} />
+        <CopyModuleDialog mod={copying} onClose={() => setCopying(null)} />
 
         <ConfirmDialog
           visible={!!toDelete}
@@ -300,6 +341,7 @@ function ModulePreview({ mod }: { mod: ClassModule }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   bodyDesktop: { paddingHorizontal: 28, paddingTop: 12 },
   columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
   listCol: { flex: 0.9, minWidth: 0 },
