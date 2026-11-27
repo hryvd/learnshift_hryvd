@@ -1,12 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
-  useWindowDimensions,
+  TextInput,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -27,9 +26,11 @@ import {
   Notice,
   PillButton,
   SegmentedControl,
+  Skeleton,
   Stagger,
   Text,
 } from '@/components/ui';
+import { useDesktop } from '@/hooks/useDesktop';
 import { buildSections, needsSupport, type Section, type Student } from '@/data/class';
 import { SKILL_BY_ID, SKILLS, type SkillId } from '@/data/skills';
 import { useTheme } from '@/design/theme';
@@ -70,7 +71,6 @@ function PitchTeacher() {
 }
 
 function RealTeacher() {
-  const { c } = useTheme();
   const loading = useTeacher((s) => s.loading);
   const error = useTeacher((s) => s.error);
   const classes = useTeacher((s) => s.classes);
@@ -89,9 +89,12 @@ function RealTeacher() {
   if (loading && classes.length === 0) {
     return (
       <Frame title={T.classes} subtitle={me?.display_name ?? T.teacher} showTabs>
-        <Card style={styles.loadingCard}>
-          <ActivityIndicator size="small" color={c.accent} />
-          <Text variant="subhead">Loading your classes…</Text>
+        <Card style={styles.gap} accessibilityLabel="Loading your classes">
+          <Skeleton width="40%" height={22} />
+          <Skeleton height={14} width="60%" />
+          {[0, 1, 2, 3, 4].map((k) => (
+            <Skeleton key={k} height={28} />
+          ))}
         </Card>
       </Frame>
     );
@@ -167,6 +170,7 @@ function Frame({
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
+  const { isDesktop } = useDesktop();
   return (
     <BarBlurHost>
       <KeyboardAvoidingView
@@ -175,7 +179,10 @@ function Frame({
       >
         <BarBlurTarget>
           <ScrollView
-            contentContainerStyle={[styles.body, { maxWidth: 560, paddingBottom: insets.bottom + 110 }]}
+            contentContainerStyle={[
+              styles.body,
+              { maxWidth: isDesktop ? 760 : 560, paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+            ]}
             keyboardShouldPersistTaps="handled"
             refreshControl={
               IS_PITCH ? undefined : (
@@ -232,9 +239,27 @@ function Dashboard({
   const { c, isNight } = useTheme();
   const insets = useSafeAreaInsets();
   const pull = usePullRefresh(refreshTeacher);
-  const { width } = useWindowDimensions();
+  const { contentWidth: width, isDesktop } = useDesktop();
   const wide = width >= 900;
   const [cell, setCell] = useState<{ s: Student; skill: SkillId } | null>(null);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'support' | 'none'>('all');
+  const [sort, setSort] = useState<'name' | 'low' | 'high'>('name');
+  const searchRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const pendingReview = useTeacher((s) => s.review.filter((r) => r.status === 'needs_review').length);
+
+  // Ctrl/Cmd+K jumps to the student search on a laptop.
+  useEffect(() => {
+    if (!isDesktop || typeof window === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDesktop]);
 
   const active = useMemo(() => section.students.filter((s) => (s as { answered?: number }).answered !== 0), [section]);
   const support = useMemo(
@@ -251,7 +276,23 @@ function Dashboard({
     return [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
   }, [active]);
 
-  const maxW = wide ? 1240 : 560;
+  const supportIds = useMemo(() => new Set(support.map((x) => x.student.id)), [support]);
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = section.students.filter((st) => {
+      if (q && !st.name.toLowerCase().includes(q)) return false;
+      if (filter === 'support' && !supportIds.has(st.id)) return false;
+      if (filter === 'none' && (st as { answered?: number }).answered !== 0) return false;
+      return true;
+    });
+    if (sort === 'low') list.sort((a, b) => avgOf(a) - avgOf(b));
+    else if (sort === 'high') list.sort((a, b) => avgOf(b) - avgOf(a));
+    else list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [section, query, filter, sort, supportIds]);
+  const classAvg = active.length ? active.reduce((a, st) => a + avgOf(st), 0) / active.length : null;
+
+  const maxW = isDesktop ? 1400 : wide ? 1240 : 560;
   const contentW = Math.min(width, maxW) - space.screen * 2;
   const heatW = wide ? contentW * 0.62 - space.gap / 2 : contentW;
   const heatInner = heatW - space.card * 2;
@@ -275,13 +316,60 @@ function Dashboard({
           </Text>
         </View>
       ) : null}
+      {!empty && section.students.length > 0 ? (
+        <View style={styles.toolbar}>
+          <TextInput
+            ref={searchRef}
+            value={query}
+            onChangeText={setQuery}
+            placeholder={isDesktop ? 'Search students (Ctrl K)' : 'Search students'}
+            placeholderTextColor={c.textTertiary}
+            accessibilityLabel="Search students"
+            style={[styles.search, { color: c.text, backgroundColor: c.inset, borderColor: c.hairline }]}
+          />
+          <SegmentedControl
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'support', label: T.needs },
+              { value: 'none', label: T.never },
+            ]}
+            value={filter}
+            onChange={(v) => setFilter(v as typeof filter)}
+            style={styles.filterSeg}
+          />
+          <SegmentedControl
+            options={[
+              { value: 'name', label: 'A–Z' },
+              { value: 'low', label: 'Lowest' },
+              { value: 'high', label: 'Highest' },
+            ]}
+            value={sort}
+            onChange={(v) => setSort(v as typeof sort)}
+            style={styles.sortSeg}
+          />
+        </View>
+      ) : null}
       {empty ? (
         <EmptyState title={T.noStudents} subtitle={T.noStudentsSub} expression="curious" />
+      ) : shown.length === 0 ? (
+        <EmptyState
+          title="No matching students"
+          subtitle="Try another name or filter."
+          expression="curious"
+          action={{
+            label: 'Clear filters',
+            onPress: () => {
+              setQuery('');
+              setFilter('all');
+            },
+          }}
+        />
       ) : (
         <ClassHeatmap
-          students={section.students}
+          students={shown}
+          showValues={isDesktop}
           width={heatInner}
-          height={Math.min(wide ? 620 : 470, 90 + section.students.length * 40)}
+          height={Math.min(wide ? 620 : 470, 90 + shown.length * 40)}
           highlight={rootCounts?.[0]}
           onCell={(s, skill) => setCell({ s, skill })}
           onStudent={openStudent}
@@ -350,7 +438,11 @@ function Dashboard({
       <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
         <BarBlurTarget>
           <ScrollView
-            contentContainerStyle={[styles.body, { maxWidth: maxW, paddingBottom: insets.bottom + 110 }]}
+            contentContainerStyle={[
+              styles.body,
+              { maxWidth: maxW, paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+              isDesktop && styles.bodyDesktop,
+            ]}
             refreshControl={
               IS_PITCH ? undefined : (
                 <RefreshControl
@@ -395,6 +487,32 @@ function Dashboard({
                 />
               ) : null}
             </Stagger>
+            {isDesktop ? (
+              <View style={styles.kpis}>
+                <Kpi
+                  label="Students"
+                  value={String(section.students.length)}
+                  sub={`${active.length} answered in 30 days`}
+                />
+                <Kpi
+                  label="Class average"
+                  value={classAvg == null ? '—' : `${Math.round(classAvg * 100)}%`}
+                  sub="Across 9 skills"
+                />
+                <Kpi
+                  label="Top root gap"
+                  value={rootCounts ? SKILL_BY_ID[rootCounts[0]].name.en : 'None'}
+                  sub={rootCounts ? `${rootCounts[1]} ${rootCounts[1] === 1 ? 'student' : 'students'} · show` : 'No shared gap'}
+                  onPress={rootCounts ? () => setFilter('support') : undefined}
+                />
+                <Kpi
+                  label="Review queue"
+                  value={IS_PITCH ? '—' : String(pendingReview)}
+                  sub="Tutor answers to check"
+                  onPress={() => router.replace('/teacher/review')}
+                />
+              </View>
+            ) : null}
             {wide ? (
               <View style={styles.columns}>
                 <View style={styles.mainCol}>{heat}</View>
@@ -456,8 +574,42 @@ function Dashboard({
   );
 }
 
+function avgOf(st: Student) {
+  return SKILLS.reduce((a, k) => a + st.mastery[k.id], 0) / SKILLS.length;
+}
+
+function Kpi({ label, value, sub, onPress }: { label: string; value: string; sub: string; onPress?: () => void }) {
+  return (
+    <Card style={styles.kpi} onPress={onPress} accessibilityLabel={`${label}: ${value}. ${sub}`}>
+      <Text variant="overline">{label}</Text>
+      <Text variant="title" numberOfLines={1} style={styles.tabular}>
+        {value}
+      </Text>
+      <Text variant="caption" numberOfLines={1}>
+        {sub}
+      </Text>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bodyDesktop: { paddingHorizontal: 28, paddingTop: 12 },
+  kpis: { flexDirection: 'row', gap: space.gap },
+  kpi: { flex: 1, gap: 4, minWidth: 0 },
+  tabular: { fontVariant: ['tabular-nums'] },
+  toolbar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  search: {
+    flexGrow: 1,
+    flexBasis: 200,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
+  filterSeg: { flexGrow: 1, flexBasis: 280, maxWidth: 380 },
+  sortSeg: { flexBasis: 220, maxWidth: 260 },
   flex: { flex: 1 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
@@ -480,7 +632,6 @@ const styles = StyleSheet.create({
   },
   supportRow: { borderRadius: radius.inset },
   supportInner: { padding: 14, gap: 8 },
-  loadingCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   welcomeCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   smallChip: { height: 26, paddingHorizontal: 10 },

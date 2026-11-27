@@ -132,7 +132,7 @@ export type AppIcon = React.ComponentType<IconProps>;
 const MUTED_WEIGHTS: ReadonlySet<IconWeight> = new Set(['thin', 'light', 'regular']);
 
 function make(Glyph: SolarIcon, name: string): AppIcon {
-  function Icon({ size = 24, color = '#000000', weight = 'fill', style, testID, alt }: IconProps) {
+  function Icon({ size = 24, color = '#2B2D31', weight = 'fill', style, testID, alt }: IconProps) {
     return (
       <Glyph
         size={size}

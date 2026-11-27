@@ -1,29 +1,21 @@
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { Clock, Eye, FileText, HouseLine, Info, Lifebuoy, ShieldCheck, UserCircle } from '@/components/ui/icons';
+import { FileText, GearSix, Info, Lifebuoy, ShieldCheck, UserCircle } from '@/components/ui/icons';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
 import { BooksArt, LanguageArt, MoonArt, ShieldArt } from '@/components/student/TileArt';
-import { Card, DarkTile, LargeTitleHeader, ListGroup, ListRow, PressableScale, SegmentedControl, Stagger, Text, Toggle } from '@/components/ui';
-import { haptic } from '@/design/haptics';
+import { Card, DarkTile, LargeTitleHeader, ListGroup, ListRow, PressableScale, SegmentedControl, Stagger, Text } from '@/components/ui';
 import { SUBJECTS } from '@/data/localQuestions';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
-import { fontFor } from '@/design/typography';
 import { formatClock, useT } from '@/i18n/useT';
 import { IS_PITCH } from '@/lib/config';
 import * as api from '@/services/backend/api';
 import { flushStudent } from '@/services/backend/sync';
-import { BREAK_INTERVAL_PRESETS, snapBreakIntervalSec } from '@/services/learningBreak';
-import { openBatterySettings, openOverlaySettings, openScrollSettings, platform, requestAccess } from '@/services/monitor';
 import { useDevice } from '@/services/monitor/bridge';
 import { patchProfile, useAuth } from '@/store/useAuth';
-import { DEFAULT_SENTINEL, useAppStore, type ThemePref } from '@/store/useAppStore';
-import { useSession } from '@/store/useSession';
-
-const FREQ_OPTIONS = BREAK_INTERVAL_PRESETS;
+import { useAppStore, type ThemePref } from '@/store/useAppStore';
 
 export default function Profile() {
   const { c } = useTheme();
@@ -33,21 +25,13 @@ export default function Profile() {
   const guardian = useAppStore((s) => s.guardian);
   const offline = useAppStore((s) => s.offline);
   const themePref = useAppStore((s) => s.themePref);
-  const [confirm, setConfirm] = useState(false);
-  const [cleared, setCleared] = useState(false);
-  const [showPacing, setShowPacing] = useState(false);
   const name = useAppStore((s) => s.studentName);
   const classes = useAppStore((s) => s.classes);
   const userId = useAuth((s) => s.profile?.id ?? null);
   const grade = useAuth((s) => s.profile?.grade ?? null);
-  const overlayIntervalSec = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
-  const guardianBreakSec = useAppStore((s) => (s.guardian.linked ? s.limits.breakIntervalSec : null));
-  const effectiveIntervalSec = snapBreakIntervalSec(guardianBreakSec ?? overlayIntervalSec);
-  const monitorAllApps = useAppStore((s) => s.sentinel?.monitorAllApps ?? DEFAULT_SENTINEL.monitorAllApps);
   const learningGrade = useAppStore((s) => s.learningGrade);
   const learningSubject = useAppStore((s) => s.learningSubject);
   const fil = lang === 'fil';
-  const devStatus = useDevice((s) => s.status);
   const pitchGrade = IS_PITCH ? 8 : grade;
   const syncSettingNow = () => {
     void useDevice.getState().refresh();
@@ -58,7 +42,11 @@ export default function Profile() {
   return (
     <Screen tabs header={<LargeTitleHeader title={fil ? 'Mga Setting' : 'Settings'} />}>
       <Stagger index={i++}>
-        <Card style={styles.me}>
+        <Card
+          style={styles.me}
+          onPress={IS_PITCH ? undefined : () => router.push('/account')}
+          accessibilityLabel={IS_PITCH ? undefined : `${name}, ${t.profile.account}`}
+        >
           <PatyAvatar size={58} />
           <View style={styles.flex}>
             <Text variant="title" numberOfLines={1}>
@@ -111,9 +99,9 @@ export default function Profile() {
 
       <Stagger index={i++}>
         <Card style={styles.gap}>
-          <Text variant="headline">{fil ? 'Ang iyong mga tanong' : 'Your questions'}</Text>
-          <Text variant="subhead">{fil ? 'Piliin ang baitang at paksang gusto mong aralin.' : 'Choose your grade and what you want to practise.'}</Text>
-          <Text variant="body">{fil ? 'Baitang' : 'Grade'}</Text>
+          <Text variant="headline">{t.profile.yourQuestions}</Text>
+          <Text variant="subhead">{t.profile.yourQuestionsSub}</Text>
+          <Text variant="body">{t.profile.gradeLabel}</Text>
           <View style={styles.freqRow}>
             {Array.from({ length: 10 }, (_, i) => i + 1).map((grade) => (
               <PressableScale
@@ -134,9 +122,9 @@ export default function Profile() {
               </PressableScale>
             ))}
           </View>
-          <Text variant="body">{fil ? 'Paksa' : 'Subject'}</Text>
+          <Text variant="body">{t.profile.subjectLabel}</Text>
           <View style={styles.freqRow}>
-            {[{ id: 'mixed' as const, label: fil ? 'Lahat' : 'All subjects' }, ...SUBJECTS].map((subject) => (
+            {[{ id: 'mixed' as const, label: t.profile.allSubjects }, ...SUBJECTS].map((subject) => (
               <PressableScale
                 key={subject.id}
                 accessibilityLabel={subject.label}
@@ -151,7 +139,7 @@ export default function Profile() {
               </PressableScale>
             ))}
           </View>
-          <Text variant="caption">{fil ? 'Nasa app ang 3,000 tanong. Ang mga sagot sa practice feed ay mananatili sa sesyon mo.' : '3,000 questions are included in the app. Practice-feed answers stay in your session.'}</Text>
+          <Text variant="caption">{t.profile.questionsNote}</Text>
         </Card>
       </Stagger>
 
@@ -173,127 +161,25 @@ export default function Profile() {
         </Card>
       </Stagger>
 
-      {platform === 'android' ? (
-        <Stagger index={i++}>
-          <ListGroup>
-            <ListRow
-              title="App usage permission"
-              value={devStatus.access ? 'On' : 'Tap to grant'}
-              icon={<ShieldCheck size={20} weight="fill" color={devStatus.access ? c.success : c.accent} />}
-              onPress={() => void requestAccess()}
-            />
-            <ListRow
-              title="Show learning breaks over apps"
-              value={devStatus.overlay ? 'On' : 'Tap to grant'}
-              icon={<ShieldCheck size={20} weight="fill" color={devStatus.overlay ? c.success : c.accent} />}
-              onPress={openOverlaySettings}
-            />
-            <ListRow
-              title="Wait for my scroll"
-              value={devStatus.scrollAccess ? 'On' : 'Set up'}
-              icon={<ShieldCheck size={20} color={c.accent} />}
-              onPress={openScrollSettings}
-            />
-            <ListRow
-              title="Keep breaks running"
-              value={devStatus.battery ? 'Unrestricted' : 'Optimize'}
-              icon={<Info size={20} weight="fill" color={devStatus.battery ? c.success : c.textSecondary} />}
-              onPress={openBatterySettings}
-            />
-          </ListGroup>
-        </Stagger>
-      ) : null}
-
-      <Stagger index={i++}>
-        <ListGroup>
-          <ListRow
-            title={fil ? 'Attention Mirror (Neutral Feed)' : 'Attention Mirror (Neutral Feed)'}
-            value="Mode C"
-            icon={<Eye size={20} weight="fill" color={c.accent} />}
-            onPress={() => router.push('/mirror' as unknown as Href)}
-          />
-          <ListRow title={fil ? 'Subukan ang pag-swipe' : 'Try the swipe demo'} value="Preview" icon={<Clock size={20} color={c.accent} />} onPress={() => router.push({ pathname: '/simulate', params: { app: 'tiktok' } })} />
-          {IS_PITCH ? <ListRow title="Demo controls" icon={<Info size={20} color={c.accent} />} onPress={() => router.push('/demo')} /> : null}
-          <ListRow title={fil ? 'I-setup ang learning breaks' : 'Set up learning breaks'} icon={<HouseLine size={20} color={c.accent} />} onPress={() => router.push('/account')} />
-        </ListGroup>
-      </Stagger>
-
-      {/* Quietly tucked away adaptive pacing selector (45s / 3m / 9m / 15m) */}
-      <Stagger index={i++}>
-        <ListGroup>
-          <ListRow
-            title={fil ? 'Adaptive rhythm' : 'Adaptive rhythm'}
-            value={showPacing ? (fil ? 'Itago' : 'Hide') : `${FREQ_OPTIONS.find((x) => x.sec === effectiveIntervalSec)?.label ?? '3m'} · Auto`}
-            chevron={!showPacing}
-            onPress={() => setShowPacing((v) => !v)}
-          />
-        </ListGroup>
-        {showPacing ? (
-          <Card style={[styles.gap, { marginTop: 8 }]}>
-            <Text variant="caption">
-              {guardianBreakSec != null
-                ? fil
-                  ? `Itinakda ni ${guardian.name || 'Guardian mo'}. Mas umiikli ito kapag tuloy-tuloy o mabilis ang pag-scroll.`
-                  : `Set by ${guardian.name || 'your guardian'}. Adapts automatically: longer use time and rapid scrolling shorten the break timer.`
-                : fil
-                  ? 'Awtomatikong umiikli ang timer kapag matagal ang paggamit o mabilis ang pag-scroll.'
-                  : 'Adapts automatically: longer use time and excessive scrolling shorten the interval.'}
-            </Text>
-            <View style={styles.freqRow}>
-              {FREQ_OPTIONS.map((opt) => {
-                const active = effectiveIntervalSec === opt.sec;
-                return (
-                  <PressableScale
-                    key={opt.sec}
-                    disabled={guardianBreakSec != null}
-                    accessibilityLabel={`Break ready after ${opt.label}`}
-                    accessibilityState={{ selected: active, disabled: guardianBreakSec != null }}
-                    onPress={() => {
-                      haptic.select();
-                      useAppStore.getState().setOverlayInterval(opt.sec);
-                      syncSettingNow();
-                    }}
-                    style={[
-                      styles.freqPill,
-                      { backgroundColor: active ? c.accent : c.inset, opacity: guardianBreakSec != null && !active ? 0.45 : 1 },
-                    ]}
-                  >
-                    <Text variant="caption" color={active ? c.onAccent : c.text} style={fontFor(700)}>
-                      {opt.label}
-                    </Text>
-                  </PressableScale>
-                );
-              })}
-            </View>
-            <View style={styles.rowBetween}>
-              <View style={styles.flex}>
-                <Text variant="subhead" color="text">
-                  Include other apps
-                </Text>
-                <Text variant="caption">Watch non-study apps beyond video, social and games.</Text>
-              </View>
-              <Toggle
-                value={monitorAllApps}
-                onChange={(v) => {
-                  useAppStore.getState().setMonitorAllApps(v);
-                  syncSettingNow();
-                }}
-                accessibilityLabel="Include other apps"
-              />
-            </View>
-          </Card>
-        ) : null}
-      </Stagger>
-
       <Stagger index={i++}>
         <ListGroup>
           {!IS_PITCH ? (
             <ListRow
-              title="Account"
+              title={t.profile.account}
               icon={<UserCircle size={20} weight="fill" color={c.accent} />}
               onPress={() => router.push('/account')}
             />
           ) : null}
+          <ListRow
+            title={t.profile.advanced}
+            icon={<GearSix size={20} weight="fill" color={c.textSecondary} />}
+            onPress={() => router.push('/advanced' as Href)}
+          />
+        </ListGroup>
+      </Stagger>
+
+      <Stagger index={i++}>
+        <ListGroup>
           <ListRow
             title={t.profile.privacy}
             icon={<ShieldCheck size={20} weight="fill" color={c.success} />}
@@ -317,30 +203,6 @@ export default function Profile() {
           />
         </ListGroup>
       </Stagger>
-
-      <Stagger index={i++}>
-        <ListGroup>
-          <ListRow
-            title={IS_PITCH ? (cleared ? t.profile.delDone : confirm ? t.profile.delConfirm : t.profile.del) : t.profile.del}
-            destructive
-            chevron={false}
-            onPress={() => {
-              if (!IS_PITCH) {
-                router.push('/account');
-                return;
-              }
-              if (!confirm) {
-                setConfirm(true);
-                return;
-              }
-              useAppStore.getState().reset();
-              useSession.getState().setSimMinutes(0);
-              setConfirm(false);
-              setCleared(true);
-            }}
-          />
-        </ListGroup>
-      </Stagger>
     </Screen>
   );
 }
@@ -348,7 +210,6 @@ export default function Profile() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   gap: { gap: 12 },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   freqRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   freqPill: { paddingHorizontal: 12, minHeight: 48, minWidth: 48, borderRadius: radius.pill, justifyContent: 'center', alignItems: 'center' },
   me: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },

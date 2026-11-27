@@ -19,6 +19,7 @@ import { VerticalPager } from '@/components/student/VerticalPager';
 import { IconButton, Text } from '@/components/ui';
 import { mirroredAppByIdOrPkg, type MirroredClip } from '@/data/mirroredApps';
 import { ease, useReducedMotion } from '@/design/motion';
+import { IS_PITCH } from '@/lib/config';
 import { DEFAULT_SENTINEL, useAppStore } from '@/store/useAppStore';
 
 import { breakTransition, type BreakState } from '@/services/learningBreak';
@@ -29,7 +30,9 @@ export default function Simulate() {
   const insets = useSafeAreaInsets();
   const { app: appParam, start } = useLocalSearchParams<{ app?: string; start?: string }>();
   const [app] = useState(() => mirroredAppByIdOrPkg(appParam));
-  const interval = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
+  const storedInterval = useAppStore((s) => s.sentinel?.overlayIntervalSec ?? DEFAULT_SENTINEL.overlayIntervalSec);
+  // Pitch demo: a short countdown so the break appears quickly on stage.
+  const interval = IS_PITCH ? 10 : storedInterval;
   const [{ remaining, stage }, dispatch] = useReducer(breakTransition, {
     stage: start === 'quiz' ? 'overlay' : start === 'nudge' ? 'ready' : 'feed',
     remaining: start === 'quiz' || start === 'nudge' ? 0 : interval,
@@ -47,6 +50,8 @@ export default function Simulate() {
     const timer = setInterval(() => {
       if (Platform.OS === 'web' && typeof document !== 'undefined' && document.hidden) return;
       dispatch({ type: 'tick' });
+      // Pitch demo: open the learning card automatically when the timer ends.
+      if (IS_PITCH) dispatch({ type: 'start' });
     }, 1000);
     return () => clearInterval(timer);
   }, [stage, active]);

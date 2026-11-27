@@ -193,21 +193,49 @@ class InterventionDispatcher(private val context: Context) {
   private val telemetry = PilotTelemetryRecorder(LearnShiftOfflineDb.getInstance(context))
 
   fun dispatch(targetPackage: String, snapshot: OfflineContextSnapshot): String {
-    val tier = if (canSafelyLaunchWorkProfileApp()) {
-      launchWorkProfileApp(targetPackage, snapshot.sessionMinutes)
-      "TIER_A_WORK_PROFILE_REAL_APP"
+    val selected = LearningMirrorSelector(context).selectVideoForSession(targetPackage, snapshot)
+    return dispatchWithLearningVideo(targetPackage, snapshot, selected, fil = false)
+  }
+
+  fun dispatchWithLearningVideo(
+    targetPackage: String,
+    snapshot: OfflineContextSnapshot,
+    selectedVideo: LearningVideoSeed?,
+    fil: Boolean = false,
+  ): String {
+    val canTierA = canSafelyLaunchWorkProfileApp() && LearningMirrorPolicy.isAllowedTargetPackage(targetPackage)
+    val tier = if (canTierA) {
+      val badge = LearningMirrorPolicy.formatBadge(snapshot.sessionMinutes, selectedVideo, fil)
+      val launched = launchWorkProfileLearningVideo(
+        targetPackage = targetPackage,
+        sessionMinutes = snapshot.sessionMinutes,
+        deepLinkUrl = selectedVideo?.deepLinkUrl,
+        badgeText = badge,
+      )
+      if (launched) {
+        // Personal Profile holds SYSTEM_ALERT_WINDOW, so render the honest 1.8s pill from here.
+        NeutralBannerOverlay.showBriefPill(context, badge, durationMs = 1800L, delayMs = 250L)
+        if (selectedVideo != null) "TIER_A_WORK_PROFILE_LEARNING_VIDEO" else "TIER_A_WORK_PROFILE_REAL_APP"
+      } else {
+        val strategy = bandit.selectDecelerationStrategy(snapshot)
+        launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
+        "TIER_C_LOW_RAM_VIEWPAGER_${strategy.name}"
+      }
     } else {
       val strategy = bandit.selectDecelerationStrategy(snapshot)
       launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
       "TIER_C_LOW_RAM_VIEWPAGER_${strategy.name}"
     }
-    Thread { telemetry.logInterventionTriggered(targetPackage, snapshot.sessionMinutes, tier) }.start()
+    Thread {
+      telemetry.logInterventionTriggered(targetPackage, snapshot.sessionMinutes, tier, selectedVideo?.id)
+    }.start()
     return tier
   }
 
   fun canSafelyLaunchWorkProfileApp(): Boolean {
     val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     val memInfo = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
+    // Integer division of totalMem on 6 GB nominal phones yields 5 due to kernel/GPU reservation.
     val totalRamGb = memInfo.totalMem / (1024L * 1024L * 1024L)
     val availRamMb = memInfo.availMem / (1024L * 1024L)
 
@@ -220,13 +248,26 @@ class InterventionDispatcher(private val context: Context) {
     return hasWorkProfile && !memInfo.lowMemory && totalRamGb >= 5 && availRamMb >= 900
   }
 
-  private fun launchWorkProfileApp(targetPackage: String, sessionMinutes: Int) {
+  private fun launchWorkProfileLearningVideo(
+    targetPackage: String,
+    sessionMinutes: Int,
+    deepLinkUrl: String?,
+    badgeText: String,
+  ): Boolean {
     val intent = Intent(LearnShiftAdminReceiver.ACTION_LAUNCH_NEUTRAL_APP).apply {
       putExtra(LearnShiftAdminReceiver.EXTRA_TARGET_PKG, targetPackage)
       putExtra(LearnShiftAdminReceiver.EXTRA_SESSION_MIN, sessionMinutes)
+      if (!deepLinkUrl.isNullOrBlank()) {
+        putExtra(LearnShiftAdminReceiver.EXTRA_DEEP_LINK_URL, deepLinkUrl)
+      }
+      putExtra(LearnShiftAdminReceiver.EXTRA_BADGE_TEXT, badgeText)
+      putExtra(LearnShiftAdminReceiver.EXTRA_SHOW_LOCAL_PILL, false)
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    context.startActivity(intent)
+    return runCatching {
+      context.startActivity(intent)
+      true
+    }.getOrDefault(false)
   }
 
   private fun launchNativeXmlFallback(sessionMinutes: Int, strategyName: String) {

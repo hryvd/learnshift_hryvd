@@ -1,13 +1,41 @@
 /**
  * Attention Mirror (Option C) interface over:
- *   - Android: Real Work-Profile second app launcher (Tier A, >= 6 GB RAM) +
+ *   - Android: Real Work-Profile learning video deep-link launcher (Tier A, >= 6 GB RAM) +
  *              Opt-in 1-frame RAM-only ML Kit Smart Study Guard +
  *              Low-RAM 60 FPS native XML ViewPager2 Deceleration Deck (Tier C)
- *   - iOS / Web / Expo Go fallback: In-app 4-strategy Low-Stimulation Deceleration Deck
+ *   - iOS / Web / Expo Go fallback: 4-platform verified learning video catalog +
+ *              In-app 4-strategy Low-Stimulation Deceleration Deck
  */
 import { Linking, Platform } from 'react-native';
 
 import { UsageMonitor } from '../../../modules/usage-monitor';
+import {
+  formatMirrorBadge,
+  isAllowedLearningDeepLink,
+  LEARNING_VIDEO_CATALOG,
+  MIRROR_PLATFORMS,
+  selectLearningVideo,
+  type CanonicalMirrorPackage,
+  type LearningVideoSeed,
+  type MirrorPlatform,
+  type MirrorPlatformInfo,
+  type PacingMode,
+  type VideoDisplayRecord,
+} from './learningMirrorSelector';
+
+export {
+  formatMirrorBadge,
+  isAllowedLearningDeepLink,
+  LEARNING_VIDEO_CATALOG,
+  MIRROR_PLATFORMS,
+  selectLearningVideo,
+  type CanonicalMirrorPackage,
+  type LearningVideoSeed,
+  type MirrorPlatform,
+  type MirrorPlatformInfo,
+  type PacingMode,
+  type VideoDisplayRecord,
+};
 
 export type MirrorStatus = {
   workProfileStatus: 'ACTIVE_AND_READY' | 'CAN_PROVISION' | 'BLOCKED_EXISTING_OR_UNSUPPORTED';
@@ -19,7 +47,17 @@ export type MirrorStatus = {
   riskScore: number;
   batteryExempt: boolean;
   lastStrategy: string;
+  lastVideoId: string;
+  lastVideoTitle: string;
+  catalogCount: number;
   nativeSupported: boolean;
+};
+
+export type MirrorShiftResult = {
+  tier: string;
+  video: LearningVideoSeed | null;
+  badge: string;
+  dispatchedNatively: boolean;
 };
 
 export const NEUTRAL_SEEDS = [
@@ -74,10 +112,21 @@ export const OFFLINE_DECELERATION_CARDS = [
   },
 ] as const;
 
+export function getCatalogByPlatform(platform: MirrorPlatform): LearningVideoSeed[] {
+  return LEARNING_VIDEO_CATALOG.filter((item) => item.platform === platform);
+}
+
 export function getMirrorStatus(): MirrorStatus {
   if (Platform.OS === 'android' && UsageMonitor?.getMirrorStatus) {
     try {
-      return { ...UsageMonitor.getMirrorStatus(), nativeSupported: true };
+      const raw = UsageMonitor.getMirrorStatus();
+      return {
+        ...raw,
+        lastVideoId: raw.lastVideoId ?? '',
+        lastVideoTitle: raw.lastVideoTitle ?? '',
+        catalogCount: raw.catalogCount && raw.catalogCount > 0 ? raw.catalogCount : LEARNING_VIDEO_CATALOG.length,
+        nativeSupported: true,
+      };
     } catch {
       // fall through
     }
@@ -92,6 +141,9 @@ export function getMirrorStatus(): MirrorStatus {
     riskScore: 0.18,
     batteryExempt: true,
     lastStrategy: 'IN_APP_DECELERATION',
+    lastVideoId: '',
+    lastVideoTitle: '',
+    catalogCount: LEARNING_VIDEO_CATALOG.length,
     nativeSupported: false,
   };
 }
@@ -129,12 +181,86 @@ export function triggerMirrorIntervention(targetPkg = 'com.zhiliaoapp.musically'
   return null;
 }
 
+export async function triggerMirrorLearningShift(
+  targetPkg: CanonicalMirrorPackage = 'com.google.android.youtube',
+  opts?: {
+    preferredSubject?: string | null;
+    lang?: 'en' | 'fil';
+    inBedtime?: boolean;
+    sessionMinutes?: number;
+    history?: Readonly<Record<string, VideoDisplayRecord>>;
+  },
+): Promise<MirrorShiftResult> {
+  const lang = opts?.lang ?? 'en';
+  const sessionMinutes = opts?.sessionMinutes ?? 25;
+
+  if (Platform.OS === 'android' && UsageMonitor?.triggerMirrorLearningShift) {
+    try {
+      const res = await UsageMonitor.triggerMirrorLearningShift(targetPkg);
+      const matched = LEARNING_VIDEO_CATALOG.find((v) => v.id === res.videoId) ?? null;
+      return {
+        tier: res.tier,
+        video: matched,
+        badge: res.badge || formatMirrorBadge(sessionMinutes, matched, lang),
+        dispatchedNatively: true,
+      };
+    } catch {
+      // fall through to legacy native or JS preview
+    }
+  }
+
+  const preview = selectLearningVideo(
+    LEARNING_VIDEO_CATALOG,
+    {
+      activeForegroundPackage: targetPkg,
+      hourOfDay: new Date().getHours(),
+      sessionMinutes,
+      posture: 'DESK_UPRIGHT',
+      inBedtime: opts?.inBedtime ?? false,
+      preferredSubject: opts?.preferredSubject ?? null,
+    },
+    opts?.history ?? {},
+  );
+  const badge = formatMirrorBadge(sessionMinutes, preview, lang);
+
+  if (Platform.OS === 'android' && UsageMonitor?.triggerMirrorIntervention) {
+    const tier = UsageMonitor.triggerMirrorIntervention(targetPkg);
+    return { tier: tier ?? 'TIER_A_WORK_PROFILE_REAL_APP', video: preview, badge, dispatchedNatively: true };
+  }
+
+  return {
+    tier: 'IN_APP_LEARNING_PREVIEW',
+    video: preview,
+    badge,
+    dispatchedNatively: false,
+  };
+}
+
 export function openNeutralSeedUrl(url: string): void {
+  if (!isAllowedLearningDeepLink(url)) return;
   if (Platform.OS === 'android' && UsageMonitor?.openNeutralSeed) {
     UsageMonitor.openNeutralSeed(url);
   } else {
     void Linking.openURL(url).catch(() => {});
   }
+}
+
+export function openLearningSeed(seed: LearningVideoSeed, lang: 'en' | 'fil' = 'en'): boolean {
+  if (!isAllowedLearningDeepLink(seed.deepLinkUrl)) return false;
+  const badge = formatMirrorBadge(1, seed, lang);
+  if (Platform.OS === 'android' && UsageMonitor?.openLearningSeedInWorkSpace) {
+    try {
+      return UsageMonitor.openLearningSeedInWorkSpace(seed.androidPackage, seed.deepLinkUrl, badge);
+    } catch {
+      // fall through
+    }
+  }
+  if (Platform.OS === 'android' && UsageMonitor?.openNeutralSeed) {
+    UsageMonitor.openNeutralSeed(seed.deepLinkUrl);
+    return true;
+  }
+  void Linking.openURL(seed.deepLinkUrl).catch(() => {});
+  return true;
 }
 
 export async function exportPilotCsv(): Promise<string | null> {

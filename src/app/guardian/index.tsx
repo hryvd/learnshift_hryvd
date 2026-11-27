@@ -33,14 +33,18 @@ import {
 } from '@/components/ui/icons';
 
 import { AppsCard, isLearnShiftApp, NowCard } from '@/components/guardian/AppUsage';
+import { AccountManageSection } from '@/components/account/AccountManageSection';
+import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 import { Paty } from '@/components/mascot/Paty';
 import {
+  AnimatedReveal,
   BarChart,
   BottomSheet,
   Card,
   Chip,
   DevChip,
   EmptyState,
+  HoldButton,
   ListGroup,
   ListRow,
   Notice,
@@ -900,7 +904,7 @@ function Content({
             </Text>
           </PressableScale>
 
-          {showAdvancedPacing ? (
+          <AnimatedReveal visible={showAdvancedPacing} gap={10}>
             <PressableScale
               scaleTo={pressScale.card}
               onPress={() => onEditLimit('breakSec')}
@@ -926,7 +930,7 @@ function Content({
               </View>
               <CaretRight size={15} weight="bold" color={c.textTertiary} />
             </PressableScale>
-          ) : null}
+          </AnimatedReveal>
         </View>
 
         <View style={[styles.toggleRow, { borderColor: c.hairline }]}>
@@ -995,7 +999,8 @@ function Content({
           <Toggle value={v.socialEnabled} onChange={v.setSocialEnabled} accessibilityLabel={g.socialToggle} />
         </View>
 
-        <View style={[styles.toggleRow, { borderColor: c.hairline }]}>
+        <AnimatedReveal visible={v.socialEnabled} gap={10}>
+          <View style={[styles.toggleRow, { borderColor: c.hairline }]}>
           <View style={[styles.ctlBadge, { backgroundColor: c.inset }]}>
             <ChatCircleDots size={18} weight="fill" color={c.indigo} />
           </View>
@@ -1008,7 +1013,8 @@ function Content({
             onChange={v.setChatEnabled}
             accessibilityLabel={g.chatToggle}
           />
-        </View>
+          </View>
+        </AnimatedReveal>
 
         <View style={[styles.toggleRow, styles.column, { borderColor: c.hairline }]}>
           <Text variant="overline">{g.friendsListTitle}</Text>
@@ -1332,6 +1338,22 @@ function ConfirmDangerSheet({
   onClose: () => void;
 }) {
   const g = useGuardianT();
+  const t = useT();
+  if (sheet.kind === 'delete') {
+    return (
+      <DeleteAccountSheet
+        visible={sheet.open}
+        onClose={onClose}
+        copy={t.manage}
+        role="guardian"
+        onConfirm={async () => {
+          await api.deleteAccount();
+          onClose();
+          router.replace('/onboarding');
+        }}
+      />
+    );
+  }
   const label =
     sheet.kind === 'unlink'
       ? g.unlink
@@ -1466,15 +1488,14 @@ function LinkChild({ first }: { first?: boolean }) {
   if (!open)
     return (
       <View style={styles.addChildWrap}>
-        <PillButton
+        <HoldButton
           label={g.addChild}
+          holdingLabel={g.addChild}
           kind="secondary"
+          durationMs={600}
           icon={<UserPlus size={18} weight="bold" color={c.accent} />}
-          block
-          delayLongPress={600}
-          onPress={() => setHoldHint(true)}
-          onLongPress={() => {
-            haptic.light();
+          onTapShort={() => setHoldHint(true)}
+          onComplete={() => {
             setHoldHint(false);
             setOpen(true);
           }}
@@ -1563,6 +1584,7 @@ function LinkChild({ first }: { first?: boolean }) {
 }
 
 function AccountCard({ onAskDanger }: { onAskDanger: (req: DangerReq) => void }) {
+  const { c } = useTheme();
   const g = useGuardianT();
   const t = useT();
   const me = useAuth((s) => s.profile);
@@ -1578,6 +1600,7 @@ function AccountCard({ onAskDanger }: { onAskDanger: (req: DangerReq) => void })
       <Text variant="overline" style={styles.label}>
         {g.account} · {accountLabel}
       </Text>
+      <AccountManageSection copy={t.manage} />
       <ListGroup>
         {child && selected ? (
           <ListRow
@@ -1603,10 +1626,12 @@ function AccountCard({ onAskDanger }: { onAskDanger: (req: DangerReq) => void })
             router.replace('/onboarding');
           }}
         />
+      </ListGroup>
+      <ListGroup style={styles.dangerGroup}>
         <ListRow
-          title={t.profile.del}
+          title={t.manage.deleteRow}
+          icon={<Trash size={20} weight="bold" color={c.danger} />}
           destructive
-          chevron={false}
           onPress={() =>
             onAskDanger({
               kind: 'delete',
@@ -1658,6 +1683,7 @@ const styles = StyleSheet.create({
   consentRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   label: { paddingHorizontal: 4, marginTop: 8 },
   sheetBody: { gap: 12, paddingBottom: 8 },
+  dangerGroup: { marginTop: 18 },
   timeReadout: {
     flexDirection: 'row',
     alignItems: 'center',
