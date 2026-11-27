@@ -47,7 +47,8 @@ import { radius, space } from '@/design/tokens';
 import { formatClock, useL, useT } from '@/i18n/useT';
 import { BEDTIME_STARTS, bedtimeStartIndex } from '@/lib/bedtime';
 import { useDesktop } from '@/hooks/useDesktop';
-import { IS_PITCH } from '@/lib/config';
+import { TeacherAuth } from '@/components/teacher/TeacherAuth';
+import { IS_PITCH, IS_TEACHER_APP } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
 import { mulberry32 } from '@/services/ai/interventionPolicy';
 import { gapEngine } from '@/services/ai/gapEngine';
@@ -87,7 +88,12 @@ const NO_BACK_FROM: Step[] = ['link'];
 
 type Draft = { role: Role; grade: number };
 
-export default function Onboarding() {
+/** Teacher desktop app: its own sign-in; everyone else: the onboarding wizard. */
+export default function OnboardingRoute() {
+  return IS_TEACHER_APP ? <TeacherAuth /> : <Onboarding />;
+}
+
+function Onboarding() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
   const t = useT();
