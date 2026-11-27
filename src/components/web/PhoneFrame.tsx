@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
+import { IS_TEACHER_APP } from '@/lib/config';
 import { FONT_MAIN, FONT_SECONDARY } from '@/design/typography';
 
 /**
@@ -16,6 +17,7 @@ export const STAFF_KEY = 'ls-staff';
 
 export const SHOW_FRAME: boolean = (() => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  if (IS_TEACHER_APP) return false;
   try {
     if (window.self !== window.top) return false;
     const q = new URLSearchParams(window.location.search);
@@ -24,7 +26,7 @@ export const SHOW_FRAME: boolean = (() => {
     if (q.has('full')) return false;
     if (window.localStorage.getItem('ls-full') === '1') return false;
     // Teachers and guardians work on laptops: their screens get the full window.
-    if (/^\/(teacher|guardian|reset-password)(\/|$)/.test(window.location.pathname)) return false;
+    if (/^\/(teacher|guardian|reset-password|privacy-policy|auth)(\/|$)/.test(window.location.pathname)) return false;
     if (window.localStorage.getItem(STAFF_KEY) === '1') return false;
     if (q.get('mode') === 'signin') return false;
   } catch {

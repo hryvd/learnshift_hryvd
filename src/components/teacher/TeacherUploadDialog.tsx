@@ -284,7 +284,7 @@ function Studio() {
             <Text variant="subhead" color="text">
               {T.moduleSubject}
             </Text>
-            <View style={styles.row}>
+            <View style={[styles.row, styles.rowStart]}>
               {SUBJECTS.map((s) => (
                 <Chip key={s} label={s} kind={subject === s ? 'tinted' : 'neutral'} selected={subject === s} onPress={() => setSubject(s)} />
               ))}
@@ -495,7 +495,8 @@ const styles = StyleSheet.create({
   gapSm: { gap: 6 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   drop: { borderWidth: 2, borderStyle: 'dashed', borderRadius: radius.inset, padding: 28, alignItems: 'center', gap: 8 },
-  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 15 },
+  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, fontSize: 15, fontFamily: 'Inter_500Medium' },
+  rowStart: { justifyContent: 'flex-start' },
   cols: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
   left: { flex: 0.85, minWidth: 0 },
   right: { flex: 1.5, minWidth: 0 },

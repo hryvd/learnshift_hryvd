@@ -420,7 +420,7 @@ function Dashboard({
 
   const side = (
     <View style={styles.sideCol}>
-      {joinCode ? <JoinCodeCard code={joinCode} /> : null}
+      {joinCode ? <JoinCodeCard code={joinCode} className={title} classId={section.id} /> : null}
       <Card style={styles.gap} onPress={() => router.replace('/teacher/modules')}>
         <View style={styles.rowBetween}>
           <View style={[styles.modBadge, { backgroundColor: c.accentTint }]}>

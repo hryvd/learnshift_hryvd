@@ -61,3 +61,4 @@ dist-app/
 
 # Playwright laptop E2E output
 e2e-shots/
+dist-teacher/

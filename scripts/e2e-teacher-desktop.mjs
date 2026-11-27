@@ -245,7 +245,7 @@ try {
     log('Review: keyboard approve persists', ta?.[0]?.status === 'approved' && ta?.[0]?.reviewed_by === teacherA.id, JSON.stringify(ta));
   }
 
-  // ── Settings: rename class, projector ──
+  // ── Settings: rename class, invite dialog ──
   await t.goto(`${BASE}/teacher/settings`);
   await t.waitForTimeout(3500);
   await t.getByRole('button', { name: `Edit ${klass.name}` }).click();
@@ -256,13 +256,13 @@ try {
   await t.waitForTimeout(3000);
   const { data: rn } = await teacherA.c.from('classes').select('name, grade, join_code').eq('id', klass.id).single();
   log('Rename class + grade (code unchanged)', rn.name === 'Grade 9 – Narra' && rn.grade === 9 && rn.join_code === klass.join_code, JSON.stringify(rn));
-  await t.getByRole('button', { name: /for the projector/ }).click();
+  await t.getByRole('button', { name: /Invite students with code/ }).click();
   await t.waitForTimeout(800);
-  const proj = await t.getByText(klass.join_code).count();
-  await t.screenshot({ path: `${OUT}/projector.png` });
+  const proj = await t.getByLabel('Class join QR code').count();
+  await t.screenshot({ path: `${OUT}/invite.png` });
   await t.keyboard.press('Escape');
   await t.waitForTimeout(500);
-  log('Projector shows code; Esc closes', proj > 0 && (await t.getByText('Close (Esc)').count()) === 0);
+  log('Invite dialog shows QR; Esc closes', proj > 0 && (await t.getByRole('dialog', { name: 'Invite students' }).count()) === 0);
   await t.screenshot({ path: `${OUT}/settings.png` });
 
   // ── Offline + sign-out wipe ──

@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
-import { ProjectorDialog } from '@/components/teacher/ProjectorDialog';
+import { InviteDialog } from '@/components/teacher/InviteDialog';
 import { useDesktop } from '@/hooks/useDesktop';
-import { Copy, Monitor, Trash } from '@/components/ui/icons';
+import { Copy, QrCode, Trash } from '@/components/ui/icons';
 
 import { AccountManageSection } from '@/components/account/AccountManageSection';
 import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
@@ -71,7 +71,7 @@ export function CreateClassCard({ first, onDone, onCancel }: { first: boolean; o
   );
 }
 
-export function JoinCodeCard({ code, className }: { code: string; className?: string }) {
+export function JoinCodeCard({ code, className, classId }: { code: string; className?: string; classId?: string }) {
   const { c } = useTheme();
   const [copied, setCopied] = useState(false);
   const [projecting, setProjecting] = useState(false);
@@ -101,16 +101,16 @@ export function JoinCodeCard({ code, className }: { code: string; className?: st
           }}
         />
         <PillButton
-          label="Project"
+          label="Invite"
           kind="neutral"
           size="sm"
-          icon={<Monitor size={15} weight="bold" color={c.text} />}
-          accessibilityLabel="Show the join code large for a classroom projector"
+          icon={<QrCode size={15} weight="bold" color={c.text} />}
+          accessibilityLabel="Invite students with a QR code and link"
           onPress={() => setProjecting(true)}
         />
       </View>
     </Card>
-    <ProjectorDialog visible={projecting} code={code} className={className} onClose={() => setProjecting(false)} />
+    <InviteDialog visible={projecting} code={code} className={className} classId={classId} onClose={() => setProjecting(false)} />
     </>
   );
 }
