@@ -9,9 +9,11 @@ import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import { Card, PillButton, SegmentedControl, Stagger, Text } from '@/components/ui';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
+import { useDesktop, useInstallPrompt, useOnline } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
-import { useTeacher } from '@/services/backend/teacher';
+import { clearTeacherCache, useTeacher } from '@/services/backend/teacher';
+import { useAppStore } from '@/store/useAppStore';
 import { useAuth } from '@/store/useAuth';
 
 export default function TeacherSettings() {
@@ -21,6 +23,7 @@ export default function TeacherSettings() {
   const classes = useTeacher((s) => s.classes);
   const selected = useTeacher((s) => s.selected);
   const [creating, setCreating] = useState(false);
+  const { isDesktop } = useDesktop();
 
   const active = classes.find((x) => x.id === selected) ?? classes[0] ?? null;
 
@@ -32,7 +35,11 @@ export default function TeacherSettings() {
       >
         <BarBlurTarget>
           <ScrollView
-            contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 110 }]}
+            contentContainerStyle={[
+              styles.body,
+              { paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+              isDesktop && styles.bodyDesktop,
+            ]}
             keyboardShouldPersistTaps="handled"
           >
             <Stagger index={0} style={styles.header}>
@@ -46,7 +53,8 @@ export default function TeacherSettings() {
             </Stagger>
 
             {!IS_PITCH ? (
-              <>
+              <View style={isDesktop ? styles.columns : styles.stack}>
+              <View style={[styles.stack, isDesktop && styles.col]}>
                 {classes.length > 1 ? (
                   <SegmentedControl
                     options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
@@ -55,7 +63,7 @@ export default function TeacherSettings() {
                   />
                 ) : null}
 
-                {active ? <JoinCodeCard code={active.join_code} /> : null}
+                {active ? <JoinCodeCard code={active.join_code} className={active.name} /> : null}
 
                 {creating ? (
                   <CreateClassCard
@@ -73,8 +81,13 @@ export default function TeacherSettings() {
                   />
                 )}
 
+              </View>
+              <View style={[styles.stack, isDesktop && styles.col]}>
+                <AppearanceCard />
+                {isDesktop ? <LaptopAppCard /> : null}
                 <TeacherAccountCard classId={active?.id} />
-              </>
+              </View>
+              </View>
             ) : (
               <Card style={styles.gap}>
                 <Text variant="title">Grade 8 – {PITCH_NAMES.section}</Text>
@@ -91,8 +104,75 @@ export default function TeacherSettings() {
   );
 }
 
+function AppearanceCard() {
+  const pref = useAppStore((s) => s.themePref);
+  return (
+    <Card style={styles.gap}>
+      <Text variant="headline">Appearance</Text>
+      <Text variant="subhead">Day suits a bright classroom. Night is easier on the eyes in the evening.</Text>
+      <SegmentedControl
+        options={[
+          { value: 'day', label: 'Day' },
+          { value: 'night', label: 'Night' },
+          { value: 'auto', label: 'Auto' },
+        ]}
+        value={pref}
+        onChange={(v) => useAppStore.getState().setThemePref(v as 'day' | 'night' | 'auto')}
+      />
+    </Card>
+  );
+}
+
+/** Install as a laptop app (Chrome/Edge), plus the offline copy controls. */
+function LaptopAppCard() {
+  const online = useOnline();
+  const syncedAt = useTeacher((s) => s.syncedAt);
+  const { canInstall, installed, install } = useInstallPrompt();
+  const [cleared, setCleared] = useState(false);
+  const mac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform ?? '');
+  return (
+    <Card style={styles.gap}>
+      <Text variant="headline">LearnShift on this laptop</Text>
+      <Text variant="subhead">
+        {online ? 'Online' : 'Offline'}
+        {syncedAt
+          ? ` · last synced ${new Date(syncedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+          : ''}
+      </Text>
+      {installed ? (
+        <Text variant="caption">Installed. Open LearnShift from your Start menu, Dock or desktop.</Text>
+      ) : canInstall ? (
+        <PillButton label="Install LearnShift app" kind="secondary" onPress={() => void install()} />
+      ) : (
+        <Text variant="caption">
+          {mac
+            ? 'To install: in Safari choose File › Add to Dock; in Chrome or Edge use the install icon in the address bar.'
+            : 'To install: use the install icon at the right of the Chrome or Edge address bar.'}
+        </Text>
+      )}
+      <Text variant="caption">
+        Your classes stay readable if the internet drops. Signing out removes the saved copy from this laptop.
+      </Text>
+      <PillButton
+        label={cleared ? 'Saved copy cleared' : 'Clear saved classroom data'}
+        kind="neutral"
+        size="sm"
+        disabled={cleared}
+        onPress={() => {
+          clearTeacherCache();
+          setCleared(true);
+        }}
+      />
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bodyDesktop: { maxWidth: 1120, paddingHorizontal: 28, paddingTop: 12 },
+  columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
+  col: { flex: 1, minWidth: 0 },
+  stack: { gap: space.gap },
   flex: { flex: 1 },
   gap: { gap: 12 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', maxWidth: 680, alignSelf: 'center' },

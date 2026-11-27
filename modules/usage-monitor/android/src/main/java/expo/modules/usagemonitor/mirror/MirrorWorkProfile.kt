@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.CrossProfileApps
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
@@ -16,6 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.UserManager
 import android.provider.Settings
 import android.view.Gravity
 import android.view.WindowManager
@@ -28,6 +30,10 @@ class LearnShiftAdminReceiver : DeviceAdminReceiver() {
     val adminComponent = getComponentName(context)
     dpm.setProfileName(adminComponent, "LearnShift Neutral Space")
     dpm.setProfileEnabled(adminComponent)
+
+    // Enable WorkBridgeActivity strictly inside the isolated Work Profile so
+    // Personal Profile intents route directly across profiles without a chooser.
+    WorkProfileOnboardingManager.setWorkBridgeEnabled(context, enabled = true)
 
     val crossProfileFilter = IntentFilter(ACTION_LAUNCH_NEUTRAL_APP).apply {
       addCategory(Intent.CATEGORY_DEFAULT)
@@ -43,6 +49,9 @@ class LearnShiftAdminReceiver : DeviceAdminReceiver() {
     const val ACTION_LAUNCH_NEUTRAL_APP = "com.learnshift.ACTION_LAUNCH_NEUTRAL_APP"
     const val EXTRA_TARGET_PKG = "EXTRA_TARGET_PKG"
     const val EXTRA_SESSION_MIN = "EXTRA_SESSION_MIN"
+    const val EXTRA_DEEP_LINK_URL = "EXTRA_DEEP_LINK_URL"
+    const val EXTRA_BADGE_TEXT = "EXTRA_BADGE_TEXT"
+    const val EXTRA_SHOW_LOCAL_PILL = "EXTRA_SHOW_LOCAL_PILL"
 
     fun getComponentName(context: Context): ComponentName =
       ComponentName(context.applicationContext, LearnShiftAdminReceiver::class.java)
@@ -85,45 +94,82 @@ class WorkProfileOnboardingManager(private val context: Context) {
     activity.startActivityForResult(intent, requestCode)
     return true
   }
+
+  companion object {
+    fun isRunningInsideWorkProfile(context: Context): Boolean {
+      val appCtx = context.applicationContext
+      val dpm = appCtx.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+      if (dpm != null && runCatching { dpm.isProfileOwnerApp(appCtx.packageName) }.getOrDefault(false)) {
+        return true
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val um = appCtx.getSystemService(Context.USER_SERVICE) as? UserManager
+        if (um != null && runCatching { um.isManagedProfile }.getOrDefault(false)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    fun setWorkBridgeEnabled(context: Context, enabled: Boolean) {
+      runCatching {
+        val appCtx = context.applicationContext
+        val component = ComponentName(appCtx, WorkBridgeActivity::class.java)
+        val desired = if (enabled) {
+          PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        } else {
+          PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        }
+        val current = appCtx.packageManager.getComponentEnabledSetting(component)
+        if (current != desired) {
+          appCtx.packageManager.setComponentEnabledSetting(component, desired, PackageManager.DONT_KILL_APP)
+        }
+      }
+    }
+
+    fun ensureBridgeEnabledState(context: Context) {
+      setWorkBridgeEnabled(context, enabled = isRunningInsideWorkProfile(context))
+    }
+  }
 }
 
 object NeutralBannerOverlay {
-  fun showBriefPill(context: Context, message: String, durationMs: Long = 1800L) {
+  fun showBriefPill(context: Context, message: String, durationMs: Long = 1800L, delayMs: Long = 0L) {
     val appCtx = context.applicationContext
-    if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(appCtx)) {
-      Handler(Looper.getMainLooper()).post { Toast.makeText(appCtx, message, Toast.LENGTH_SHORT).show() }
-      return
-    }
-    val wm = appCtx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val pill = TextView(appCtx).apply {
-      text = message
-      setTextColor(Color.WHITE)
-      textSize = 13f
-      setPadding(40, 20, 40, 20)
-      background = GradientDrawable().apply {
-        setColor(Color.parseColor("#E6121212"))
-        cornerRadius = 48f
-        setStroke(2, Color.parseColor("#44FFFFFF"))
-      }
-    }
-    val type = if (Build.VERSION.SDK_INT >= 26) {
-      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-    } else {
-      @Suppress("DEPRECATION")
-      WindowManager.LayoutParams.TYPE_PHONE
-    }
-    val params = WindowManager.LayoutParams(
-      WindowManager.LayoutParams.WRAP_CONTENT,
-      WindowManager.LayoutParams.WRAP_CONTENT,
-      type,
-      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-      PixelFormat.TRANSLUCENT,
-    ).apply {
-      gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-      y = 110
-    }
     val mainHandler = Handler(Looper.getMainLooper())
-    mainHandler.post {
+    val showTask = Runnable {
+      if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(appCtx)) {
+        Toast.makeText(appCtx, message, Toast.LENGTH_SHORT).show()
+        return@Runnable
+      }
+      val wm = appCtx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+      val pill = TextView(appCtx).apply {
+        text = message
+        setTextColor(Color.WHITE)
+        textSize = 13f
+        setPadding(40, 20, 40, 20)
+        background = GradientDrawable().apply {
+          setColor(Color.parseColor("#E6121212"))
+          cornerRadius = 48f
+          setStroke(2, Color.parseColor("#44FFFFFF"))
+        }
+      }
+      val type = if (Build.VERSION.SDK_INT >= 26) {
+        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+      } else {
+        @Suppress("DEPRECATION")
+        WindowManager.LayoutParams.TYPE_PHONE
+      }
+      val params = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        type,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+        PixelFormat.TRANSLUCENT,
+      ).apply {
+        gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        y = 110
+      }
       try {
         wm.addView(pill, params)
         mainHandler.postDelayed({ runCatching { wm.removeViewImmediate(pill) } }, durationMs)
@@ -131,31 +177,110 @@ object NeutralBannerOverlay {
         Toast.makeText(appCtx, message, Toast.LENGTH_SHORT).show()
       }
     }
+    if (delayMs > 0L) {
+      mainHandler.postDelayed(showTask, delayMs)
+    } else {
+      mainHandler.post(showTask)
+    }
   }
 }
 
 class WorkBridgeActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val targetPkg = intent.getStringExtra(LearnShiftAdminReceiver.EXTRA_TARGET_PKG)
+
+    val rawTargetPkg = intent.getStringExtra(LearnShiftAdminReceiver.EXTRA_TARGET_PKG)
     val sessionMin = intent.getIntExtra(LearnShiftAdminReceiver.EXTRA_SESSION_MIN, 20)
-    if (targetPkg.isNullOrBlank()) {
+    val rawDeepLink = intent.getStringExtra(EXTRA_DEEP_LINK_URL)
+    val badgeText = intent.getStringExtra(EXTRA_BADGE_TEXT)?.takeIf { it.isNotBlank() }
+      ?: "${sessionMin.coerceAtLeast(1)}m break · Learning Feed Mode"
+    val showLocalPill = intent.getBooleanExtra(LearnShiftAdminReceiver.EXTRA_SHOW_LOCAL_PILL, true)
+
+    if (rawTargetPkg.isNullOrBlank() || !LearningMirrorPolicy.isAllowedTargetPackage(rawTargetPkg)) {
       finish()
       return
     }
-    val launchIntent = packageManager.getLaunchIntentForPackage(targetPkg)?.apply {
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    }
-    if (launchIntent != null) {
-      startActivity(launchIntent)
-      NeutralBannerOverlay.showBriefPill(applicationContext, "$sessionMin min scroll break • Neutral Feed Mode")
+
+    // Reject untrusted or non-HTTPS URLs passed to this exported cross-profile bridge.
+    val safeDeepLink = rawDeepLink?.trim()?.takeIf { LearningMirrorPolicy.isAllowedDeepLink(it) }
+    val resolvedPkg = resolveInstalledPackage(rawTargetPkg)
+
+    // Priority 1: Open the real Work-Profile app directly onto the curated learning video or creator page.
+    val launchedDirectVideo = if (safeDeepLink != null && resolvedPkg != null) {
+      val videoIntent = Intent(Intent.ACTION_VIEW, Uri.parse(safeDeepLink)).apply {
+        setPackage(resolvedPkg)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      }
+      runCatching {
+        if (videoIntent.resolveActivity(packageManager) != null) {
+          startActivity(videoIntent)
+          true
+        } else {
+          false
+        }
+      }.getOrDefault(false)
     } else {
-      NeutralBannerOverlay.showBriefPill(
-        applicationContext,
-        "Install target app in LearnShift Neutral Space to enable real-app mode",
-      )
+      false
+    }
+
+    // Priority 2: Launch the installed Work-Profile app's seeded learning home feed.
+    val launchedAppHome = if (!launchedDirectVideo && resolvedPkg != null) {
+      val homeIntent = packageManager.getLaunchIntentForPackage(resolvedPkg)?.apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      }
+      homeIntent != null && runCatching {
+        startActivity(homeIntent)
+        true
+      }.getOrDefault(false)
+    } else {
+      false
+    }
+
+    // Priority 3: Open the allowlisted learning URL in the isolated Work-Profile browser.
+    val launchedWorkBrowser = if (!launchedDirectVideo && !launchedAppHome && safeDeepLink != null) {
+      val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(safeDeepLink)).apply {
+        addCategory(Intent.CATEGORY_BROWSABLE)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      }
+      runCatching {
+        val resolved = webIntent.resolveActivity(packageManager)
+        if (resolved != null && resolved.packageName != packageName) {
+          startActivity(webIntent)
+          true
+        } else {
+          false
+        }
+      }.getOrDefault(false)
+    } else {
+      false
+    }
+
+    // Priority 4: Never fail open back to Personal-Profile doomscrolling — show Tier C Deceleration Deck.
+    if (!launchedDirectVideo && !launchedAppHome && !launchedWorkBrowser) {
+      val fallbackIntent = Intent(this, DecelerationOverlayActivity::class.java).apply {
+        putExtra(DecelerationOverlayActivity.EXTRA_SESSION_MIN, sessionMin)
+        putExtra(DecelerationOverlayActivity.EXTRA_STRATEGY, DecelerationStrategy.ANTI_FEED.name)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+      }
+      runCatching { startActivity(fallbackIntent) }
+    }
+
+    if (showLocalPill) {
+      NeutralBannerOverlay.showBriefPill(applicationContext, badgeText)
     }
     finish()
+  }
+
+  private fun resolveInstalledPackage(requestedPkg: String): String? {
+    for (candidate in LearningMirrorPolicy.packageCandidatesFor(requestedPkg)) {
+      if (packageManager.getLaunchIntentForPackage(candidate) != null) return candidate
+    }
+    return null
+  }
+
+  companion object {
+    const val EXTRA_DEEP_LINK_URL = LearnShiftAdminReceiver.EXTRA_DEEP_LINK_URL
+    const val EXTRA_BADGE_TEXT = LearnShiftAdminReceiver.EXTRA_BADGE_TEXT
   }
 }
 
@@ -185,10 +310,51 @@ object NeutralSeedManager {
   )
 
   fun openSeedInWorkBrowser(context: Context, url: String) {
+    if (!LearningMirrorPolicy.isAllowedDeepLink(url)) return
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    context.startActivity(intent)
+    runCatching { context.startActivity(intent) }
+  }
+
+  /**
+   * Opens a curated creator/video inside the isolated Work-Profile app when active
+   * (supporting the 1-Minute Onboarding Seed Ritual), or falls back to opening the
+   * HTTPS URL directly on devices without a Work Profile.
+   */
+  fun openLearningSeed(
+    context: Context,
+    targetPackage: String,
+    url: String,
+    badgeText: String,
+  ): Boolean {
+    if (!LearningMirrorPolicy.isAllowedDeepLink(url)) return false
+    val status = WorkProfileOnboardingManager(context).checkStatus()
+    if (status == WorkProfileStatus.ACTIVE_AND_READY && LearningMirrorPolicy.isAllowedTargetPackage(targetPackage)) {
+      val crossIntent = Intent(LearnShiftAdminReceiver.ACTION_LAUNCH_NEUTRAL_APP).apply {
+        putExtra(LearnShiftAdminReceiver.EXTRA_TARGET_PKG, targetPackage)
+        putExtra(LearnShiftAdminReceiver.EXTRA_SESSION_MIN, 1)
+        putExtra(LearnShiftAdminReceiver.EXTRA_DEEP_LINK_URL, url)
+        putExtra(LearnShiftAdminReceiver.EXTRA_BADGE_TEXT, badgeText)
+        putExtra(LearnShiftAdminReceiver.EXTRA_SHOW_LOCAL_PILL, false)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      val routed = runCatching {
+        context.startActivity(crossIntent)
+        true
+      }.getOrDefault(false)
+      if (routed) {
+        NeutralBannerOverlay.showBriefPill(context, badgeText, delayMs = 250L)
+        return true
+      }
+    }
+    val fallback = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    return runCatching {
+      context.startActivity(fallback)
+      true
+    }.getOrDefault(false)
   }
 }
 

@@ -67,13 +67,27 @@ type UsageMonitorNative = {
     riskScore: number;
     batteryExempt: boolean;
     lastStrategy: string;
+    lastVideoId?: string;
+    lastVideoTitle?: string;
+    catalogCount?: number;
   };
   provisionMirrorWorkProfile?(): boolean;
   openOemAutostart?(): void;
   requestSmartStudyGuard?(enabled: boolean): Promise<boolean>;
   setMirrorAutoEnabled?(enabled: boolean): boolean;
   triggerMirrorIntervention?(targetPkg: string): string;
+  triggerMirrorLearningShift?(targetPkg: string): Promise<{
+    tier: string;
+    videoId: string;
+    title: string;
+    creatorName: string;
+    platform: string;
+    pacingMode: string;
+    deepLinkUrl: string;
+    badge: string;
+  }>;
   openNeutralSeed?(url: string): void;
+  openLearningSeedInWorkSpace?(targetPkg: string, url: string, badgeText: string): boolean;
   exportMirrorPilotCsv?(): Promise<string>;
   addListener?(eventName: 'onWakeRefresh', listener: () => void): { remove(): void };
   lastConfig(): string;

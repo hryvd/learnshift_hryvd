@@ -15,6 +15,8 @@ export type Palette = {
   textTertiary: string;
   hairline: string;
   accent: string;
+  /** Light orange. Only on dark surfaces (tiles, Night) or as a non-text fill. */
+  accentLight: string;
   accentTint: string;
   accentFaded: string;
   onAccent: string;
@@ -43,22 +45,23 @@ export const day: Palette = {
   bg: '#F6F5F1',
   card: '#FFFFFF',
   inset: '#F1F2EF',
-  tileDark: '#161616',
+  tileDark: '#1F2227',
   tileDarkText: '#FFFFFF',
   tileDarkSecondary: '#B9BFC9',
-  text: '#111111',
-  textSecondary: '#62666C',
-  textTertiary: '#73777D',
+  text: '#2B2D31',
+  textSecondary: '#575C63',
+  textTertiary: '#686D75',
   hairline: 'rgba(0,0,0,0.06)',
-  accent: '#C8400F',
-  accentTint: '#F7DED3',
+  accent: '#C2410C',
+  accentLight: '#FFA952',
+  accentTint: '#FDECE4',
   accentFaded: '#E9A487',
   onAccent: '#FFFFFF',
   spark: '#FFB21E',
   sparkDeep: '#FF8A00',
   success: '#187B43',
   warning: '#945700',
-  danger: '#E5484D',
+  danger: '#C93238',
   indigo: '#6E6AF0',
   tabHome: '#E5483B',
   tabLearn: '#2FBF5B',
@@ -86,14 +89,15 @@ export const night: Palette = {
   textTertiary: '#929BB8',
   hairline: 'rgba(236,232,225,0.07)',
   accent: '#F2A65A',
-  accentTint: '#3A3140',
+  accentLight: '#FFBE78',
+  accentTint: '#33283A',
   accentFaded: '#7A5D4A',
   onAccent: '#1A1410',
   spark: '#F5C46B',
   sparkDeep: '#E0A24A',
   success: '#5CC98A',
   warning: '#E9B25E',
-  danger: '#E88A86',
+  danger: '#F28B87',
   indigo: '#8F8BF5',
   tabHome: '#F2A65A',
   tabLearn: '#5CC98A',

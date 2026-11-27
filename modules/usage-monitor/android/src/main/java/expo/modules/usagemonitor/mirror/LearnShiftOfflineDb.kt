@@ -2,6 +2,7 @@ package expo.modules.usagemonitor.mirror
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import java.io.File
@@ -22,6 +23,23 @@ data class DecelerationCard(
   val badgeLabel: String,
 )
 
+data class LearningVideoSeed(
+  val id: String,
+  val platform: String,
+  val androidPackage: String,
+  val creatorName: String,
+  val titleOrTopic: String,
+  val subjectTag: String,
+  val depedCompetency: String,
+  val pacingMode: String,
+  val language: String,
+  val durationSeconds: Int,
+  val deepLinkUrl: String,
+  val whyThisAppearedBadge: String,
+  val timesShown: Int = 0,
+  val lastShownMs: Long = 0L,
+)
+
 data class PilotSessionLog(
   val id: Int = 0,
   val timestampEpochMs: Long,
@@ -29,10 +47,11 @@ data class PilotSessionLog(
   val sessionMinutesBeforeTrigger: Int,
   val tierExecuted: String,
   val timeToScreenOffMs: Long? = null,
+  val videoId: String? = null,
 )
 
 class LearnShiftOfflineDb private constructor(ctx: Context) :
-  SQLiteOpenHelper(ctx.applicationContext, "learnshift_offline.db", null, 1) {
+  SQLiteOpenHelper(ctx.applicationContext, "learnshift_offline.db", null, DB_VERSION) {
 
   override fun onCreate(db: SQLiteDatabase) {
     db.execSQL(
@@ -65,14 +84,50 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
         targetAppCategory TEXT NOT NULL,
         sessionMinutesBeforeTrigger INTEGER NOT NULL,
         tierExecuted TEXT NOT NULL,
-        timeToScreenOffMs INTEGER
+        timeToScreenOffMs INTEGER,
+        videoId TEXT
       )
       """.trimIndent(),
     )
+    createLearningVideoTable(db)
     seedInitialBank(db)
   }
 
-  override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+  override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    if (oldVersion < 2) {
+      createLearningVideoTable(db)
+      runCatching { db.execSQL("ALTER TABLE pilot_session_logs ADD COLUMN videoId TEXT") }
+    }
+  }
+
+  private fun createLearningVideoTable(db: SQLiteDatabase) {
+    db.execSQL(
+      """
+      CREATE TABLE IF NOT EXISTS learning_video_seeds (
+        id TEXT PRIMARY KEY,
+        platform TEXT NOT NULL,
+        androidPackage TEXT NOT NULL,
+        creatorName TEXT NOT NULL,
+        titleOrTopic TEXT NOT NULL,
+        subjectTag TEXT NOT NULL,
+        depedCompetency TEXT NOT NULL,
+        pacingMode TEXT NOT NULL,
+        language TEXT NOT NULL,
+        durationSeconds INTEGER NOT NULL,
+        deepLinkUrl TEXT NOT NULL,
+        whyThisAppearedBadge TEXT NOT NULL,
+        timesShown INTEGER NOT NULL DEFAULT 0,
+        lastShownMs INTEGER NOT NULL DEFAULT 0
+      )
+      """.trimIndent(),
+    )
+    db.execSQL(
+      """
+      CREATE INDEX IF NOT EXISTS idx_learning_video_pkg_mode
+      ON learning_video_seeds(androidPackage, pacingMode, timesShown, lastShownMs)
+      """.trimIndent(),
+    )
+  }
 
   private fun seedInitialBank(db: SQLiteDatabase) {
     val tags = listOf("SOIL_TAXONOMY", "TAX_ACCOUNTING", "PARLIAMENTARY_RULES", "WIND_DOWN_CHORE", "GRADE7_MATH_LOCAL")
@@ -130,6 +185,147 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
       )
     }
   }
+
+  fun upsertLearningSeeds(seeds: List<LearningVideoSeed>) {
+    if (seeds.isEmpty()) return
+    val db = writableDatabase
+    db.beginTransaction()
+    try {
+      for (s in seeds) {
+        val insertValues = ContentValues().apply {
+          put("id", s.id)
+          put("platform", s.platform)
+          put("androidPackage", s.androidPackage)
+          put("creatorName", s.creatorName)
+          put("titleOrTopic", s.titleOrTopic)
+          put("subjectTag", s.subjectTag)
+          put("depedCompetency", s.depedCompetency)
+          put("pacingMode", s.pacingMode)
+          put("language", s.language)
+          put("durationSeconds", s.durationSeconds)
+          put("deepLinkUrl", s.deepLinkUrl)
+          put("whyThisAppearedBadge", s.whyThisAppearedBadge)
+          put("timesShown", s.timesShown)
+          put("lastShownMs", s.lastShownMs)
+        }
+        val inserted = db.insertWithOnConflict(
+          "learning_video_seeds",
+          null,
+          insertValues,
+          SQLiteDatabase.CONFLICT_IGNORE,
+        )
+        if (inserted == -1L) {
+          // Preserve timesShown & lastShownMs while refreshing catalog metadata on updates.
+          val updateValues = ContentValues().apply {
+            put("platform", s.platform)
+            put("androidPackage", s.androidPackage)
+            put("creatorName", s.creatorName)
+            put("titleOrTopic", s.titleOrTopic)
+            put("subjectTag", s.subjectTag)
+            put("depedCompetency", s.depedCompetency)
+            put("pacingMode", s.pacingMode)
+            put("language", s.language)
+            put("durationSeconds", s.durationSeconds)
+            put("deepLinkUrl", s.deepLinkUrl)
+            put("whyThisAppearedBadge", s.whyThisAppearedBadge)
+          }
+          db.update("learning_video_seeds", updateValues, "id = ?", arrayOf(s.id))
+        }
+      }
+      db.setTransactionSuccessful()
+    } finally {
+      db.endTransaction()
+    }
+  }
+
+  fun countLearningSeeds(): Int {
+    readableDatabase.rawQuery("SELECT COUNT(*) FROM learning_video_seeds", null).use { c ->
+      return if (c.moveToFirst()) c.getInt(0) else 0
+    }
+  }
+
+  fun getNextLearningVideo(
+    pkg: String,
+    mode: String,
+    preferredSubjectTag: String? = null,
+  ): LearningVideoSeed? {
+    if (!preferredSubjectTag.isNullOrBlank()) {
+      querySingleLearningVideo(
+        """
+        SELECT $VIDEO_COLUMNS FROM learning_video_seeds
+        WHERE androidPackage = ? AND pacingMode = ? AND subjectTag = ?
+        ORDER BY timesShown ASC, lastShownMs ASC, rowid ASC
+        LIMIT 1
+        """.trimIndent(),
+        arrayOf(pkg, mode, preferredSubjectTag),
+      )?.let { return it }
+    }
+    return querySingleLearningVideo(
+      """
+      SELECT $VIDEO_COLUMNS FROM learning_video_seeds
+      WHERE androidPackage = ? AND pacingMode = ?
+      ORDER BY timesShown ASC, lastShownMs ASC, rowid ASC
+      LIMIT 1
+      """.trimIndent(),
+      arrayOf(pkg, mode),
+    )
+  }
+
+  fun getNextLearningVideoAnyMode(
+    pkg: String,
+    preferredSubjectTag: String? = null,
+  ): LearningVideoSeed? {
+    if (!preferredSubjectTag.isNullOrBlank()) {
+      querySingleLearningVideo(
+        """
+        SELECT $VIDEO_COLUMNS FROM learning_video_seeds
+        WHERE androidPackage = ? AND subjectTag = ?
+        ORDER BY timesShown ASC, lastShownMs ASC, rowid ASC
+        LIMIT 1
+        """.trimIndent(),
+        arrayOf(pkg, preferredSubjectTag),
+      )?.let { return it }
+    }
+    return querySingleLearningVideo(
+      """
+      SELECT $VIDEO_COLUMNS FROM learning_video_seeds
+      WHERE androidPackage = ?
+      ORDER BY timesShown ASC, lastShownMs ASC, rowid ASC
+      LIMIT 1
+      """.trimIndent(),
+      arrayOf(pkg),
+    )
+  }
+
+  fun markLearningVideoShown(id: String, nowMs: Long) {
+    writableDatabase.execSQL(
+      "UPDATE learning_video_seeds SET timesShown = timesShown + 1, lastShownMs = ? WHERE id = ?",
+      arrayOf(nowMs, id),
+    )
+  }
+
+  private fun querySingleLearningVideo(sql: String, args: Array<String>): LearningVideoSeed? {
+    readableDatabase.rawQuery(sql, args).use { c ->
+      return if (c.moveToFirst()) readLearningVideo(c) else null
+    }
+  }
+
+  private fun readLearningVideo(c: Cursor): LearningVideoSeed = LearningVideoSeed(
+    id = c.getString(0),
+    platform = c.getString(1),
+    androidPackage = c.getString(2),
+    creatorName = c.getString(3),
+    titleOrTopic = c.getString(4),
+    subjectTag = c.getString(5),
+    depedCompetency = c.getString(6),
+    pacingMode = c.getString(7),
+    language = c.getString(8),
+    durationSeconds = c.getInt(9),
+    deepLinkUrl = c.getString(10),
+    whyThisAppearedBadge = c.getString(11),
+    timesShown = c.getInt(12),
+    lastShownMs = c.getLong(13),
+  )
 
   fun getAllStats(): List<TopicImplicitStat> {
     val out = ArrayList<TopicImplicitStat>()
@@ -189,6 +385,7 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
         put("sessionMinutesBeforeTrigger", log.sessionMinutesBeforeTrigger)
         put("tierExecuted", log.tierExecuted)
         if (log.timeToScreenOffMs != null) put("timeToScreenOffMs", log.timeToScreenOffMs)
+        if (!log.videoId.isNullOrBlank()) put("videoId", log.videoId)
       },
     )
   }
@@ -203,7 +400,7 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
   fun getAllLogs(): List<PilotSessionLog> {
     val out = ArrayList<PilotSessionLog>()
     readableDatabase.rawQuery(
-      "SELECT id, timestampEpochMs, targetAppCategory, sessionMinutesBeforeTrigger, tierExecuted, timeToScreenOffMs FROM pilot_session_logs ORDER BY timestampEpochMs ASC",
+      "SELECT id, timestampEpochMs, targetAppCategory, sessionMinutesBeforeTrigger, tierExecuted, timeToScreenOffMs, videoId FROM pilot_session_logs ORDER BY timestampEpochMs ASC",
       null,
     ).use { c ->
       while (c.moveToNext()) {
@@ -215,6 +412,7 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
             c.getInt(3),
             c.getString(4),
             if (c.isNull(5)) null else c.getLong(5),
+            if (c.isNull(6)) null else c.getString(6),
           ),
         )
       }
@@ -223,6 +421,10 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
   }
 
   companion object {
+    private const val DB_VERSION = 2
+    private const val VIDEO_COLUMNS =
+      "id, platform, androidPackage, creatorName, titleOrTopic, subjectTag, depedCompetency, pacingMode, language, durationSeconds, deepLinkUrl, whyThisAppearedBadge, timesShown, lastShownMs"
+
     @Volatile private var INSTANCE: LearnShiftOfflineDb? = null
 
     fun getInstance(context: Context): LearnShiftOfflineDb =
@@ -233,7 +435,12 @@ class LearnShiftOfflineDb private constructor(ctx: Context) :
 }
 
 class PilotTelemetryRecorder(private val db: LearnShiftOfflineDb) {
-  fun logInterventionTriggered(pkg: String, sessionMinutes: Int, tierExecuted: String) {
+  fun logInterventionTriggered(
+    pkg: String,
+    sessionMinutes: Int,
+    tierExecuted: String,
+    videoId: String? = null,
+  ) {
     val category = when {
       pkg.contains("musically") || pkg.contains("trill") -> "SHORT_FORM_VIDEO"
       pkg.contains("facebook") || pkg.contains("instagram") -> "SOCIAL_FEED"
@@ -246,6 +453,7 @@ class PilotTelemetryRecorder(private val db: LearnShiftOfflineDb) {
         targetAppCategory = category,
         sessionMinutesBeforeTrigger = sessionMinutes,
         tierExecuted = tierExecuted,
+        videoId = videoId,
       ),
     )
   }
@@ -259,10 +467,10 @@ class PilotTelemetryRecorder(private val db: LearnShiftOfflineDb) {
     val dir = context.getExternalFilesDir(null) ?: context.filesDir
     val outFile = File(dir, "learnshift_pilot_metrics.csv")
     outFile.bufferedWriter().use { writer ->
-      writer.write("timestamp_ms,category,session_min_before_trigger,tier_executed,time_to_screen_off_ms\n")
+      writer.write("timestamp_ms,category,session_min_before_trigger,tier_executed,time_to_screen_off_ms,video_id\n")
       for (r in rows) {
         writer.write(
-          "${r.timestampEpochMs},${r.targetAppCategory},${r.sessionMinutesBeforeTrigger},${r.tierExecuted},${r.timeToScreenOffMs ?: -1}\n",
+          "${r.timestampEpochMs},${r.targetAppCategory},${r.sessionMinutesBeforeTrigger},${r.tierExecuted},${r.timeToScreenOffMs ?: -1},${r.videoId ?: ""}\n",
         )
       }
     }

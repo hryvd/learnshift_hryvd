@@ -2,7 +2,7 @@ import { StyleSheet, Text as RNText, type TextProps as RNTextProps } from 'react
 
 import { useTheme } from '@/design/theme';
 import type { Palette } from '@/design/tokens';
-import { FONT_MAIN, FONT_SECONDARY, maxScaleFor, textStyle, type Variant } from '@/design/typography';
+import { familyFor, maxScaleFor, textStyle, type Variant } from '@/design/typography';
 
 type ColorKey = { [K in keyof Palette]: Palette[K] extends string ? K : never }[keyof Palette];
 
@@ -16,22 +16,18 @@ export type TextProps = RNTextProps & {
 
 const defaultColor: Partial<Record<Variant, ColorKey>> = {
   overline: 'textSecondary',
-  caption: 'textSecondary',
+  caption: 'textTertiary',
   subhead: 'textSecondary',
 };
 
+/** A `fontWeight` in a style override picks the matching Inter face. */
 function familyForWeight(weight: string | number | undefined): string | undefined {
   if (weight === undefined) return undefined;
-  const normalized = String(weight);
-  if (normalized === '800' || normalized === '900') return FONT_MAIN;
-  if (
-    normalized === '500' ||
-    normalized === '600' ||
-    normalized === '700' ||
-    normalized === 'bold'
-  ) {
-    return FONT_SECONDARY;
-  }
+  const w = String(weight);
+  if (w === '800' || w === '900') return familyFor(800);
+  if (w === '700' || w === 'bold') return familyFor(700);
+  if (w === '600') return familyFor(600);
+  if (w === '500') return familyFor(500);
   return undefined;
 }
 

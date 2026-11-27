@@ -33,6 +33,7 @@ import {
 } from '@/services/ai/moduleGenerator';
 import { publishModulesToClasses, useTeacher } from '@/services/backend/teacher';
 import { pickModuleFile } from '@/services/monitor';
+import { extractLessonFile, LESSON_FILE_ACCEPT } from '@/services/teacher/extractLessonFile';
 
 const SUBJECTS = ['Math', 'Science', 'English', 'Filipino', 'General'] as const;
 
@@ -139,7 +140,7 @@ export function TeacherUploadSheet() {
     setError(null);
     setDoneBanner(null);
     if (/[\u0000-\u0008\u000E-\u001F]/.test(rawText.slice(0, 800))) {
-      setError('Binary file detected. Choose a .txt, .md, .csv, or .html file, or paste lesson notes.');
+      setError('Binary file detected. Choose a .pdf, .docx, .txt, .md, or .html file, or paste lesson notes.');
       return;
     }
     const clean = rawText.trim().slice(0, 10000);
@@ -157,8 +158,12 @@ export function TeacherUploadSheet() {
 
   const readWebFile = async (file: File) => {
     try {
-      const txt = await file.text();
-      applyUploadedText(file.name, txt);
+      const res = await extractLessonFile(file);
+      if ('error' in res) {
+        setError(res.error);
+        return;
+      }
+      applyUploadedText(file.name, res.text);
     } catch {
       setError('Could not read that file.');
     }
@@ -285,7 +290,7 @@ export function TeacherUploadSheet() {
         <input
           ref={webInputRef}
           type="file"
-          accept=".txt,.md,.csv,.json,.html,text/*"
+          accept={LESSON_FILE_ACCEPT}
           onChange={handleWebInput}
           style={{ display: 'none' }}
         />
@@ -302,7 +307,7 @@ export function TeacherUploadSheet() {
       >
         <Animated.View style={[styles.cardFrame, growWrapperStyle]}>
           {/* Compact front face shown briefly at the start of the 3D flip */}
-          <Animated.View style={[styles.frontFace, { backgroundColor: '#C84317' }, frontFaceStyle]} pointerEvents="none">
+          <Animated.View style={[styles.frontFace, { backgroundColor: '#C2410C' }, frontFaceStyle]} pointerEvents="none">
             <Plus size={44} weight="bold" color="#FFFFFF" />
             <Text variant="title" color="#FFFFFF" align="center">
               UPLOAD MODULE
@@ -330,7 +335,7 @@ export function TeacherUploadSheet() {
               {doneBanner ? (
                 <View style={styles.doneBanner}>
                   <CheckCircle size={18} weight="fill" color="#187B43" />
-                  <Text variant="subhead" color="#111111" style={styles.flex}>
+                  <Text variant="subhead" color="#2B2D31" style={styles.flex}>
                     {doneBanner}
                   </Text>
                 </View>
@@ -367,7 +372,7 @@ export function TeacherUploadSheet() {
                     accessibilityLabel="Select module to upload"
                     style={styles.selectPill}
                   >
-                    <Text variant="headline" color="#C84317" style={[fontFor(800), styles.selectLabel]}>
+                    <Text variant="headline" color="#C2410C" style={[fontFor(800), styles.selectLabel]}>
                       SELECT MODULE TO UPLOAD
                     </Text>
                   </PressableScale>
@@ -418,9 +423,9 @@ export function TeacherUploadSheet() {
                             <PressableScale
                               key={subj}
                               onPress={() => setSubject(subj)}
-                              style={[styles.subjBtn, { backgroundColor: active ? '#C84317' : '#F3F2EE' }]}
+                              style={[styles.subjBtn, { backgroundColor: active ? '#C2410C' : '#F3F2EE' }]}
                             >
-                              <Text variant="caption" color={active ? '#FFFFFF' : '#111111'}>
+                              <Text variant="caption" color={active ? '#FFFFFF' : '#2B2D31'}>
                                 {subj}
                               </Text>
                             </PressableScale>
@@ -454,7 +459,7 @@ export function TeacherUploadSheet() {
                 <View style={styles.metaPanel}>
                   <View style={styles.rowBetween}>
                     <View style={styles.flex}>
-                      <Text variant="title" color="#111111" numberOfLines={2}>
+                      <Text variant="title" color="#2B2D31" numberOfLines={2}>
                         {title.trim() || 'Generated Module'}
                       </Text>
                       <Text variant="caption" color="#62666C">
@@ -468,7 +473,7 @@ export function TeacherUploadSheet() {
                     {deck.summary}
                   </Text>
 
-                  <Text variant="overline" color="#C84317">
+                  <Text variant="overline" color="#C2410C">
                     Select class to receive this module
                   </Text>
                   <View style={styles.classWrap}>
@@ -485,13 +490,13 @@ export function TeacherUploadSheet() {
                         style={[
                           styles.classPill,
                           {
-                            backgroundColor: targetIds.length === availableClasses.length ? '#C84317' : '#EFECE6',
+                            backgroundColor: targetIds.length === availableClasses.length ? '#C2410C' : '#EFECE6',
                           },
                         ]}
                       >
                         <Text
                           variant="caption"
-                          color={targetIds.length === availableClasses.length ? '#FFFFFF' : '#111111'}
+                          color={targetIds.length === availableClasses.length ? '#FFFFFF' : '#2B2D31'}
                         >
                           All classes
                         </Text>
@@ -506,11 +511,11 @@ export function TeacherUploadSheet() {
                           accessibilityState={{ selected: picked }}
                           style={[
                             styles.classPill,
-                            { backgroundColor: picked ? '#C84317' : '#EFECE6' },
+                            { backgroundColor: picked ? '#C2410C' : '#EFECE6' },
                           ]}
                         >
                           {picked ? <CheckCircle size={15} weight="fill" color="#FFFFFF" /> : <BookOpenText size={15} color="#62666C" />}
-                          <Text variant="caption" color={picked ? '#FFFFFF' : '#111111'}>
+                          <Text variant="caption" color={picked ? '#FFFFFF' : '#2B2D31'}>
                             {cl.name}
                           </Text>
                         </PressableScale>
@@ -531,7 +536,7 @@ export function TeacherUploadSheet() {
                   {deck.flashcards.map((fc, idx) => (
                     <View key={fc.id} style={styles.itemCard}>
                       <View style={styles.rowBetween}>
-                        <Text variant="subhead" color="#C84317" style={styles.flex}>
+                        <Text variant="subhead" color="#C2410C" style={styles.flex}>
                           #{idx + 1} · {fc.front}
                         </Text>
                         {deck.flashcards.length > 1 ? (
@@ -560,7 +565,7 @@ export function TeacherUploadSheet() {
                   {deck.questions.map((q, idx) => (
                     <View key={q.id} style={styles.itemCard}>
                       <View style={styles.rowBetween}>
-                        <Text variant="subhead" color="#111111" style={styles.flex}>
+                        <Text variant="subhead" color="#2B2D31" style={styles.flex}>
                           Q{idx + 1}. {q.prompt}
                         </Text>
                         {deck.questions.length > 1 ? (
@@ -634,7 +639,7 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   backCard: {
-    backgroundColor: '#C84317',
+    backgroundColor: '#C2410C',
     borderRadius: radius.sheet,
     borderCurve: 'continuous',
     padding: 20,
@@ -692,7 +697,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 11,
     fontSize: 15,
-    color: '#111111',
+    color: '#2B2D31',
     fontFamily: FONT_SECONDARY,
   },
   pasteInput: { minHeight: 96 },

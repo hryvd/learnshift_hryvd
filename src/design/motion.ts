@@ -15,6 +15,10 @@ export const spring = {
   bouncy: { damping: 12, stiffness: 200, mass: 1, reduceMotion: ReduceMotion.System },
   /** Gauges and rings: a slower settle (~700 ms) with no visible overshoot. */
   draw: { damping: 20, stiffness: 120, mass: 1, reduceMotion: ReduceMotion.System },
+  /** Switch knob and track: crisp ~200 ms settle, barely any overshoot. */
+  toggle: { damping: 20, stiffness: 320, mass: 0.85, reduceMotion: ReduceMotion.System },
+  /** Rows a switch reveals or hides: ~250 ms, no bounce. */
+  reveal: { damping: 24, stiffness: 260, mass: 0.9, reduceMotion: ReduceMotion.System },
 } as const satisfies Record<string, WithSpringConfig>;
 
 export const pressScale = {

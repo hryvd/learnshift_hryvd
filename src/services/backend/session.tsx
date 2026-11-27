@@ -4,7 +4,7 @@
  * notification taps. Renders nothing.
  */
 import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { router } from 'expo-router';
 
 import { IS_PITCH } from '@/lib/config';
@@ -38,6 +38,17 @@ export function SessionEffects() {
     startAuth();
     return routeNotificationTaps();
   }, []);
+
+  // Laptop web: teachers and guardians skip the phone frame on their next visit.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      if (role === 'teacher' || role === 'guardian') window.localStorage.setItem('ls-staff', '1');
+      else if (role) window.localStorage.removeItem('ls-staff');
+    } catch {
+      // storage blocked: the URL rules still apply
+    }
+  }, [role]);
 
   // Keep the store on the signed-in user; a different user starts clean.
   useEffect(() => {

@@ -96,9 +96,10 @@ export default function Onboarding() {
 
   // A signed-in student who hasn't finished setup resumes after the account step.
   const [flow, setFlow] = useState<Step[]>(() =>
-    IS_PITCH ? PITCH_FLOW : status === 'signedIn' ? STUDENT_AFTER_ACCOUNT : START,
+    IS_PITCH ? PITCH_FLOW : status === 'signedIn' ? STUDENT_AFTER_ACCOUNT : wantsSignIn() ? ['welcome', 'signin'] : START,
   );
-  const [i, setI] = useState(0);
+  // `?mode=signin` (the laptop "Teacher sign in" link) opens straight on sign in.
+  const [i, setI] = useState(() => (!IS_PITCH && status !== 'signedIn' && wantsSignIn() ? 1 : 0));
   const [dir, setDir] = useState(1);
   const [draft, setDraft] = useState<Draft>({ role: 'student', grade: useAppStore.getState().learningGrade });
   const step = flow[i];
@@ -1088,3 +1089,8 @@ const styles = StyleSheet.create({
   perm: { borderRadius: radius.tile, padding: 16, gap: 10 },
   permRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });
+
+function wantsSignIn(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('mode') === 'signin';
+}

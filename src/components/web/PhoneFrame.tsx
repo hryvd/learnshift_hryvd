@@ -11,6 +11,9 @@ import { FONT_MAIN, FONT_SECONDARY } from '@/design/typography';
  * site, so every screen lays itself out for phone width. Phones, embedded
  * pages and `?full` / "Full width" skip the frame.
  */
+/** Set while a teacher or guardian is signed in on this browser. */
+export const STAFF_KEY = 'ls-staff';
+
 export const SHOW_FRAME: boolean = (() => {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
   try {
@@ -20,6 +23,10 @@ export const SHOW_FRAME: boolean = (() => {
     if (q.has('phone')) window.localStorage.removeItem('ls-full');
     if (q.has('full')) return false;
     if (window.localStorage.getItem('ls-full') === '1') return false;
+    // Teachers and guardians work on laptops: their screens get the full window.
+    if (/^\/(teacher|guardian|reset-password)(\/|$)/.test(window.location.pathname)) return false;
+    if (window.localStorage.getItem(STAFF_KEY) === '1') return false;
+    if (q.get('mode') === 'signin') return false;
   } catch {
     return false;
   }
@@ -34,7 +41,7 @@ function size() {
 export function PhoneFrame() {
   useFonts({
     [FONT_MAIN]: require('../../../assets/fonts/Bungee-Regular.ttf'),
-    [FONT_SECONDARY]: require('../../../assets/fonts/Poppins-Bold.ttf'),
+    [FONT_SECONDARY]: require('@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf'),
   });
   const [{ w, h }, setSize] = useState(size);
   const [src] = useState(() => `${window.location.pathname}${window.location.search}`);
@@ -55,6 +62,10 @@ export function PhoneFrame() {
     window.location.href = `${window.location.pathname}?full`;
   };
 
+  const staffSignIn = () => {
+    window.location.href = '/onboarding?mode=signin&full';
+  };
+
   const bezel = 12;
   return (
     <div style={styles.page}>
@@ -69,7 +80,10 @@ export function PhoneFrame() {
             Paty notices long scrolls and turns them into 45-second lessons. One app for students, guardians and
             teachers.
           </p>
-          <button type="button" onClick={fullWidth} style={styles.button}>
+          <button type="button" onClick={staffSignIn} style={styles.button}>
+            Teacher sign in
+          </button>
+          <button type="button" onClick={fullWidth} style={styles.secondary}>
             Open full width
           </button>
         </div>
@@ -91,9 +105,14 @@ export function PhoneFrame() {
           />
         </div>
         {!wide ? (
-          <button type="button" onClick={fullWidth} style={styles.link}>
-            Open full width
-          </button>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button type="button" onClick={staffSignIn} style={styles.link}>
+              Teacher sign in
+            </button>
+            <button type="button" onClick={fullWidth} style={styles.link}>
+              Open full width
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
@@ -109,7 +128,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     gap: 72,
     background: 'radial-gradient(circle at 30% 20%, #FDF1E2 0%, #F3E2C8 55%, #E9CDB0 100%)',
-    fontFamily: 'Poppins-Bold, system-ui, -apple-system, Segoe UI, sans-serif',
+    fontFamily: 'Inter_700Bold, system-ui, -apple-system, Segoe UI, sans-serif',
     overflow: 'hidden',
   },
   side: { maxWidth: 360, color: '#3A2A20' },
@@ -130,9 +149,21 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 20px',
     background: '#C8400F',
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold, system-ui, sans-serif',
+    fontFamily: 'Inter_700Bold, system-ui, sans-serif',
     fontSize: 15,
     fontWeight: 'normal',
+    cursor: 'pointer',
+  },
+  secondary: {
+    marginTop: 18,
+    marginLeft: 10,
+    border: '1px solid #C8400F',
+    borderRadius: 999,
+    padding: '11px 20px',
+    background: 'transparent',
+    color: '#C8400F',
+    fontSize: 15,
+    fontWeight: 700,
     cursor: 'pointer',
   },
   column: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 },

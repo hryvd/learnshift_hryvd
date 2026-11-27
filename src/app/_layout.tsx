@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useFonts } from 'expo-font';
+import { Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
 
 import { ease, timing, useReducedMotion } from '@/design/motion';
 import { ThemeProvider, useTheme } from '@/design/theme';
@@ -31,8 +32,11 @@ export default function RootLayout() {
 
 function App() {
   const [loaded, error] = useFonts({
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
     [FONT_MAIN]: require('../../assets/fonts/Bungee-Regular.ttf'),
-    [FONT_SECONDARY]: require('../../assets/fonts/Poppins-Bold.ttf'),
   });
   const [hydrated, setHydrated] = useState(() => useAppStore.persist.hasHydrated());
   const authReady = useAuth((s) => s.status !== 'loading');
@@ -102,6 +106,7 @@ function Shell() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+          <Stack.Screen name="reset-password" options={{ animation: 'fade' }} />
           <Stack.Screen name="account" options={{ presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
           <Stack.Screen name="(student)" />
           <Stack.Screen name="guardian" options={{ animation: 'fade' }} />
@@ -174,31 +179,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 14,
   },
-  errTitle: {
-    fontSize: 22,
-    fontFamily: FONT_MAIN,
-    fontWeight: 'normal',
-    color: '#111111',
-    textAlign: 'center',
-  },
-  errSub: {
-    fontSize: 15,
-    fontFamily: FONT_SECONDARY,
-    fontWeight: 'normal',
-    color: '#62666C',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+  errTitle: { fontSize: 22, fontFamily: FONT_MAIN, fontWeight: 'normal', color: '#2B2D31', textAlign: 'center' },
+  errSub: { fontSize: 15, fontFamily: 'Inter_500Medium', color: '#575C63', textAlign: 'center', lineHeight: 22 },
   errBtn: {
     minWidth: 220,
     minHeight: 48,
     borderRadius: 999,
-    backgroundColor: '#C8400F',
+    backgroundColor: '#C2410C',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   errBtnText: { color: '#FFFFFF', fontSize: 16, fontFamily: FONT_SECONDARY, fontWeight: 'normal' },
   errSecondary: { backgroundColor: '#EAE8E2' },
-  errSecondaryText: { color: '#111111', fontSize: 15, fontFamily: FONT_SECONDARY, fontWeight: 'normal' },
+  errSecondaryText: { color: '#2B2D31', fontSize: 15, fontFamily: FONT_SECONDARY, fontWeight: 'normal' },
 });

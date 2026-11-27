@@ -13,6 +13,9 @@ import expo.modules.kotlin.exception.Exceptions
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.usagemonitor.mirror.InterventionDispatcher
+import expo.modules.usagemonitor.mirror.LearningMirrorPolicy
+import expo.modules.usagemonitor.mirror.LearningMirrorSelector
+import expo.modules.usagemonitor.mirror.LearningSeedAssetLoader
 import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
 import expo.modules.usagemonitor.mirror.NeutralSeedManager
 import expo.modules.usagemonitor.mirror.OemBatteryHardening
@@ -49,6 +52,11 @@ class UsageMonitorModule : Module() {
     Events("onWakeRefresh")
 
     OnCreate {
+      val appCtx = ctx.applicationContext
+      WorkProfileOnboardingManager.ensureBridgeEnabledState(appCtx)
+      Thread {
+        runCatching { LearningSeedAssetLoader.ensureSeeded(appCtx, LearnShiftOfflineDb.getInstance(appCtx)) }
+      }.start()
       MonitorService.onWakeCallback = {
         runCatching { sendEvent("onWakeRefresh", mapOf("at" to System.currentTimeMillis())) }
       }
@@ -465,6 +473,7 @@ class UsageMonitorModule : Module() {
       val vec = SessionRiskScorer().buildVector(0L, swipes)
       val risk = SessionRiskScorer().computeRiskProbability(vec)
       val pm = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+      val catalogCount = runCatching { LearnShiftOfflineDb.getInstance(ctx).countLearningSeeds() }.getOrDefault(0)
       mapOf(
         "workProfileStatus" to mgr.checkStatus().name,
         "tierAReady" to dispatcher.canSafelyLaunchWorkProfileApp(),
@@ -475,6 +484,9 @@ class UsageMonitorModule : Module() {
         "riskScore" to risk.toDouble(),
         "batteryExempt" to pm.isIgnoringBatteryOptimizations(ctx.packageName),
         "lastStrategy" to SentinelBus.lastInterventionStrategy,
+        "lastVideoId" to SentinelBus.lastInterventionVideoId,
+        "lastVideoTitle" to SentinelBus.lastInterventionVideoTitle,
+        "catalogCount" to catalogCount,
       )
     }
 
@@ -527,16 +539,56 @@ class UsageMonitorModule : Module() {
         sessionMin = 28,
         dwellVar = 1.1f,
       )
-      val pkg = if (targetPkg.isNotBlank()) targetPkg else "com.zhiliaoapp.musically"
-      val tier = InterventionDispatcher(ctx).dispatch(pkg, snap)
+      val pkg = if (targetPkg.isNotBlank()) targetPkg else LearningMirrorPolicy.PKG_TIKTOK
+      val cfg = Store.config(ctx)
+      val selected = LearningMirrorSelector(ctx).selectVideoForSession(pkg, snap, cfg)
+      val tier = InterventionDispatcher(ctx).dispatchWithLearningVideo(pkg, snap, selected, cfg.fil)
       SentinelBus.lastInterventionTimeMs = elapsed
       SentinelBus.lastInterventionStrategy = tier
       SentinelBus.lastActivePackage = pkg
+      SentinelBus.lastInterventionVideoId = selected?.id ?: ""
+      SentinelBus.lastInterventionVideoTitle = selected?.titleOrTopic ?: ""
+      if (selected != null) SentinelBus.lastInterventionTopicTag = selected.subjectTag
       tier
+    }
+
+    AsyncFunction("triggerMirrorLearningShift") { targetPkg: String ->
+      val elapsed = android.os.SystemClock.elapsedRealtime()
+      val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
+      val snap = OfflineContextCollector(ctx).buildSnapshot(
+        cadencePerMin = maxOf(24f, swipes.size.toFloat()),
+        sessionMin = 28,
+        dwellVar = 1.1f,
+      )
+      val pkg = if (targetPkg.isNotBlank()) targetPkg else LearningMirrorPolicy.PKG_TIKTOK
+      val cfg = Store.config(ctx)
+      val selected = LearningMirrorSelector(ctx).selectVideoForSession(pkg, snap, cfg)
+      val tier = InterventionDispatcher(ctx).dispatchWithLearningVideo(pkg, snap, selected, cfg.fil)
+      val badge = LearningMirrorPolicy.formatBadge(snap.sessionMinutes, selected, cfg.fil)
+      SentinelBus.lastInterventionTimeMs = elapsed
+      SentinelBus.lastInterventionStrategy = tier
+      SentinelBus.lastActivePackage = pkg
+      SentinelBus.lastInterventionVideoId = selected?.id ?: ""
+      SentinelBus.lastInterventionVideoTitle = selected?.titleOrTopic ?: ""
+      if (selected != null) SentinelBus.lastInterventionTopicTag = selected.subjectTag
+      mapOf(
+        "tier" to tier,
+        "videoId" to (selected?.id ?: ""),
+        "title" to (selected?.titleOrTopic ?: ""),
+        "creatorName" to (selected?.creatorName ?: ""),
+        "platform" to (selected?.platform ?: ""),
+        "pacingMode" to (selected?.pacingMode ?: ""),
+        "deepLinkUrl" to (selected?.deepLinkUrl ?: ""),
+        "badge" to badge,
+      )
     }
 
     Function("openNeutralSeed") { url: String ->
       NeutralSeedManager.openSeedInWorkBrowser(ctx, url)
+    }
+
+    Function("openLearningSeedInWorkSpace") { targetPkg: String, url: String, badgeText: String ->
+      NeutralSeedManager.openLearningSeed(ctx, targetPkg, url, badgeText)
     }
 
     AsyncFunction("exportMirrorPilotCsv") {

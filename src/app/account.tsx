@@ -4,6 +4,8 @@ import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChalkboardTeacher, HouseLine, SignOut, Trash } from '@/components/ui/icons';
 
+import { AccountManageSection } from '@/components/account/AccountManageSection';
+import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { MonitorSetup } from '@/components/student/MonitorSetup';
 import { Card, IconButton, ListGroup, ListRow, Notice, PillButton, SheetHeader, Text, TextField } from '@/components/ui';
@@ -41,7 +43,7 @@ export default function Account() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmUnlink, setConfirmUnlink] = useState<string | null>(null);
 
   useEffect(() => {
@@ -111,30 +113,30 @@ export default function Account() {
     router.replace('/onboarding');
   };
 
-  const deleteAccount = () =>
-    run(async () => {
-      if (hasGuardian) {
-        if (pendingDelete) {
-          setInfo(t.acct.delReqPending);
-          return;
-        }
-        const req = await api.requestAccountAction('delete_account');
-        const cur = useAppStore.getState();
-        cur.hydrate({
-          accountRequests: [
-            { id: req.id, at: req.created_at, kind: req.kind, status: req.status },
-            ...cur.accountRequests.filter((x) => x.id !== req.id),
-          ],
-        });
-        setConfirmDelete(false);
-        setInfo(t.acct.delReqSent(guardianName));
-        haptic.success();
-        return;
-      }
-      await forgetDevice().catch(() => {});
-      await api.deleteAccount();
-      router.replace('/onboarding');
-    });
+  /** Runs from the delete sheet; throws so the sheet can show the error. */
+  const deleteAccount = async () => {
+    setError(null);
+    setInfo(null);
+    if (hasGuardian) {
+      if (pendingDelete) return;
+      const req = await api.requestAccountAction('delete_account');
+      const cur = useAppStore.getState();
+      cur.hydrate({
+        accountRequests: [
+          { id: req.id, at: req.created_at, kind: req.kind, status: req.status },
+          ...cur.accountRequests.filter((x) => x.id !== req.id),
+        ],
+      });
+      setDeleteOpen(false);
+      setInfo(t.acct.delReqSent(guardianName));
+      haptic.success();
+      return;
+    }
+    await forgetDevice().catch(() => {});
+    await api.deleteAccount();
+    setDeleteOpen(false);
+    router.replace('/onboarding');
+  };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.root, { backgroundColor: c.bg }]}>
@@ -157,6 +159,8 @@ export default function Account() {
 
         {error ? <Notice text={error} /> : null}
         {info ? <Notice text={info} tone="success" /> : null}
+
+        <AccountManageSection copy={t.manage} />
 
         <Text variant="overline" style={styles.label}>
           {t.profile.guardian}
@@ -289,33 +293,26 @@ export default function Account() {
               void signOut();
             }}
           />
+        </ListGroup>
+
+        <ListGroup style={styles.danger}>
           <ListRow
-            title={
-              !hasGuardian
-                ? confirmDelete
-                  ? t.profile.delConfirm
-                  : t.profile.del
-                : pendingDelete
-                  ? t.acct.delReqPending
-                  : confirmDelete
-                    ? t.acct.delReqConfirm
-                    : t.acct.delReq
-            }
+            title={hasGuardian ? (pendingDelete ? t.acct.delReqPending : t.acct.delReq) : t.manage.deleteRow}
             value={declinedDelete && !pendingDelete ? t.lock.declined : undefined}
             icon={<Trash size={20} weight="bold" color={c.danger} />}
             destructive
-            chevron={false}
-            onPress={() => {
-              if (hasGuardian && pendingDelete) {
-                setInfo(t.acct.delReqPending);
-                return;
-              }
-              if (!confirmDelete) return setConfirmDelete(true);
-              deleteAccount();
-            }}
+            onPress={() => setDeleteOpen(true)}
           />
         </ListGroup>
       </ScrollView>
+      <DeleteAccountSheet
+        visible={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        copy={t.manage}
+        role="student"
+        request={hasGuardian ? { guardianName, pending: !!pendingDelete } : undefined}
+        onConfirm={deleteAccount}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -331,4 +328,5 @@ const styles = StyleSheet.create({
   codeBox: { width: 40, height: 52, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   codeGap: { marginLeft: 10 },
   spaced: { marginTop: 18 },
+  danger: { marginTop: 28 },
 });

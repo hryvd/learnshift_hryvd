@@ -37,11 +37,11 @@ import { VerticalPager } from './VerticalPager';
 const SURFACE = '#F6F5F2';
 const CARD_BG = '#FFFFFF';
 const CARD_BORDER = 'rgba(17,17,17,0.09)';
-const INK = '#111111';
-const INK_SUB = '#5C5C62';
-const ACCENT = '#C8400F';
+const INK = '#2B2D31';
+const INK_SUB = '#575C63';
+const ACCENT = '#C2410C';
 const SUCCESS = '#2FBF5B';
-const DANGER = '#E5484D';
+const DANGER = '#C93238';
 const INDIGO = '#5B57D6';
 
 const LANG_OPTIONS: { id: DeckLang; label: string }[] = [

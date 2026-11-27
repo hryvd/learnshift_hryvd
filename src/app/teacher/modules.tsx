@@ -5,13 +5,13 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BookOpenText, Plus, WifiHigh } from '@/components/ui/icons';
 
+import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
 import { TeacherTabBar } from '@/components/teacher/TeacherTabBar';
 import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
 import {
@@ -30,12 +30,13 @@ import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
 import { usePullRefresh } from '@/hooks/useAutoRefresh';
+import { useDesktop } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import type { ClassModule } from '@/services/ai/moduleGenerator';
 import * as api from '@/services/backend/api';
 import { getPeerLanBaseUrl } from '@/services/backend/peerModuleSync';
-import { refreshTeacher, removeLocalModule, useTeacher } from '@/services/backend/teacher';
+import { addLocalModule, refreshTeacher, removeLocalModule, useTeacher } from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
 
 const EMPTY_MODULES: ClassModule[] = [];
@@ -43,7 +44,7 @@ const EMPTY_MODULES: ClassModule[] = [];
 export default function TeacherModules() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { contentWidth: width, isDesktop } = useDesktop();
   const wide = width >= 900;
   const pull = usePullRefresh(refreshTeacher);
 
@@ -63,17 +64,23 @@ export default function TeacherModules() {
 
   const [error, setError] = useState<string | null>(null);
   const [previewMod, setPreviewMod] = useState<ClassModule | null>(null);
+  const [toDelete, setToDelete] = useState<ClassModule | null>(null);
+  // Laptop: the first module previews in the right pane until one is picked.
+  const selectedMod = isDesktop ? (modules.find((m) => m.id === previewMod?.id) ?? modules[0] ?? null) : null;
 
   const handleDelete = async (mod: ClassModule) => {
+    setError(null);
+    if (IS_PITCH) {
+      useAppStore.getState().deletePitchModule(mod.id);
+      return;
+    }
+    removeLocalModule(mod.classId, mod.id);
+    if (mod.id.startsWith('local-')) return;
     try {
-      if (IS_PITCH) {
-        useAppStore.getState().deletePitchModule(mod.id);
-      } else {
-        removeLocalModule(mod.classId, mod.id);
-        await api.deleteClassModule(mod.id).catch(() => {});
-      }
+      await api.deleteClassModule(mod.id);
     } catch (e) {
-      setError((e as Error).message);
+      addLocalModule(mod); // put it back: students still have it
+      throw new Error(`Could not delete "${mod.title}". ${(e as Error).message}`);
     }
   };
 
@@ -85,7 +92,11 @@ export default function TeacherModules() {
       >
         <BarBlurTarget>
           <ScrollView
-            contentContainerStyle={[styles.body, { maxWidth: wide ? 1100 : 560, paddingBottom: insets.bottom + 110 }]}
+            contentContainerStyle={[
+              styles.body,
+              { maxWidth: isDesktop ? 1400 : wide ? 1100 : 560, paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+              isDesktop && styles.bodyDesktop,
+            ]}
             keyboardShouldPersistTaps="handled"
             refreshControl={
               IS_PITCH ? undefined : (
@@ -134,11 +145,12 @@ export default function TeacherModules() {
                   {T.uploadModule}
                 </Text>
                 <Text variant="subhead" align="center">
-                  Tap the centered + button below to flip open the drag-and-drop card, approve flashcards & quizzes, and
-                  pick classes.
+                  {isDesktop
+                    ? 'Drop a PDF, Word file or text, review the flashcards and quiz, then publish to your classes.'
+                    : 'Tap the centered + button below to flip open the drag-and-drop card, approve flashcards & quizzes, and pick classes.'}
                 </Text>
                 <PillButton
-                  label="Open Upload Card"
+                  label={isDesktop ? 'Upload module (Ctrl U)' : 'Open Upload Card'}
                   icon={<Plus size={18} weight="bold" color={c.onAccent} />}
                   size="lg"
                   onPress={() => setUploadOpen(true)}
@@ -146,16 +158,18 @@ export default function TeacherModules() {
                 <View style={[styles.syncRow, { backgroundColor: c.inset }]}>
                   <WifiHigh size={16} weight="bold" color={c.success} />
                   <Text variant="caption" color="success" style={styles.flex}>
-                    {lanUrl
-                      ? `Direct phone sync live (${lanUrl}) — students download straight from your phone`
-                      : 'Phone-to-phone sync ready — minimizes cloud storage usage'}
+                    {Platform.OS === 'web'
+                      ? 'Published modules sync to students through LearnShift cloud.'
+                      : lanUrl
+                        ? `Direct phone sync live (${lanUrl}) — students download straight from your phone`
+                        : 'Phone-to-phone sync ready — minimizes cloud storage usage'}
                   </Text>
                 </View>
               </Card>
             </Stagger>
 
-            <Stagger index={2}>
-              <Card style={styles.gap}>
+            <Stagger index={2} style={isDesktop ? styles.columns : undefined}>
+              <Card style={[styles.gap, isDesktop && styles.listCol]}>
                 <Text variant="title">{T.publishedModules}</Text>
                 {modules.length === 0 ? (
                   <EmptyState title={T.noModules} subtitle={T.noModulesSub} expression="curious" />
@@ -164,7 +178,12 @@ export default function TeacherModules() {
                     <Card
                       key={m.id}
                       onPress={() => setPreviewMod(m)}
-                      style={[styles.modRow, { backgroundColor: c.inset }]}
+                      accessibilityLabel={`${m.title}, ${m.flashcards.length} flashcards, ${m.questions.length} quiz questions`}
+                      style={[
+                        styles.modRow,
+                        { backgroundColor: c.inset },
+                        selectedMod?.id === m.id && { borderWidth: 2, borderColor: c.accent },
+                      ]}
                       padded={false}
                     >
                       <View style={styles.modRowInner}>
@@ -186,7 +205,7 @@ export default function TeacherModules() {
                             tone="danger"
                             size={32}
                             accessibilityLabel={T.deleteModule}
-                            onPress={() => void handleDelete(m)}
+                            onPress={() => setToDelete(m)}
                           />
                         </View>
                       </View>
@@ -194,12 +213,22 @@ export default function TeacherModules() {
                   ))
                 )}
               </Card>
+              {isDesktop && selectedMod ? <ModulePreview mod={selectedMod} /> : null}
             </Stagger>
           </ScrollView>
         </BarBlurTarget>
 
+        <ConfirmDialog
+          visible={!!toDelete}
+          title={`Delete "${toDelete?.title ?? ''}"?`}
+          body="Students in this class lose these flashcards and quiz questions. This can't be undone."
+          confirmLabel="Delete module"
+          onClose={() => setToDelete(null)}
+          onConfirm={() => (toDelete ? handleDelete(toDelete) : undefined)}
+        />
+
         <BottomSheet
-          visible={!!previewMod}
+          visible={!isDesktop && !!previewMod}
           onClose={() => setPreviewMod(null)}
           accessibilityLabel={previewMod?.title ?? ''}
         >
@@ -221,8 +250,61 @@ export default function TeacherModules() {
   );
 }
 
+/** Laptop: everything students receive, so the teacher can audit it. */
+function ModulePreview({ mod }: { mod: ClassModule }) {
+  const { c } = useTheme();
+  const [tab, setTab] = useState<'cards' | 'quiz'>('cards');
+  return (
+    <Card style={[styles.gap, styles.previewCol]}>
+      <View style={styles.rowBetween}>
+        <Text variant="title" style={styles.flex}>
+          {mod.title}
+        </Text>
+        <Chip label={mod.subject} kind="neutral" style={styles.smallChip} />
+      </View>
+      {mod.sourceName ? <Text variant="caption">From {mod.sourceName}</Text> : null}
+      <Text variant="body">{mod.summary}</Text>
+      <SegmentedControl
+        options={[
+          { value: 'cards', label: `${T.flashcards} (${mod.flashcards.length})` },
+          { value: 'quiz', label: `Quiz (${mod.questions.length})` },
+        ]}
+        value={tab}
+        onChange={(v) => setTab(v as 'cards' | 'quiz')}
+      />
+      {tab === 'cards'
+        ? mod.flashcards.map((f, i) => (
+            <View key={i} style={[styles.previewItem, { backgroundColor: c.inset }]}>
+              <Text variant="headline">{f.front}</Text>
+              <Text variant="body">{f.back}</Text>
+              {f.hint ? <Text variant="caption">Hint: {f.hint}</Text> : null}
+            </View>
+          ))
+        : mod.questions.map((q, i) => (
+            <View key={i} style={[styles.previewItem, { backgroundColor: c.inset }]}>
+              <Text variant="headline">
+                {i + 1}. {q.prompt}
+              </Text>
+              {q.options.map((o, k) => (
+                <Text key={k} variant="subhead" color={k === q.answer ? 'success' : 'textSecondary'} style={k === q.answer ? fontFor(700) : undefined}>
+                  {k === q.answer ? '✓ ' : '• '}
+                  {o}
+                </Text>
+              ))}
+              {q.explanation ? <Text variant="caption">{q.explanation}</Text> : null}
+            </View>
+          ))}
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  bodyDesktop: { paddingHorizontal: 28, paddingTop: 12 },
+  columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
+  listCol: { flex: 0.9, minWidth: 0 },
+  previewCol: { flex: 1.4, minWidth: 0 },
+  previewItem: { borderRadius: radius.inset, padding: 14, gap: 6 },
   flex: { flex: 1 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', alignSelf: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },

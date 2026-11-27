@@ -13,12 +13,25 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
   <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-  <!-- Needed to read app categories and names on Android 11+. -->
+  <!-- Needed to read app categories, names, and resolve Work-Profile deep links on Android 11+. -->
   <queries>
     <intent>
       <action android:name="android.intent.action.MAIN" />
       <category android:name="android.intent.category.LAUNCHER" />
     </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+    <package android:name="com.google.android.youtube" />
+    <package android:name="com.zhiliaoapp.musically" />
+    <package android:name="com.ss.android.ugc.trill" />
+    <package android:name="com.zhiliaoapp.musically.go" />
+    <package android:name="com.facebook.katana" />
+    <package android:name="com.facebook.lite" />
+    <package android:name="com.instagram.android" />
+    <package android:name="com.instagram.lite" />
   </queries>
 
   <application>
@@ -64,6 +77,7 @@
 
     <activity
       android:name="expo.modules.usagemonitor.mirror.WorkBridgeActivity"
+      android:enabled="false"
       android:excludeFromRecents="true"
       android:exported="true"
       android:launchMode="singleTask"

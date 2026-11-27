@@ -5,6 +5,7 @@ import { Text } from '@/components/ui';
 import { BarTab, CenterPlusButton, FloatingBarShell } from '@/components/ui/FloatingBar';
 import { BookOpenText, ChalkboardTeacher, ChatTeardropText, GearSix, type IconProps } from '@/components/ui/icons';
 import { useTheme } from '@/design/theme';
+import { useDesktop } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH } from '@/lib/config';
 import { useTeacher } from '@/services/backend/teacher';
@@ -40,6 +41,9 @@ export function TeacherTabBar({ active }: { active: TeacherTab }) {
   const pitchReviewed = useAppStore((s) => s.reviewed);
   const pitchOpen = pitchReview.filter((r) => !pitchReviewed[r.id]).length;
   const pendingCount = IS_PITCH ? pitchOpen : realOpen;
+  // Laptops use the sidebar instead.
+  const { isDesktop } = useDesktop();
+  if (isDesktop) return null;
 
   const renderTab = (item: TabItem) => {
     const showBadge = item.key === 'review' && pendingCount > 0;
