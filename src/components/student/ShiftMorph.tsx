@@ -82,6 +82,9 @@ export function ShiftMorph({
   }, [visible]);
 
   const drag = useSharedValue(0);
+  /** Whole-overlay opacity: used to hand off to a new page without the shrink. */
+  const fade = useSharedValue(1);
+  const navigatingRef = useRef(false);
   const cardH = useSharedValue(Math.min(Math.round(winH * 0.78), 680));
   const rowY = useSharedValue(23);
   const rowH = useSharedValue(CLOSE);
@@ -99,6 +102,8 @@ export function ShiftMorph({
   useEffect(() => {
     if (!mounted) return;
     if (visible) {
+      navigatingRef.current = false;
+      fade.set(1);
       drag.set(0);
       haptic.light();
       progress.set(reduced ? withTiming(1, { duration: 180, easing: ease.out }) : withSpring(1, openSpring));
@@ -107,11 +112,24 @@ export function ShiftMorph({
         'worklet';
         if (finished) scheduleOnRN(finishUnmount);
       };
+      if (navigatingRef.current) {
+        // A tile opened a page: the page slides in over the tabs, so just fade
+        // the card away underneath it. Running the 680 ms shrink at the same
+        // time made two motions fight.
+        fade.set(
+          withTiming(0, { duration: 200, easing: ease.outStrong }, (finished) => {
+            if (!finished) return;
+            progress.set(0);
+            scheduleOnRN(finishUnmount);
+          }),
+        );
+        return;
+      }
       progress.set(
         reduced ? withTiming(0, { duration: 160, easing: ease.out }, done) : withSpring(0, closeSpring, done),
       );
     }
-  }, [visible, mounted, reduced, progress, drag, openSpring, closeSpring]);
+  }, [visible, mounted, reduced, progress, drag, fade, openSpring, closeSpring]);
 
   // Android hardware Back closes the open card.
   useEffect(() => {
@@ -148,6 +166,8 @@ export function ShiftMorph({
       }
     },
   });
+
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fade.get() }));
 
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: 1 - (1 - Math.min(1, Math.max(0, progress.get()))) ** 2, // ease-out
@@ -226,11 +246,16 @@ export function ShiftMorph({
     color: interpolateColor(Math.max(0, progress.get()), [0, 0.6], [c.onAccent, c.text]),
   }));
 
+  const navigateClose = () => {
+    navigatingRef.current = true;
+    onClose();
+  };
+
   if (!mounted) return null;
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
+    <Animated.View
+      style={[StyleSheet.absoluteFill, fadeStyle]}
       pointerEvents={visible ? 'auto' : 'none'}
       accessibilityViewIsModal
       accessibilityLabel={t.shift.title}
@@ -292,7 +317,7 @@ export function ShiftMorph({
         </GestureDetector>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={styles.scrollContent}>
-          <ShiftSheetContent onClose={onClose} />
+          <ShiftSheetContent onClose={navigateClose} />
         </ScrollView>
       </Animated.View>
 
@@ -301,7 +326,7 @@ export function ShiftMorph({
           +
         </Animated.Text>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 

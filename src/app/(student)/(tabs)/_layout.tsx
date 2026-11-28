@@ -8,6 +8,7 @@ import { ShiftMorph } from '@/components/student/ShiftMorph';
 import { TabBar, type TabKey } from '@/components/ui';
 import { BarBlurHost, BarBlurTarget, type WindowRect } from '@/components/ui/FloatingBar';
 import { useReducedMotion } from '@/design/motion';
+import { tabTransition } from '@/design/navigation';
 import { useT } from '@/i18n/useT';
 import { useSession } from '@/store/useSession';
 
@@ -48,7 +49,7 @@ export default function TabsLayout() {
         <BarBlurTarget style={styles.root}>
           {/* The screen recedes slightly behind the open Shift card (iOS sheet depth). */}
           <Animated.View style={[styles.root, recede]}>
-            <Tabs screenOptions={{ headerShown: false, animation: 'shift' }} tabBar={() => null}>
+            <Tabs screenOptions={{ headerShown: false, ...tabTransition }} tabBar={() => null}>
               <Tabs.Screen name="home" />
               <Tabs.Screen name="learn" />
               <Tabs.Screen name="insights" />

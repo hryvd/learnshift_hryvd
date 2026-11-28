@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
+
+import { pushTransition, sheetTransition } from '@/design/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui';
@@ -24,11 +26,11 @@ export default function StudentLayout() {
 
   const gate = useRoleGate('student');
   if (gate) return gate;
-  const sheet = { presentation: 'modal' as const, contentStyle: { backgroundColor: c.bg } };
+  const sheet = { ...sheetTransition, contentStyle: { backgroundColor: c.bg } };
   const full = { presentation: 'fullScreenModal' as const, animation: 'fade' as const };
   return (
     <View style={styles.root}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg }, ...pushTransition }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="simulate" options={{ animation: 'fade', contentStyle: { backgroundColor: '#000' } }} />
         <Stack.Screen name="break/[id]" options={sheet} />

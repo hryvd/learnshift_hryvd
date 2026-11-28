@@ -59,20 +59,20 @@ export const ease = {
 export const PRESS_IN_MS = 110;
 
 /**
- * Entry animation for stacked cards: translateY 12 → 0, opacity 0 → 1,
- * 40 ms stagger. Falls back to a plain fade under Reduce Motion.
+ * Entry for stacked cards: a quiet fade with a 6 px rise (280 ms strong
+ * ease-out), 30 ms stagger capped at 6 items. It plays alongside the native
+ * screen slide, so it stays small: content arriving, not a second animation.
  */
 export function enterAt(index: number, reduced: boolean) {
-  const delay = index * timing.stagger;
+  const delay = Math.min(index, 6) * 30;
   // Reanimated's web layout animations leave content hidden (visibility:
   // hidden until a keyframe that never starts), so web renders without them.
   if (Platform.OS === 'web') return undefined;
-  if (reduced) return FadeIn.delay(delay).duration(220);
+  if (reduced) return FadeIn.delay(delay).duration(200);
   return FadeInDown.delay(delay)
-    .springify()
-    .damping(spring.smooth.damping)
-    .stiffness(spring.smooth.stiffness)
-    .withInitialValues({ opacity: 0, transform: [{ translateY: 12 }] });
+    .duration(280)
+    .easing(ease.outStrong)
+    .withInitialValues({ opacity: 0, transform: [{ translateY: 6 }] });
 }
 
 export { useReducedMotion };

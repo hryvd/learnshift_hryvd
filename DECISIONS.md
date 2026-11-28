@@ -53,3 +53,7 @@ One line each. Newest at the bottom.
 - Tab changes no longer pop or bounce: they happen 100+ times a day.
 - Day feature tiles are warm paper `#EDEBE6` with a layered `boxShadow` (contact + ambient + 1 px top highlight), no border.
 - Floating tab bar: ~5% blur (intensity 5), light tint for legibility, no sheen or strokes; edges get an inset-glow "light wrap" via `boxShadow`.
+- Navigation motion lives in `src/design/navigation.ts`: iOS keeps its native push; Android uses 'ios_from_right' so both phones slide the same way; web has no route animation. Sheets slide up on Android.
+- Tab switch is a 220 ms strong ease-out crossfade with a 6 px drift; the stock 'shift' showed both screens at once.
+- Screen content entry (`enterAt`) is a 280 ms fade with a 6 px rise and a 30 ms stagger capped at 6, so it doesn't compete with the screen slide.
+- Tapping a tile in the + card fades the card away under the new page instead of running the shrink at the same time.
