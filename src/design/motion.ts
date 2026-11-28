@@ -27,6 +27,9 @@ export const spring = {
   morphOpen: { duration: 680, dampingRatio: 0.92, reduceMotion: ReduceMotion.System },
   /** Card → + button. Same unhurried pace as open (owner's call), no overshoot. */
   morphClose: { duration: 680, dampingRatio: 1, reduceMotion: ReduceMotion.System },
+  /** Night: a touch slower, since a dark shape on a dark screen reads as faster. */
+  morphOpenNight: { duration: 820, dampingRatio: 0.94, reduceMotion: ReduceMotion.System },
+  morphCloseNight: { duration: 820, dampingRatio: 1, reduceMotion: ReduceMotion.System },
 } as const satisfies Record<string, WithSpringConfig>;
 
 export const pressScale = {
