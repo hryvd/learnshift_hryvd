@@ -22,7 +22,7 @@ type Props = {
 
 /**
  * Feature tile with a two-line label and corner illustration.
- * Day: warm paper (#E4E2DD) lifted by a layered contact + ambient shadow and a
+ * Day: warm paper (#E9E7E2) lifted by a layered contact + ambient shadow and a
  * thin top highlight; no border. Night: `tileDark` with the same layered depth.
  */
 export function FeatureTile({ title, status, statusAccent, art, onPress, style, height = 120 }: Props) {
@@ -81,7 +81,7 @@ export function FeatureTile({ title, status, statusAccent, art, onPress, style, 
 export const DarkTile = FeatureTile;
 
 /** Warm "dirty white" paper, a step below the #F6F5F1 canvas so tiles read as objects. */
-const PAPER = '#E4E2DD';
+const PAPER = '#E9E7E2';
 /** Contact shadow + soft ambient lift + a 1px top highlight. */
 const DAY_SHADOW =
   '0 1px 3px rgba(28,25,20,0.10), 0 12px 28px -10px rgba(28,25,20,0.26), inset 0 1px 0 rgba(255,255,255,0.7)';
