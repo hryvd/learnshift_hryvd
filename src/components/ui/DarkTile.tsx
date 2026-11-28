@@ -84,7 +84,7 @@ export const DarkTile = FeatureTile;
 const PAPER = '#E9E7E2';
 /** Contact shadow + soft ambient lift + a 1px top highlight. */
 const DAY_SHADOW =
-  '0 1px 3px rgba(28,25,20,0.10), 0 12px 28px -10px rgba(28,25,20,0.26), inset 0 1px 0 rgba(255,255,255,0.7)';
+  '0 1px 2px rgba(28,25,20,0.08), 0 10px 24px -10px rgba(28,25,20,0.20), inset 0 1px 0 rgba(255,255,255,0.7)';
 const NIGHT_SHADOW =
   '0 1px 2px rgba(0,0,0,0.30), 0 10px 24px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)';
 
