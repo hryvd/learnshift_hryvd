@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, Text as RNText, View } from 'react-native';
 import { router, Stack } from 'expo-router';
+import { pushTransition } from '@/design/navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -113,7 +114,7 @@ function Shell() {
     <View style={[styles.root, { backgroundColor: c.bg }]}>
       <StatusBar style={isNight ? 'light' : 'dark'} />
       <LangFade>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg }, ...pushTransition }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
           <Stack.Screen name="reset-password" options={{ animation: 'fade' }} />

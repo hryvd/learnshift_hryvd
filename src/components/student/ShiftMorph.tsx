@@ -62,7 +62,14 @@ export function ShiftMorph({
   /** 0 = closed, 1 = open. Owned by the layout so the screen behind can recede. */
   progress: SharedValue<number>;
 }) {
-  const { c } = useTheme();
+  const { c, isNight } = useTheme();
+  // At night the card uses the lifted card tone (not the page bg) plus an edge glow,
+  // so its growth stays visible against the dark screen.
+  const surface = isNight ? c.card : c.bg;
+  const openSpring = isNight ? spring.morphOpenNight : spring.morphOpen;
+  const closeSpring = isNight ? spring.morphCloseNight : spring.morphClose;
+  const colorEnd = isNight ? 0.85 : 0.65;
+  const contentIn: [number, number] = isNight ? [0.22, 0.97] : [0.3, 0.95];
   const t = useT();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
@@ -75,6 +82,9 @@ export function ShiftMorph({
   }, [visible]);
 
   const drag = useSharedValue(0);
+  /** Whole-overlay opacity: used to hand off to a new page without the shrink. */
+  const fade = useSharedValue(1);
+  const navigatingRef = useRef(false);
   const cardH = useSharedValue(Math.min(Math.round(winH * 0.78), 680));
   const rowY = useSharedValue(23);
   const rowH = useSharedValue(CLOSE);
@@ -92,19 +102,34 @@ export function ShiftMorph({
   useEffect(() => {
     if (!mounted) return;
     if (visible) {
+      navigatingRef.current = false;
+      fade.set(1);
       drag.set(0);
       haptic.light();
-      progress.set(reduced ? withTiming(1, { duration: 180, easing: ease.out }) : withSpring(1, spring.morphOpen));
+      progress.set(reduced ? withTiming(1, { duration: 180, easing: ease.out }) : withSpring(1, openSpring));
     } else {
       const done = (finished?: boolean) => {
         'worklet';
         if (finished) scheduleOnRN(finishUnmount);
       };
+      if (navigatingRef.current) {
+        // A tile opened a page: the page slides in over the tabs, so just fade
+        // the card away underneath it. Running the 680 ms shrink at the same
+        // time made two motions fight.
+        fade.set(
+          withTiming(0, { duration: 200, easing: ease.outStrong }, (finished) => {
+            if (!finished) return;
+            progress.set(0);
+            scheduleOnRN(finishUnmount);
+          }),
+        );
+        return;
+      }
       progress.set(
-        reduced ? withTiming(0, { duration: 160, easing: ease.out }, done) : withSpring(0, spring.morphClose, done),
+        reduced ? withTiming(0, { duration: 160, easing: ease.out }, done) : withSpring(0, closeSpring, done),
       );
     }
-  }, [visible, mounted, reduced, progress, drag]);
+  }, [visible, mounted, reduced, progress, drag, fade, openSpring, closeSpring]);
 
   // Android hardware Back closes the open card.
   useEffect(() => {
@@ -142,6 +167,8 @@ export function ShiftMorph({
     },
   });
 
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fade.get() }));
+
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: 1 - (1 - Math.min(1, Math.max(0, progress.get()))) ** 2, // ease-out
   }));
@@ -162,7 +189,7 @@ export function ShiftMorph({
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
         opacity: p,
-        backgroundColor: c.bg,
+        backgroundColor: surface,
       };
     }
     const q = Math.max(0, p); // springs may dip below 0 on close; never invert the frame
@@ -178,7 +205,7 @@ export function ShiftMorph({
       borderBottomLeftRadius: bottom,
       borderBottomRightRadius: bottom,
       opacity: 1,
-      backgroundColor: interpolateColor(q, [0, 0.65], [c.accent, c.bg]),
+      backgroundColor: interpolateColor(q, [0, colorEnd], [c.accent, surface]),
     };
   });
 
@@ -188,8 +215,8 @@ export function ShiftMorph({
     const p = progress.get();
     // Open: content arrives late. Close: it leaves first, before the shape shrinks.
     const cp = opening
-      ? interpolate(p, [0.3, 0.95], [0, 1], Extrapolation.CLAMP)
-      : interpolate(p, [0.3, 0.95], [0, 1], Extrapolation.CLAMP);
+      ? interpolate(p, contentIn, [0, 1], Extrapolation.CLAMP)
+      : interpolate(p, contentIn, [0, 1], Extrapolation.CLAMP);
     return {
       opacity: reduced ? p : cp,
       transform: [
@@ -219,11 +246,16 @@ export function ShiftMorph({
     color: interpolateColor(Math.max(0, progress.get()), [0, 0.6], [c.onAccent, c.text]),
   }));
 
+  const navigateClose = () => {
+    navigatingRef.current = true;
+    onClose();
+  };
+
   if (!mounted) return null;
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
+    <Animated.View
+      style={[StyleSheet.absoluteFill, fadeStyle]}
       pointerEvents={visible ? 'auto' : 'none'}
       accessibilityViewIsModal
       accessibilityLabel={t.shift.title}
@@ -232,7 +264,10 @@ export function ShiftMorph({
         <Pressable style={styles.fill} onPress={onClose} accessibilityRole="button" accessibilityLabel={t.common.close} />
       </Animated.View>
 
-      <Animated.View pointerEvents="none" style={[styles.shape, shapeStyle]} />
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.shape, isNight && styles.shapeNight, shapeStyle]}
+      />
 
       <Animated.View
         onLayout={(e) => {
@@ -282,7 +317,7 @@ export function ShiftMorph({
         </GestureDetector>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={styles.scrollContent}>
-          <ShiftSheetContent onClose={onClose} />
+          <ShiftSheetContent onClose={navigateClose} />
         </ScrollView>
       </Animated.View>
 
@@ -291,7 +326,7 @@ export function ShiftMorph({
           +
         </Animated.Text>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -304,6 +339,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     ...(Platform.OS === 'ios' ? ({ borderCurve: 'continuous' } as const) : null),
     boxShadow: '0 -6px 28px rgba(0,0,0,0.16)',
+  },
+  shapeNight: {
+    boxShadow: '0 -6px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 0 0.5px rgba(255,255,255,0.06)',
   },
   content: {
     position: 'absolute',
