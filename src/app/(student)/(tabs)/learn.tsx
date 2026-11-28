@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Play } from '@/components/ui/icons';
 
 import { SkillGraph } from '@/components/learn/SkillGraph';
@@ -15,7 +15,7 @@ import {
   Stagger,
   Text,
 } from '@/components/ui';
-import { SUBJECTS } from '@/data/localQuestions';
+import { practiceGrade, SUBJECTS } from '@/data/localQuestions';
 import { countFor } from '@/data/pickQuestions';
 import { SKILL_BY_ID, SKILLS } from '@/data/skills';
 import { useTheme } from '@/design/theme';
@@ -87,13 +87,29 @@ function ForYou() {
       <Card style={{ gap: 12 }}>
         <Text variant="overline">{fil ? 'ANG IYONG PRACTICE' : 'YOUR PRACTICE'}</Text>
         <Text variant="title">Grade {grade} · {fil ? 'Piliin ang paksa' : 'Pick a subject'}</Text>
-        <Text variant="body" color="textSecondary">{fil ? 'Maiikling tanong, malinaw na sagot. Kahit walang internet.' : 'Small questions. Clear explanations. Ready without internet.'}</Text>
-        <Chip label={fil ? 'Palitan ang baitang' : 'Change grade'} onPress={() => router.push('/profile')} />
+        <Text variant="body" color="textSecondary">
+          {grade >= 11
+            ? fil
+              ? 'Grade 10 muna ang mga tanong sa practice sa ngayon.'
+              : 'Practice uses Grade 10 questions for now.'
+            : fil
+              ? 'Maiikling tanong, malinaw na sagot. Kahit walang internet.'
+              : 'Small questions. Clear explanations. Ready without internet.'}
+        </Text>
+        <Chip
+          label={fil ? 'Palitan ang baitang' : 'Change grade'}
+          onPress={() => router.push('/personalization' as Href)}
+        />
       </Card>
       {[{ id: 'mixed' as const, label: fil ? 'Surprise me · All subjects' : 'Surprise me · All subjects' }, ...SUBJECTS].map((subject, index) => (
-        <Card key={subject.id} onPress={() => { useAppStore.getState().setLearningSubject(subject.id); router.push('/feed'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }} accessibilityLabel={`Practice ${subject.label}, grade ${grade}`}>
+        <Card
+          key={subject.id}
+          onPress={() => router.push({ pathname: '/feed', params: { subject: subject.id } })}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}
+          accessibilityLabel={`Practice ${subject.label}, grade ${grade}`}
+        >
           <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: c.accentTint, alignItems: 'center', justifyContent: 'center' }}><Text variant="title" color="accent">{['✦', '＋', 'Aa', 'Ab', '⚗', '◎'][index]}</Text></View>
-          <View style={{ flex: 1, gap: 4 }}><Text variant="headline">{subject.label}</Text><Text variant="subhead">{countFor(grade, subject.id)} {fil ? 'tanong sa baitang mo' : 'questions for your grade'}</Text></View>
+          <View style={{ flex: 1, gap: 4 }}><Text variant="headline">{subject.label}</Text><Text variant="subhead">{countFor(practiceGrade(grade), subject.id)} {fil ? 'tanong sa baitang mo' : 'questions for your grade'}</Text></View>
           <Play size={20} color={c.accent} weight="fill" />
         </Card>
       ))}
@@ -106,8 +122,7 @@ function EarlyMath({ grade }: { grade: number }) {
   const { c } = useTheme();
   const t = useT();
   const start = () => {
-    useAppStore.getState().setLearningSubject('math');
-    router.push('/feed');
+    router.push({ pathname: '/feed', params: { subject: 'math' } });
   };
   return (
     <Stagger index={0}>

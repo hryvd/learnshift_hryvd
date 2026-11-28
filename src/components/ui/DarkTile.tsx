@@ -20,17 +20,30 @@ type Props = {
   height?: number;
 };
 
-/** Near-black feature tile with a two-line label and corner illustration. */
-export function DarkTile({ title, status, statusAccent, art, onPress, style, height = 120 }: Props) {
-  const { c } = useTheme();
+/**
+ * Feature tile with a two-line label and corner illustration.
+ * Day theme: crisp white card surface with hairline edge and subtle shadow.
+ * Night theme: elevated dark surface (`tileDark`) for low-glare reading.
+ */
+export function FeatureTile({ title, status, statusAccent, art, onPress, style, height = 120 }: Props) {
+  const { c, isNight } = useTheme();
+  const titleColor = isNight ? c.tileDarkText : c.text;
+  const statusColor = isNight
+    ? statusAccent
+      ? c.accentLight
+      : c.tileDarkSecondary
+    : statusAccent
+      ? c.accent
+      : c.textSecondary;
+
   const content = (
     <>
       <View style={styles.label}>
-        <Text variant="headline" color={c.tileDarkText} numberOfLines={1}>
+        <Text variant="headline" color={titleColor} numberOfLines={1}>
           {title}
         </Text>
         {status ? (
-          <Text variant="subhead" color={statusAccent ? c.accentLight : c.tileDarkSecondary} numberOfLines={1}>
+          <Text variant="subhead" color={statusColor} numberOfLines={1}>
             {status}
           </Text>
         ) : null}
@@ -45,7 +58,9 @@ export function DarkTile({ title, status, statusAccent, art, onPress, style, hei
   const s = [
     styles.tile,
     Platform.OS === 'ios' && ({ borderCurve: 'continuous' } as const),
-    { backgroundColor: c.tileDark, height },
+    isNight
+      ? { backgroundColor: c.tileDark, height }
+      : [styles.daySurface, { backgroundColor: c.card, borderColor: c.hairline, height }],
     style,
   ];
   if (onPress) {
@@ -63,8 +78,19 @@ export function DarkTile({ title, status, statusAccent, art, onPress, style, hei
   return <View style={s}>{content}</View>;
 }
 
+/** Backwards-compatible alias for `FeatureTile`. */
+export const DarkTile = FeatureTile;
+
 const styles = StyleSheet.create({
   tile: { borderRadius: radius.tile, overflow: 'hidden', padding: 16 },
+  daySurface: {
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 0,
+  },
   label: { gap: 2, maxWidth: '70%', zIndex: 1 },
   art: { position: 'absolute', right: -8, bottom: -8 },
 });

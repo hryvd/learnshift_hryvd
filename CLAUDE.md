@@ -43,6 +43,8 @@ Many screens branch on `IS_PITCH`. Keep both paths working when editing a screen
 - `src/services/backend/sync.ts` flushes those to Supabase, pulls server state on start, on foreground, and on realtime events (guardian changes to `guardian_controls`, `student_settings`, `time_requests`, links and classes).
 - A pull never overwrites a field that is still dirty.
 - `answer(e, meta)` must receive `meta` (question id, choice, context) or the attempt never reaches the teacher.
+- **Reward ledger (`reward_events` + `claim_reward` RPC):** Coins are server-authoritative. `useAppStore` holds `coinsConfirmed` + `pendingRewards` for immediate optimistic display and flushes `reward` outbox ops **after** `attempt` ops via `claim_reward(client_key, kind, amount, ref_id)`. Direct client writes to `progress.coins` are frozen by a DB trigger.
+- **Editable teacher quizzes (`module_sources` + `quiz_drafts` + `assign_quiz` RPC):** Teacher uploads store originals privately in the `module-sources` bucket (`source-signed-url` Edge Function for 10-min downloads), generate private `quiz_drafts` (800 ms autosave, version bump trigger), and publish immutable snapshots to `class_modules` only via `assign_quiz`. Students only ever see published snapshots.
 
 **Auth and session.**
 - `src/store/useAuth.ts` holds the session and profile.
@@ -58,8 +60,10 @@ Many screens branch on `IS_PITCH`. Keep both paths working when editing a screen
 
 **Database (`supabase/migrations/`).**
 - The privacy split is enforced by RLS:
-  - Guardians see habits: `usage_daily`, `nudge_events`, `app_usage`, `live_status`, `time_requests`.
+  - Students only: `reward_events` (student reads own ledger; credits via `claim_reward` RPC only).
+  - Guardians see habits: `usage_daily`, `nudge_events`, `app_usage`, `live_status` (includes `confidence`), `time_requests`.
   - Teachers see learning: `attempts`, `mastery`, `mastery_daily`, `tutor_answers`.
+  - Teachers only (private authoring): `quiz_drafts`, `module_sources` (plus private `module-sources` Storage bucket).
   - Neither sees the other's data.
 - Relationship checks are `private.is_guardian_of` and `private.is_teacher_of`.
 - Linking, joining, request decisions and device tokens go through SECURITY DEFINER RPCs in `public`, each with an `auth.uid()` check.

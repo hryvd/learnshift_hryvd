@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { haptic } from '@/design/haptics';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { useT } from '@/i18n/useT';
+import { focusRewardKey, rewardAmount } from '@/lib/rewards';
 import { useAppStore } from '@/store/useAppStore';
 import { useSession } from '@/store/useSession';
 
@@ -23,12 +24,19 @@ export default function Focus() {
   const [mins, setMins] = useState(25);
   const [state, setState] = useState<State>('setup');
   const [left, setLeft] = useState(25 * 60);
-  const reward = Math.round(mins / 5) * 3;
+  const endAtRef = useRef<number>(0);
+  const reward = rewardAmount('focus', { minutes: mins });
 
-  const complete = () => {
+  const complete = (endAtMs?: number) => {
     haptic.success();
     useSession.getState().setFocusUntil(null);
-    useAppStore.getState().addCoins(reward);
+    const stamp = endAtMs ?? (endAtRef.current || Date.now());
+    useAppStore.getState().claimReward({
+      key: focusRewardKey(stamp),
+      kind: 'focus',
+      ref: String(mins),
+      meta: { minutes: mins },
+    });
     setLeft(0);
     setState('done');
   };
@@ -37,13 +45,14 @@ export default function Focus() {
   useEffect(() => {
     if (state !== 'running') return;
     const endAt = Date.now() + left * 1000;
+    endAtRef.current = endAt;
     useSession.getState().setFocusUntil(endAt);
     const id = setInterval(() => {
       const remain = Math.max(0, Math.round((endAt - Date.now()) / 1000));
       setLeft(remain);
       if (remain === 0) {
         clearInterval(id);
-        complete();
+        complete(endAt);
       }
     }, 250);
     return () => clearInterval(id);

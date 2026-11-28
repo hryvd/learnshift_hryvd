@@ -1,14 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { FileText, GearSix, Info, Lifebuoy, ShieldCheck, UserCircle } from '@/components/ui/icons';
+import { FileText, GearSix, Info, Lifebuoy, ShieldCheck, Sparkle, UserCircle } from '@/components/ui/icons';
 
 import { PatyAvatar } from '@/components/mascot/Paty';
 import { Screen } from '@/components/student/Screen';
 import { BooksArt, LanguageArt, MoonArt, ShieldArt } from '@/components/student/TileArt';
-import { Card, DarkTile, LargeTitleHeader, ListGroup, ListRow, PressableScale, SegmentedControl, Stagger, Text } from '@/components/ui';
+import { Card, DarkTile, LargeTitleHeader, ListGroup, ListRow, SegmentedControl, Stagger, Text } from '@/components/ui';
 import { SUBJECTS } from '@/data/localQuestions';
 import { useTheme } from '@/design/theme';
-import { radius, space } from '@/design/tokens';
+import { space } from '@/design/tokens';
 import { formatClock, useT } from '@/i18n/useT';
 import { IS_PITCH } from '@/lib/config';
 import * as api from '@/services/backend/api';
@@ -32,7 +32,12 @@ export default function Profile() {
   const learningGrade = useAppStore((s) => s.learningGrade);
   const learningSubject = useAppStore((s) => s.learningSubject);
   const fil = lang === 'fil';
-  const pitchGrade = IS_PITCH ? 8 : grade;
+  const displayGrade = IS_PITCH ? learningGrade : (learningGrade || grade);
+  const subjectLabel =
+    learningSubject === 'mixed'
+      ? t.profile.allSubjects
+      : (SUBJECTS.find((s) => s.id === learningSubject)?.label ?? t.profile.allSubjects);
+  const personalizationValue = `Grade ${displayGrade} · ${subjectLabel}`;
   const syncSettingNow = () => {
     void useDevice.getState().refresh();
     if (!IS_PITCH && userId) void flushStudent(userId).catch(() => {});
@@ -52,7 +57,7 @@ export default function Profile() {
             <Text variant="title" numberOfLines={1}>
               {name}
             </Text>
-            <Text variant="subhead">{t.profile.grade(pitchGrade, classes[0]?.name ?? '')}</Text>
+            <Text variant="subhead">{t.profile.grade(displayGrade, classes[0]?.name ?? '')}</Text>
           </View>
         </Card>
       </Stagger>
@@ -99,52 +104,6 @@ export default function Profile() {
 
       <Stagger index={i++}>
         <Card style={styles.gap}>
-          <Text variant="headline">{t.profile.yourQuestions}</Text>
-          <Text variant="subhead">{t.profile.yourQuestionsSub}</Text>
-          <Text variant="body">{t.profile.gradeLabel}</Text>
-          <View style={styles.freqRow}>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((grade) => (
-              <PressableScale
-                key={grade}
-                accessibilityLabel={`Grade ${grade}`}
-                accessibilityState={{ selected: learningGrade === grade }}
-                onPress={() => {
-                  useAppStore.getState().setLearningGrade(grade);
-                  if (!IS_PITCH && userId) {
-                    patchProfile({ grade });
-                    void api.updateProfile({ grade }).catch(() => {});
-                  }
-                  syncSettingNow();
-                }}
-                style={[styles.freqPill, { backgroundColor: learningGrade === grade ? c.accent : c.inset }]}
-              >
-                <Text color={learningGrade === grade ? c.onAccent : c.text}>{grade}</Text>
-              </PressableScale>
-            ))}
-          </View>
-          <Text variant="body">{t.profile.subjectLabel}</Text>
-          <View style={styles.freqRow}>
-            {[{ id: 'mixed' as const, label: t.profile.allSubjects }, ...SUBJECTS].map((subject) => (
-              <PressableScale
-                key={subject.id}
-                accessibilityLabel={subject.label}
-                accessibilityState={{ selected: learningSubject === subject.id }}
-                onPress={() => {
-                  useAppStore.getState().setLearningSubject(subject.id);
-                  syncSettingNow();
-                }}
-                style={[styles.freqPill, { backgroundColor: learningSubject === subject.id ? c.accent : c.inset }]}
-              >
-                <Text color={learningSubject === subject.id ? c.onAccent : c.text}>{subject.label}</Text>
-              </PressableScale>
-            ))}
-          </View>
-          <Text variant="caption">{t.profile.questionsNote}</Text>
-        </Card>
-      </Stagger>
-
-      <Stagger index={i++}>
-        <Card style={styles.gap}>
           <Text variant="headline">{t.profile.appearance}</Text>
           <SegmentedControl<ThemePref>
             options={[
@@ -163,6 +122,12 @@ export default function Profile() {
 
       <Stagger index={i++}>
         <ListGroup>
+          <ListRow
+            title={t.profile.personalization}
+            value={personalizationValue}
+            icon={<Sparkle size={20} weight="fill" color={c.accent} />}
+            onPress={() => router.push('/personalization' as Href)}
+          />
           {!IS_PITCH ? (
             <ListRow
               title={t.profile.account}
@@ -210,8 +175,6 @@ export default function Profile() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   gap: { gap: 12 },
-  freqRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  freqPill: { paddingHorizontal: 12, minHeight: 48, minWidth: 48, borderRadius: radius.pill, justifyContent: 'center', alignItems: 'center' },
   me: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.gap },
   tile: { flexBasis: '47%', flexGrow: 1 },

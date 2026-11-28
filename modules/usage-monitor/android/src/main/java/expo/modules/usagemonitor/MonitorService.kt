@@ -23,6 +23,10 @@ import androidx.core.content.ContextCompat
 import expo.modules.usagemonitor.mirror.InterventionDispatcher
 import expo.modules.usagemonitor.mirror.LearningMirrorSelector
 import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
+import expo.modules.usagemonitor.mirror.MirrorTickInput
+import expo.modules.usagemonitor.mirror.MirrorTimer
+import expo.modules.usagemonitor.mirror.MirrorTimerState
+import expo.modules.usagemonitor.mirror.MirrorTriggerMode
 import expo.modules.usagemonitor.mirror.OfflineContextCollector
 import expo.modules.usagemonitor.mirror.PilotTelemetryRecorder
 import expo.modules.usagemonitor.mirror.SentinelBus
@@ -221,7 +225,8 @@ class MonitorService : Service() {
   private val contextCollector by lazy { OfflineContextCollector(this) }
   private val mirrorSelector by lazy { LearningMirrorSelector(this) }
   private val mirrorDispatcher by lazy { InterventionDispatcher(this) }
-  private var lastMirrorDispatchAt = 0L
+  private var mirrorTimerState = MirrorTimerState()
+  private var lastMirrorTickAt = 0L
 
   private fun effectiveBreakIntervalSec(cfg: Config, activeCat: Cat, sessionMin: Double, now: Long): Pair<Int, Int> {
     val baseSec = when {
@@ -303,6 +308,89 @@ class MonitorService : Service() {
     return next
   }
 
+  private fun stepMirror(
+    cfg: Config,
+    now: Long,
+    screenAwake: Boolean,
+    visiblePkg: String?,
+    live: Live,
+    suppressed: Boolean,
+  ): Boolean {
+    val prefs = getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+    val mirrorAuto = prefs.getBoolean("mirror_auto_enabled", false)
+    val mode = MirrorTriggerMode.fromKey(prefs.getString("mirror_trigger", "smart"))
+    val timerMin = MirrorTimer.normalizeMinutes(prefs.getInt("mirror_timer_min", 15))
+    val elapsed = SystemClock.elapsedRealtime()
+    val dtMs = if (lastMirrorTickAt > 0L) (elapsed - lastMirrorTickAt).coerceIn(0L, 10_000L) else 0L
+    lastMirrorTickAt = elapsed
+
+    val inTarget = visiblePkg != null && Categories.isTargetApp(this, visiblePkg, cfg.monitorAllApps)
+    val swipes = if (inTarget && mirrorAuto && !suppressed) SentinelBus.snapshotScrollTimestamps(elapsed) else emptyList()
+    val vec = if (inTarget && mirrorAuto && !suppressed) {
+      riskScorer.buildVector((live.sessionMin * 60_000.0).toLong(), swipes)
+    } else {
+      null
+    }
+    val risk = if (vec != null) riskScorer.computeRiskProbability(vec) else 0f
+    if (risk >= 0.60f && inTarget && mirrorAuto && !suppressed) {
+      contextCollector.captureSingleGravityReading()
+    }
+
+    val res = MirrorTimer.step(
+      mirrorTimerState,
+      MirrorTickInput(
+        nowMs = elapsed,
+        dtMs = dtMs,
+        autoEnabled = mirrorAuto,
+        mode = mode,
+        timerMinutes = timerMin,
+        screenAwake = screenAwake,
+        inTargetApp = inTarget,
+        activePkg = visiblePkg,
+        suppressed = suppressed,
+        riskScore = risk,
+      ),
+    )
+    mirrorTimerState = res.state
+    SentinelBus.timerRemainingSec = res.remainingSec
+    SentinelBus.timerPaused = res.paused
+
+    if (res.shouldDispatch && visiblePkg != null && vec != null) {
+      if (!SmartStudyGuardService.evaluateSingleFrameIfEnabledSync(this)) {
+        mirrorTimerState = MirrorTimer.commitDispatch(mirrorTimerState, elapsed)
+        SentinelBus.timerRemainingSec = if (mode == MirrorTriggerMode.TIMER || mode == MirrorTriggerMode.BOTH) timerMin * 60 else null
+        SentinelBus.timerPaused = false
+        val snap = contextCollector.buildSnapshot(vec.scrollCadencePerMin, vec.sessionMinutes, vec.dwellVarianceSecSq)
+        val capturedPkg = visiblePkg
+        val selectedVideo = mirrorSelector.selectVideoForSession(capturedPkg, snap, cfg)
+        val isFil = cfg.fil
+        ScrollGate.clear()
+        activeAccumMs = 0L
+        lastTickAt = now
+        android.os.Handler(mainLooper).post {
+          if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
+          val tier = mirrorDispatcher.dispatchWithLearningVideo(
+            targetPackage = capturedPkg,
+            snapshot = snap,
+            selectedVideo = selectedVideo,
+            fil = isFil,
+            isSameAppInFront = true,
+          )
+          SentinelBus.lastInterventionTimeMs = elapsed
+          SentinelBus.lastInterventionStrategy = tier
+          SentinelBus.lastActivePackage = capturedPkg
+          SentinelBus.lastInterventionVideoId = selectedVideo?.id ?: ""
+          SentinelBus.lastInterventionVideoTitle = selectedVideo?.titleOrTopic ?: ""
+          if (selectedVideo != null) {
+            SentinelBus.lastInterventionTopicTag = selectedVideo.subjectTag
+          }
+        }
+        return true
+      }
+    }
+    return false
+  }
+
   private fun decide(): Long {
     val cfg = Store.config(this)
     val hasUsage = Perms.hasUsageAccess(this)
@@ -312,18 +400,19 @@ class MonitorService : Service() {
       lastTickAt = 0L
     }
     val now = System.currentTimeMillis()
-    val live = if (hasUsage) tracker!!.update(now) else Live(null, Cat.OTHER, 0.0, 0)
+    val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+    val keyguard = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+    val screenAwake = power.isInteractive && !keyguard.isKeyguardLocked
+    val live = if (hasUsage) tracker!!.update(now, screenAwake) else Live(null, Cat.OTHER, 0.0, 0)
     val cal = Calendar.getInstance()
     val clock = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
     val schoolDay = Schedule.schoolDay(cal)
     val locked = LockdownController.isLocked(cfg, clock, now)
     val activePkg = live.pkg
-    val mine = activePkg == packageName
+    val visiblePkg = if (screenAwake && live.confidence == "visible") activePkg else null
+    val mine = visiblePkg == packageName
     val home = launchers ?: Categories.launchers(this).also { launchers = it }
 
-    val power = getSystemService(Context.POWER_SERVICE) as PowerManager
-    val keyguard = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-    val screenAwake = power.isInteractive && !keyguard.isKeyguardLocked
     val overlayShowing = OverlayController.isShowing()
     if (overlayShowing) {
       if (overlayStudyStartAt == 0L) overlayStudyStartAt = now
@@ -331,10 +420,10 @@ class MonitorService : Service() {
       overlayStudyStartAt = 0L
     }
 
-    lastActivePkg = if (screenAwake) activePkg else null
-    lastActiveCat = if (screenAwake) live.cat else Cat.OTHER
+    lastActivePkg = visiblePkg
+    lastActiveCat = if (visiblePkg != null) live.cat else Cat.OTHER
 
-    val studyingNow = screenAwake && (live.cat == Cat.STUDY || overlayShowing)
+    val studyingNow = screenAwake && ((live.confidence == "visible" && live.cat == Cat.STUDY) || overlayShowing)
     var forceStudyReport = studyingNow && studySessionStartAt > 0L && now - studySessionStartAt >= 5 * 60_000L
     if (studyingNow && studySessionStartAt == 0L) {
       studySessionStartAt = now
@@ -343,30 +432,42 @@ class MonitorService : Service() {
       studySessionStartAt = 0L
     }
 
-    // Only real "free time" apps: never the store, settings or system screens.
-    if (activePkg != null && !mine && activePkg !in home && activePkg !in NOT_FREE_TIME && activePkg != lastRecordedUsedPkg) {
-      if (runCatching { packageManager.getLaunchIntentForPackage(activePkg) != null }.getOrDefault(false)) {
-        lastRecordedUsedPkg = activePkg
-        Store.putString(this, "lastUsedPkg", activePkg)
-        Store.putString(this, "lastUsedLabel", Categories.label(this, activePkg))
+    // Only real ACTIVITY_RESUMED distracting non-audio apps, stamped with time.
+    if (
+      visiblePkg != null &&
+      !mine &&
+      visiblePkg !in home &&
+      visiblePkg !in NOT_FREE_TIME &&
+      Categories.of(this, visiblePkg).distracting &&
+      !Categories.isAudioOrMusic(this, visiblePkg)
+    ) {
+      val staleStamp = now - Store.getLong(this, "lastUsedAt") > 30_000L
+      if (visiblePkg != lastRecordedUsedPkg || staleStamp) {
+        if (runCatching { packageManager.getLaunchIntentForPackage(visiblePkg) != null }.getOrDefault(false)) {
+          lastRecordedUsedPkg = visiblePkg
+          Store.putString(this, "lastUsedPkg", visiblePkg)
+          Store.putString(this, "lastUsedLabel", Categories.label(this, visiblePkg))
+          Store.putLong(this, "lastUsedAt", now)
+        }
       }
     }
 
     val liveForReport = when {
-      !screenAwake -> Live(null, Cat.OTHER, 0.0, live.unlocksLastHour, 0.0)
-      overlayShowing -> Live(packageName, Cat.STUDY, 0.0, live.unlocksLastHour, maxOf(0.0, (now - overlayStudyStartAt) / 60_000.0))
+      !screenAwake -> Live(null, Cat.OTHER, 0.0, live.unlocksLastHour, 0.0, "visible")
+      overlayShowing -> Live(packageName, Cat.STUDY, 0.0, live.unlocksLastHour, maxOf(0.0, (now - overlayStudyStartAt) / 60_000.0), "visible")
       else -> live
     }
     maybeReport(
       cfg,
       now,
-      reportPkg = if (screenAwake) activePkg?.takeIf { it !in home } else null,
+      reportPkg = visiblePkg?.takeIf { it !in home },
       forceSoon = forceStudyReport,
     )
     if (hasUsage) updateLive(cfg, now, liveForReport)
 
     // 1. Total offline Guardian Lockdown (runs before pause/focus guardrails).
     if (locked) {
+      stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = true)
       Notifier.cancelCountdown(this)
       Notifier.cancelNudge(this)
       ScrollGate.clear()
@@ -375,7 +476,7 @@ class MonitorService : Service() {
       lastTargetPkg = null
       lastTickAt = now
       if (!screenAwake) return 2_000L
-      if (!LockdownController.isEmergencyAllowed(this, activePkg)) {
+      if (!LockdownController.isEmergencyAllowed(this, visiblePkg)) {
         if (canOverlay()) {
           LockdownController.show(this, cfg, clock)
         } else {
@@ -397,6 +498,7 @@ class MonitorService : Service() {
 
     // A sleeping or locked device must not accumulate time or hold audio focus.
     if (!screenAwake || cfg.paused || now < cfg.focusUntil) {
+      stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = true)
       activeAccumMs = 0L
       lastTargetPkg = null
       lastTickAt = now
@@ -407,12 +509,14 @@ class MonitorService : Service() {
 
     val idle = 2_000L
     if (OverlayController.isShowing()) {
+      stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = true)
       lastTickAt = now
       return idle
     }
 
     // 2. Guardrails: paused, focusing, or currently inside LearnShift itself.
     if (cfg.paused || now < cfg.focusUntil || mine) {
+      stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = mine.not())
       activeAccumMs = 0L
       lastTargetPkg = null
       ScrollGate.clear()
@@ -422,8 +526,9 @@ class MonitorService : Service() {
     }
 
     // 3. Active external target app monitoring using configured overlayIntervalSec.
-    if (activePkg != null && Categories.isTargetApp(this, activePkg, cfg.monitorAllApps)) {
+    if (visiblePkg != null && Categories.isTargetApp(this, visiblePkg, cfg.monitorAllApps)) {
       if (now < Store.getLong(this, "snoozeUntil")) {
+        stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = true)
         activeAccumMs = 0L
         ScrollGate.clear()
         if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
@@ -431,53 +536,26 @@ class MonitorService : Service() {
         return idle
       }
 
-      // Option C Attention Mirror auto-shift when behavioral risk exceeds 0.75.
-      // Evaluated before the swipe-gate early return so short break intervals do not starve Mirror.
-      val mirrorAuto = getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
-        .getBoolean("mirror_auto_enabled", false)
-      val elapsed = SystemClock.elapsedRealtime()
-      if (mirrorAuto && elapsed - lastMirrorDispatchAt >= 180_000L) {
-        val swipes = SentinelBus.snapshotScrollTimestamps(elapsed)
-        val vec = riskScorer.buildVector((live.sessionMin * 60_000.0).toLong(), swipes)
-        val risk = riskScorer.computeRiskProbability(vec)
-        if (risk >= 0.60f) contextCollector.captureSingleGravityReading()
-        if (risk > 0.75f && !SmartStudyGuardService.evaluateSingleFrameIfEnabledSync(this)) {
-          lastMirrorDispatchAt = elapsed
-          val snap = contextCollector.buildSnapshot(vec.scrollCadencePerMin, vec.sessionMinutes, vec.dwellVarianceSecSq)
-          val capturedPkg = activePkg
-          val selectedVideo = mirrorSelector.selectVideoForSession(capturedPkg, snap, cfg)
-          val isFil = cfg.fil
-          ScrollGate.clear()
-          activeAccumMs = 0L
-          lastTickAt = now
-          android.os.Handler(mainLooper).post {
-            if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
-            val tier = mirrorDispatcher.dispatchWithLearningVideo(capturedPkg, snap, selectedVideo, isFil)
-            SentinelBus.lastInterventionTimeMs = elapsed
-            SentinelBus.lastInterventionStrategy = tier
-            SentinelBus.lastActivePackage = capturedPkg
-            SentinelBus.lastInterventionVideoId = selectedVideo?.id ?: ""
-            SentinelBus.lastInterventionVideoTitle = selectedVideo?.titleOrTopic ?: ""
-            if (selectedVideo != null) {
-              SentinelBus.lastInterventionTopicTag = selectedVideo.subjectTag
-            }
-          }
-          return idle
-        }
-      }
-
-      if (OverlayController.isGateShowing() && activePkg == lastTargetPkg) {
+      if (OverlayController.isGateShowing() && visiblePkg == lastTargetPkg) {
+        // Guardian/break gate takes priority over Mirror.
+        stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = true)
         lastTickAt = now
         return idle
       }
-      val label = Categories.label(this, activePkg)
+
+      // Option C Attention Mirror (Smart, Timer, or Both) with shared 180s cooldown.
+      if (stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = false)) {
+        return idle
+      }
+
+      val label = Categories.label(this, visiblePkg)
 
       val dt = if (lastTickAt > 0L) (now - lastTickAt).coerceIn(500L, 5_000L) else 2_000L
       lastTickAt = now
-      if (activePkg != lastTargetPkg) {
+      if (visiblePkg != lastTargetPkg) {
         ScrollGate.clear()
         if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
-        lastTargetPkg = activePkg
+        lastTargetPkg = visiblePkg
         activeAccumMs = dt
       } else {
         activeAccumMs += dt
@@ -487,13 +565,14 @@ class MonitorService : Service() {
       val intervalMs = intervalSec * 1000L
       if (activeAccumMs >= intervalMs) {
         activeAccumMs = 0L
-        ScrollGate.arm(activePkg, android.os.SystemClock.uptimeMillis())
+        ScrollGate.arm(visiblePkg, android.os.SystemClock.uptimeMillis())
         if (canOverlay()) {
           val mins = maxOf(1, live.sessionMin.roundToInt())
-          OverlayController.armSwipeTrigger(this, cfg, label, activePkg, mins)
+          OverlayController.armSwipeTrigger(this, cfg, label, visiblePkg, mins)
         }
       }
     } else {
+      stepMirror(cfg, now, screenAwake, visiblePkg, live, suppressed = false)
       ScrollGate.clear()
       if (OverlayController.isGateShowing()) OverlayController.dismiss(this)
       activeAccumMs = 0L
@@ -507,11 +586,15 @@ class MonitorService : Service() {
   private fun updateLive(cfg: Config, now: Long, live: Live) {
     val home = launchers ?: Categories.launchers(this).also { launchers = it }
     val pkg = live.pkg?.takeIf { it !in home }
-    val key = pkg ?: "-"
+    val confidence = if (live.confidence == "inferred") "inferred" else "visible"
+    val key = if (pkg != null) "$pkg:$confidence" else "-"
     val lastAt = Store.getLong(this, "liveAt")
     val changed = key != Store.getString(this, "liveKey")
-    // A new app is reported within seconds; an active session refreshes every minute.
-    if (!((changed && now - lastAt > 4_000L) || (pkg != null && now - lastAt > 60_000L))) return
+    // Real foreground app switches report on the very next tick; active sessions refresh every minute.
+    val visibleChangeDue = changed && confidence == "visible" && now - lastAt > 1_500L
+    val otherChangeDue = changed && now - lastAt > 4_000L
+    val periodicDue = pkg != null && now - lastAt > 60_000L
+    if (!(visibleChangeDue || otherChangeDue || periodicDue)) return
     Store.putString(this, "liveKey", key)
     Store.putLong(this, "liveAt", now)
     val body = JSONObject()
@@ -520,6 +603,7 @@ class MonitorService : Service() {
       .put("category", pkg?.let { Categories.of(this, it).js } ?: JSONObject.NULL)
       .put("session_min", maxOf(0, live.appMin.toInt()))
       .put("screen_on", pkg != null)
+      .put("confidence", confidence)
     Thread { Reporter.live(this, cfg, body) }.start()
   }
 

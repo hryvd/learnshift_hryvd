@@ -17,6 +17,31 @@ export type ModuleQuestion = {
   topic: string;
 };
 
+export type ModuleSource = {
+  id: string;
+  storagePath: string;
+  fileName: string;
+  mime: string;
+  sizeBytes: number;
+  sha256: string;
+  extractedText: string;
+  createdAt: string;
+};
+
+export type QuizDraft = {
+  id: string;
+  sourceId: string | null;
+  sourceName: string | null;
+  title: string;
+  subject: string;
+  summary: string;
+  flashcards: ModuleFlashcard[];
+  questions: ModuleQuestion[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ClassModule = {
   id: string;
   classId: string;
@@ -28,6 +53,11 @@ export type ClassModule = {
   questions: ModuleQuestion[];
   published: boolean;
   createdAt: string;
+  quizId?: string | null;
+  quizVersion?: number | null;
+  assignedAt?: string | null;
+  shareSource?: boolean;
+  sourceId?: string | null;
 };
 
 export type GeneratedModuleDeck = {

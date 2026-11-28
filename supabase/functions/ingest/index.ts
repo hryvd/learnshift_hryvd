@@ -21,9 +21,17 @@ type UsageDay = {
 };
 
 type AppRow = { day: string; package: string; label: string; category: string; minutes: number };
-type Live = { package?: string | null; label?: string | null; category?: string | null; session_min?: number; screen_on?: boolean };
+type Live = {
+  package?: string | null;
+  label?: string | null;
+  category?: string | null;
+  session_min?: number;
+  screen_on?: boolean;
+  confidence?: string | null;
+};
 
 const CATS = new Set(['video', 'social', 'games', 'messaging', 'study', 'other']);
+const CONFIDENCES = new Set(['visible', 'inferred']);
 const LEVELS = new Set(['checkin', 'break', 'winddown', 'lock']);
 const RESPONSES = new Set(['took', 'snoozed', 'followed', 'locked', 'requested', 'quiet']);
 const int = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(Number(v) || 0)));
@@ -139,6 +147,9 @@ serve(async (req) => {
   // The app in front right now.
   const live: Live | null = body.live && typeof body.live === 'object' ? body.live : null;
   if (live) {
+    // Older APKs omit confidence; default to 'visible' so honest reports don't regress.
+    const confidence =
+      typeof live.confidence === 'string' && CONFIDENCES.has(live.confidence) ? live.confidence : 'visible';
     const { error } = await admin.from('live_status').upsert({
       student_id: studentId,
       package: live.package ? String(live.package).slice(0, 200) : null,
@@ -146,6 +157,7 @@ serve(async (req) => {
       category: live.category && CATS.has(live.category) ? live.category : null,
       session_min: int(live.session_min, 1440),
       screen_on: !!live.screen_on,
+      confidence,
       updated_at: new Date().toISOString(),
     });
     if (error) throw error;

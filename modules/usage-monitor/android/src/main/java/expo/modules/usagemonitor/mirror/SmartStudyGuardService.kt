@@ -18,6 +18,7 @@ import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -27,6 +28,7 @@ import androidx.core.app.ServiceCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import expo.modules.usagemonitor.OverlayController
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -202,34 +204,79 @@ class InterventionDispatcher(private val context: Context) {
     snapshot: OfflineContextSnapshot,
     selectedVideo: LearningVideoSeed?,
     fil: Boolean = false,
+    isSameAppInFront: Boolean = false,
   ): String {
-    val canTierA = canSafelyLaunchWorkProfileApp() && LearningMirrorPolicy.isAllowedTargetPackage(targetPackage)
-    val tier = if (canTierA) {
-      val badge = LearningMirrorPolicy.formatBadge(snapshot.sessionMinutes, selectedVideo, fil)
-      val launched = launchWorkProfileLearningVideo(
-        targetPackage = targetPackage,
-        sessionMinutes = snapshot.sessionMinutes,
-        deepLinkUrl = selectedVideo?.deepLinkUrl,
-        badgeText = badge,
-      )
-      if (launched) {
-        // Personal Profile holds SYSTEM_ALERT_WINDOW, so render the honest 1.8s pill from here.
-        NeutralBannerOverlay.showBriefPill(context, badge, durationMs = 1800L, delayMs = 250L)
+    val handoffPill = if (fil) "Lilipat sa isang learning video" else "Switching to a learning video"
+    val badge = LearningMirrorPolicy.formatBadge(snapshot.sessionMinutes, selectedVideo, fil)
+    val allowedTarget = LearningMirrorPolicy.isAllowedTargetPackage(targetPackage)
+    val canTierA = canSafelyLaunchWorkProfileApp() && allowedTarget
+    val tierBIntent = if (allowedTarget) buildSameProfileDeepLinkIntent(targetPackage, selectedVideo?.deepLinkUrl) else null
+
+    val tier = when {
+      canTierA -> {
+        OverlayController.showHandoffMask(context) {
+          val launched = launchWorkProfileLearningVideo(
+            targetPackage = targetPackage,
+            sessionMinutes = snapshot.sessionMinutes,
+            deepLinkUrl = selectedVideo?.deepLinkUrl,
+            badgeText = badge,
+            sameAppFront = isSameAppInFront,
+          )
+          if (launched) {
+            NeutralBannerOverlay.showBriefPill(context, handoffPill, durationMs = 1800L, delayMs = 280L)
+          } else if (tierBIntent != null && runCatching { context.startActivity(tierBIntent); true }.getOrDefault(false)) {
+            NeutralBannerOverlay.showBriefPill(context, handoffPill, durationMs = 1800L, delayMs = 280L)
+          } else {
+            val strategy = bandit.selectDecelerationStrategy(snapshot)
+            launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
+          }
+        }
         if (selectedVideo != null) "TIER_A_WORK_PROFILE_LEARNING_VIDEO" else "TIER_A_WORK_PROFILE_REAL_APP"
-      } else {
+      }
+      tierBIntent != null -> {
+        OverlayController.showHandoffMask(context) {
+          val launched = runCatching {
+            context.startActivity(tierBIntent)
+            true
+          }.getOrDefault(false)
+          if (launched) {
+            NeutralBannerOverlay.showBriefPill(context, handoffPill, durationMs = 1800L, delayMs = 280L)
+          } else {
+            val strategy = bandit.selectDecelerationStrategy(snapshot)
+            launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
+          }
+        }
+        "TIER_B_SAME_APP_DEEP_LINK"
+      }
+      else -> {
         val strategy = bandit.selectDecelerationStrategy(snapshot)
         launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
         "TIER_C_LOW_RAM_VIEWPAGER_${strategy.name}"
       }
-    } else {
-      val strategy = bandit.selectDecelerationStrategy(snapshot)
-      launchNativeXmlFallback(snapshot.sessionMinutes, strategy.name)
-      "TIER_C_LOW_RAM_VIEWPAGER_${strategy.name}"
     }
     Thread {
       telemetry.logInterventionTriggered(targetPackage, snapshot.sessionMinutes, tier, selectedVideo?.id)
     }.start()
     return tier
+  }
+
+  /**
+   * Tier B: same-profile, same-app deep link using FLAG_ACTIVITY_NEW_TASK only
+   * (no CLEAR_TOP) so the app handles it in its existing task via onNewIntent
+   * and Back returns to the student's previous content.
+   */
+  private fun buildSameProfileDeepLinkIntent(targetPackage: String, rawDeepLink: String?): Intent? {
+    val safeDeepLink = rawDeepLink?.trim()?.takeIf { LearningMirrorPolicy.isAllowedDeepLink(it) } ?: return null
+    val pm = context.packageManager
+    for (candidate in LearningMirrorPolicy.packageCandidatesFor(targetPackage)) {
+      if (pm.getLaunchIntentForPackage(candidate) == null) continue
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(safeDeepLink)).apply {
+        setPackage(candidate)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      if (intent.resolveActivity(pm) != null) return intent
+    }
+    return null
   }
 
   fun canSafelyLaunchWorkProfileApp(): Boolean {
@@ -253,6 +300,7 @@ class InterventionDispatcher(private val context: Context) {
     sessionMinutes: Int,
     deepLinkUrl: String?,
     badgeText: String,
+    sameAppFront: Boolean = false,
   ): Boolean {
     val intent = Intent(LearnShiftAdminReceiver.ACTION_LAUNCH_NEUTRAL_APP).apply {
       putExtra(LearnShiftAdminReceiver.EXTRA_TARGET_PKG, targetPackage)
@@ -262,6 +310,7 @@ class InterventionDispatcher(private val context: Context) {
       }
       putExtra(LearnShiftAdminReceiver.EXTRA_BADGE_TEXT, badgeText)
       putExtra(LearnShiftAdminReceiver.EXTRA_SHOW_LOCAL_PILL, false)
+      putExtra(LearnShiftAdminReceiver.EXTRA_SAME_APP_FRONT, sameAppFront)
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     return runCatching {

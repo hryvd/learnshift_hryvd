@@ -5,11 +5,12 @@
 export type ExtractResult = { text: string; note: string | null } | { error: string };
 
 export const LESSON_FILE_ACCEPT =
-  '.pdf,.docx,.txt,.md,.csv,.json,.html,text/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  '.pdf,.docx,.txt,.md,.csv,.html,.htm,text/plain,text/markdown,text/csv,text/html,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
-const MAX_BYTES = 15 * 1024 * 1024;
+const MAX_BYTES = 20 * 1024 * 1024;
 const MAX_PAGES = 40;
 const MAX_CHARS = 10000;
+const ALLOWED_EXTS = new Set(['pdf', 'docx', 'txt', 'md', 'csv', 'html', 'htm']);
 
 function ext(name: string) {
   return name.toLowerCase().split('.').pop() ?? '';
@@ -85,15 +86,23 @@ function htmlToText(html: string): string {
 }
 
 export async function extractLessonFile(file: File): Promise<ExtractResult> {
-  if (file.size > MAX_BYTES) return { error: 'That file is over 15 MB. Choose a smaller file or paste the lesson text.' };
+  if (file.size > MAX_BYTES) return { error: 'That file is over 20 MB' };
   const e = ext(file.name);
+  if (!ALLOWED_EXTS.has(e)) {
+    return { error: "We can't read this file type" };
+  }
   try {
     if (e === 'pdf' || file.type === 'application/pdf') return await readPdf(file);
     if (e === 'docx') return await readDocx(file);
-    if (e === 'doc') return { error: 'Old .doc files are not supported. Save it as .docx or PDF, then try again.' };
-    if (e === 'html' || e === 'htm' || file.type === 'text/html') return { text: htmlToText(await file.text()), note: null };
-    return { text: await file.text(), note: null };
+    if (e === 'html' || e === 'htm' || file.type === 'text/html') {
+      const text = htmlToText(await file.text());
+      if (text.trim().length < 1) return { error: 'That file has no readable text.' };
+      return { text, note: null };
+    }
+    const text = await file.text();
+    if (text.trim().length < 1) return { error: 'That file has no readable text.' };
+    return { text, note: null };
   } catch {
-    return { error: 'Could not read that file. Try another file or paste the lesson text.' };
+    return { error: 'Upload stopped, tap to try again' };
   }
 }

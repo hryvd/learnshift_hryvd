@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { router, useSegments } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 
-import { ShiftSheet } from '@/components/student/ShiftSheet';
+import { ShiftMorph } from '@/components/student/ShiftMorph';
 import { TabBar, type TabKey } from '@/components/ui';
-import { BarBlurHost, BarBlurTarget } from '@/components/ui/FloatingBar';
+import { BarBlurHost, BarBlurTarget, type WindowRect } from '@/components/ui/FloatingBar';
 import { useT } from '@/i18n/useT';
 import { useSession } from '@/store/useSession';
 
@@ -13,14 +13,15 @@ const TAB_KEYS: readonly TabKey[] = ['home', 'learn', 'insights', 'profile'];
 const isTab = (s: string | undefined): s is TabKey => !!s && (TAB_KEYS as readonly string[]).includes(s);
 
 /**
- * Four tabs plus the raised Shift button. The bar renders beside the navigator
- * (not inside it) so Android's live blur can sample the screens and the Shift
- * sheet underneath it.
+ * Four tabs plus the raised Shift button. The Shift morph card renders AFTER
+ * the floating bar so it covers the bar cleanly when expanded.
  */
 export default function TabsLayout() {
   const t = useT();
   const open = useSession((s) => s.shiftOpen);
   const setOpen = useSession((s) => s.setShiftOpen);
+  const [origin, setOrigin] = useState<WindowRect | null>(null);
+  const [morphMounted, setMorphMounted] = useState(false);
 
   // While a stack screen is pushed over the tabs, the last segment isn't a tab;
   // keep highlighting the tab the user came from.
@@ -38,7 +39,6 @@ export default function TabsLayout() {
             <Tabs.Screen name="insights" />
             <Tabs.Screen name="profile" />
           </Tabs>
-          <ShiftSheet visible={open} onClose={() => setOpen(false)} />
         </BarBlurTarget>
         <TabBar
           active={active}
@@ -47,8 +47,16 @@ export default function TabsLayout() {
             if (k !== active) router.navigate(`/${k}`);
           }}
           onShift={() => setOpen(!open)}
+          onMeasureShift={setOrigin}
           shiftOpen={open}
+          shiftHidden={open || morphMounted}
           labels={t.tabs}
+        />
+        <ShiftMorph
+          visible={open}
+          origin={origin}
+          onClose={() => setOpen(false)}
+          onPresenceChange={setMorphMounted}
         />
       </View>
     </BarBlurHost>

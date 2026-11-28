@@ -78,6 +78,12 @@ export const SUBJECTS: { id: SubjectId; label: string }[] = [
   { id: 'araling-panlipunan', label: 'Araling Panlipunan' },
 ];
 
+/** The bundled question bank covers Grades 1–10; Grades 11–12 practice from the Grade 10 pool. */
+export function practiceGrade(grade: number): number {
+  const g = Math.trunc(Number(grade) || 1);
+  return Math.max(1, Math.min(10, g));
+}
+
 /** Bundled practice content; answers never require a network request. */
 export const LOCAL_QUESTIONS = [
   ...math,

@@ -158,6 +158,8 @@ const guardianEn = {
   activeFor: (dur: string) => `${dur} now`,
   appToday: (dur: string) => `${dur} today`,
   lastSeen: (t: string) => `Last active ${t}`,
+  recentlyUsed: (label: string, minsAgo: number) =>
+    `Recently used: ${label} · ${Math.max(1, minsAgo)} min ago`,
   straight: (m: number) => `${m} min straight`,
   breakIn: (m: number) => (m <= 0 ? 'Break reminder sent' : `Break in ~${m} min`),
   learningProfileTitle: 'Learning summary',
@@ -339,6 +341,8 @@ const guardianFil: typeof guardianEn = {
   activeFor: (dur: string) => `${dur} ngayon`,
   appToday: (dur: string) => `${dur} ngayon (araw)`,
   lastSeen: (t) => `Huling aktibo ${t}`,
+  recentlyUsed: (label, minsAgo) =>
+    `Huling ginamit: ${label} · ${Math.max(1, minsAgo)} min ang nakalipas`,
   straight: (m) => `${m} min tuloy-tuloy`,
   breakIn: (m) => (m <= 0 ? 'Naipadala ang paalala' : `Break sa ~${m} min`),
   learningProfileTitle: 'Buod ng pag-aaral',
