@@ -143,7 +143,7 @@ export function ShiftMorph({
   });
 
   const scrimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.get(), [0, 1], [0, 1], Extrapolation.CLAMP),
+    opacity: 1 - (1 - Math.min(1, Math.max(0, progress.get()))) ** 2, // ease-out
   }));
 
   // 1. Shape: frame + radius + color, from the button circle to the card.
@@ -178,7 +178,7 @@ export function ShiftMorph({
       borderBottomLeftRadius: bottom,
       borderBottomRightRadius: bottom,
       opacity: 1,
-      backgroundColor: interpolateColor(q, [0, 0.55], [c.accent, c.bg]),
+      backgroundColor: interpolateColor(q, [0, 0.65], [c.accent, c.bg]),
     };
   });
 
@@ -188,7 +188,7 @@ export function ShiftMorph({
     const p = progress.get();
     // Open: content arrives late. Close: it leaves first, before the shape shrinks.
     const cp = opening
-      ? interpolate(p, [0.38, 0.92], [0, 1], Extrapolation.CLAMP)
+      ? interpolate(p, [0.3, 0.95], [0, 1], Extrapolation.CLAMP)
       : interpolate(p, [0.66, 0.97], [0, 1], Extrapolation.CLAMP);
     return {
       opacity: reduced ? p : cp,
