@@ -49,8 +49,9 @@ export function FeatureTile({ title, status, statusAccent, art, onPress, style, 
         ) : null}
       </View>
       {art ? (
-        <View style={styles.art} pointerEvents="none">
-          {art}
+        // Clip the bleeding art on an inner layer, so the tile itself never clips its own shadow (iOS).
+        <View style={styles.artClip} pointerEvents="none">
+          <View style={styles.art}>{art}</View>
         </View>
       ) : null}
     </>
@@ -83,12 +84,13 @@ export const DarkTile = FeatureTile;
 const PAPER = '#E4E2DD';
 /** Contact shadow + soft ambient lift + a 1px top highlight. */
 const DAY_SHADOW =
-  '0 1px 2px rgba(28,25,20,0.06), 0 8px 22px -10px rgba(28,25,20,0.18), inset 0 1px 0 rgba(255,255,255,0.7)';
+  '0 1px 3px rgba(28,25,20,0.10), 0 12px 28px -10px rgba(28,25,20,0.26), inset 0 1px 0 rgba(255,255,255,0.7)';
 const NIGHT_SHADOW =
   '0 1px 2px rgba(0,0,0,0.30), 0 10px 24px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)';
 
 const styles = StyleSheet.create({
-  tile: { borderRadius: radius.tile, overflow: 'hidden', padding: 16 },
+  tile: { borderRadius: radius.tile, padding: 16 },
+  artClip: { ...StyleSheet.absoluteFillObject, borderRadius: radius.tile, overflow: 'hidden' },
   label: { gap: 2, maxWidth: '78%', zIndex: 1 },
   art: { position: 'absolute', right: -8, bottom: -8, transform: [{ scale: 0.8 }], transformOrigin: 'right bottom' },
 });
