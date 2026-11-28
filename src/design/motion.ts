@@ -24,9 +24,9 @@ export const spring = {
   /** Press release back to rest (~300 ms, no overshoot). */
   release: { duration: 300, dampingRatio: 1, reduceMotion: ReduceMotion.System },
   /** + button → Shift card. Unhurried, near-critical (Apple-style, no visible bounce). */
-  morphOpen: { duration: 520, dampingRatio: 0.88, reduceMotion: ReduceMotion.System },
+  morphOpen: { duration: 680, dampingRatio: 0.92, reduceMotion: ReduceMotion.System },
   /** Card → + button. Faster than open, no overshoot. */
-  morphClose: { duration: 380, dampingRatio: 1, reduceMotion: ReduceMotion.System },
+  morphClose: { duration: 460, dampingRatio: 1, reduceMotion: ReduceMotion.System },
 } as const satisfies Record<string, WithSpringConfig>;
 
 export const pressScale = {
