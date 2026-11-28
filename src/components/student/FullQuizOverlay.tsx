@@ -17,7 +17,7 @@ import { ArrowUp, Check, CheckCircle, House, Lightbulb } from '@/components/ui/i
 
 import { Paty } from '@/components/mascot/Paty';
 import { QuestionVisual } from '@/components/student/QuestionVisual';
-import { Text } from '@/components/ui';
+import { PressableScale, Text } from '@/components/ui';
 import { practiceGrade, SUBJECTS, type LocalQuestion, type SubjectId } from '@/data/localQuestions';
 import { pickSession } from '@/data/pickQuestions';
 import type { SkillId } from '@/data/skills';
@@ -490,11 +490,11 @@ function Action({
 }
 function SecondaryAction({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={styles.secondary}>
+    <PressableScale onPress={onPress} accessibilityRole="button" style={styles.secondary}>
       <Text variant="headline" color={GREEN}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 const styles = StyleSheet.create({

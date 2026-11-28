@@ -19,6 +19,14 @@ export const spring = {
   toggle: { damping: 20, stiffness: 320, mass: 0.85, reduceMotion: ReduceMotion.System },
   /** Rows a switch reveals or hides: ~250 ms, no bounce. */
   reveal: { damping: 24, stiffness: 260, mass: 0.9, reduceMotion: ReduceMotion.System },
+  /** Critically damped UI settle (~280 ms): release, thumbs, toggles. Never wobbles. */
+  ui: { duration: 280, dampingRatio: 1, reduceMotion: ReduceMotion.System },
+  /** Press release back to rest (~300 ms, no overshoot). */
+  release: { duration: 300, dampingRatio: 1, reduceMotion: ReduceMotion.System },
+  /** + button → Shift card. Unhurried, near-critical (Apple-style, no visible bounce). */
+  morphOpen: { duration: 680, dampingRatio: 0.92, reduceMotion: ReduceMotion.System },
+  /** Card → + button. Same unhurried pace as open (owner's call), no overshoot. */
+  morphClose: { duration: 680, dampingRatio: 1, reduceMotion: ReduceMotion.System },
 } as const satisfies Record<string, WithSpringConfig>;
 
 export const pressScale = {
@@ -38,7 +46,14 @@ export const timing = {
 export const ease = {
   inOut: Easing.bezier(0.45, 0, 0.55, 1),
   out: Easing.bezier(0.22, 1, 0.36, 1),
+  /** Strong ease-out for press-in and entrances. */
+  outStrong: Easing.bezier(0.23, 1, 0.32, 1),
+  /** iOS drawer curve. */
+  drawer: Easing.bezier(0.32, 0.72, 0, 1),
 } as const;
+
+/** Press-in duration: fast enough to feel instant, long enough to be seen. */
+export const PRESS_IN_MS = 110;
 
 /**
  * Entry animation for stacked cards: translateY 12 → 0, opacity 0 → 1,
