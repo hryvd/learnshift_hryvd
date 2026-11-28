@@ -18,6 +18,7 @@ import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { useNightGuard } from '@/hooks/useNightGuard';
 import { useL, useT } from '@/i18n/useT';
+import { newRewardSessionId, quizRewardKey, rewardAmount } from '@/lib/rewards';
 import { gapEngine } from '@/services/ai/gapEngine';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -48,6 +49,7 @@ export default function Quiz() {
   useNightGuard();
   const { skillId, preset } = useLocalSearchParams<{ skillId: SkillId; preset?: string }>();
   const skill = (skillId ?? 'fractions') as SkillId;
+  const [sessionId] = useState(() => newRewardSessionId('q'));
   const [startMastery] = useState(() => useAppStore.getState().mastery);
   const [startRoot] = useState(() => gapEngine.rootGap(startMastery, skill));
 
@@ -83,7 +85,7 @@ export default function Quiz() {
     const s = useAppStore.getState();
     s.answer(
       { skill: q.skill, correct, seconds: (Date.now() - started.current) / 1000, hints: showHint ? 1 : 0 },
-      { questionId: q.id, chosen: i, context: 'quiz' },
+      { questionId: q.id, chosen: i, context: 'quiz', clientId: `${sessionId}:${asked.length + 1}` },
     );
     const nextLevel = Math.max(1, Math.min(5, level + (correct ? 1 : -1)));
     if (nextLevel !== level) setLevelMsg(t.quiz.levelChange(level, nextLevel));
@@ -139,7 +141,15 @@ export default function Quiz() {
   }));
 
   if (done) {
-    return <Results skill={skill} score={score} startMastery={startMastery} startRoot={startRoot} />;
+    return (
+      <Results
+        sessionId={sessionId}
+        skill={skill}
+        score={score}
+        startMastery={startMastery}
+        startRoot={startRoot}
+      />
+    );
   }
 
   const correct = picked === q.answer;
@@ -259,11 +269,13 @@ function LevelDot({ on }: { on: boolean }) {
 }
 
 function Results({
+  sessionId,
   skill,
   score,
   startMastery,
   startRoot,
 }: {
+  sessionId: string;
   skill: SkillId;
   score: number;
   startMastery: Record<SkillId, number>;
@@ -274,16 +286,25 @@ function Results({
   const L = useL();
   const insets = useSafeAreaInsets();
   const mastery = useAppStore((s) => s.mastery);
+  const coins = useAppStore((s) => s.coins);
   const root = gapEngine.rootGap(mastery, skill);
-  const reward = score * 10;
-  const [start] = useState(() => useAppStore.getState().coins);
-  const [shown, setShown] = useState(start);
+  const reward = rewardAmount('quiz', { correct: score });
   const [w, setW] = useState(0);
   const [topH, setTopH] = useState(0);
   const [earnAt, setEarnAt] = useState<{ x: number; y: number } | null>(null);
   const [play, setPlay] = useState(0);
-  const committed = useRef(false);
   const skills = Array.from(new Set<SkillId>([skill, startRoot, root]));
+
+  // Claim immediately when Results mounts; CoinFly is decoration only.
+  useEffect(() => {
+    if (reward <= 0) return;
+    useAppStore.getState().claimReward({
+      key: quizRewardKey(sessionId),
+      kind: 'quiz',
+      ref: sessionId,
+      meta: { sessionId, correct: score },
+    });
+  }, [sessionId, score, reward]);
 
   useEffect(() => {
     if (!reward) return;
@@ -291,13 +312,8 @@ function Results({
     return () => clearTimeout(id);
   }, [reward]);
 
-  const arrive = (i: number) => {
+  const arrive = () => {
     haptic.light();
-    setShown(start + Math.round(((i + 1) / 6) * reward));
-    if (i === 5 && !committed.current) {
-      committed.current = true;
-      useAppStore.getState().addCoins(reward);
-    }
   };
 
   return (
@@ -310,7 +326,7 @@ function Results({
     >
       <View style={styles.top} onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
         <View style={styles.flex} />
-        <CoinCounter value={shown} />
+        <CoinCounter value={coins} />
       </View>
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.center}>

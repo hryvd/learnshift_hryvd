@@ -22,7 +22,7 @@ One line each. Newest at the bottom.
 - Home tab route is `/home`, not `(student)/(tabs)/index`, so it doesn't collide with the root `index.tsx` role redirect.
 - Guardian and Teacher live under real segments (`/guardian`, `/teacher`) instead of route groups, so web URLs read well.
 - Onboarding is one paged screen (`/onboarding`) with spring page transitions, not nine routes; back/forward stay in one place.
-- The Shift sheet is an in-place bottom sheet rendered inside the tab-bar slot (under the bar), so the center button stays tappable and rotates to ×; no `shift.tsx` route.
+- The Shift sheet is `ShiftMorph`, rendered **after** `TabBar` so the center `+` button morphs in place into a full-width card covering the tab bar, rotating `+` into `×` at the card's top-right; `TabBar` is inert while open, and no `shift.tsx` route exists (D4).
 - In-screen sheets use our own `BottomSheet` (Reanimated + gesture-handler v3 `usePanGesture`); `@gorhom/bottom-sheet` stays out.
 - Tabs come from `expo-router/js-tabs` with a custom `tabBar`; `Tabs` from `expo-router` is deprecated in SDK 58.
 - BKT updates are damped (18% of each step) and "weak" means < 60%: raw BKT jumped Fractions from 41% to 79% on one correct answer.
@@ -42,3 +42,9 @@ One line each. Newest at the bottom.
 - Anod (drift) is the intentional exception to pure zero-pressure island design: falling behind on 7-day Agos momentum (effort + accuracy + improvement) triggers gentle reversible drift (fog, choppy water, stretched bridge, Paty waving a paddle) without ever losing buildings.
 - Minor-safe social boundary: friend discovery uses 6-char codes/QR or shared classmates (no public search); guardians can toggle social and chat off and inspect friend lists, never message contents; EN/FIL profanity filter runs on client and server.
 - Kapuluan Friend QR Passes render ISO/IEC 18004 ECC-H codes in pure `react-native-svg` (`qrcode` matrix) encoding `learnshift://friends?code=XXXXXX`, with runtime-guarded `expo-camera` scanning and `react-native-view-shot` + `expo-sharing` card export (Canvas PNG fallback on web) so older native APKs stay crash-free.
+- Reward coins are server-authoritative via an append-only `reward_events` ledger and idempotent `claim_reward` RPC (600/day cap, coin-freeze trigger on `progress`, optimistic client balance with settled server confirmation) (D1).
+- Grades 1–12 are supported in `Profile → Personalization`; Senior High (11–12) saves truthfully and draws practice questions via `practiceGrade(g) = min(g, 10)`, while Learn-tab subject cards act as session choices only (D2).
+- App Mirror supports `Smart | Timer | Both` triggers (`5|10|15|20|30` min continuous foreground countdown, <2 min pauses, ≥2 min resets, shared 180 s cooldown) and Tier A → Tier B (same-profile deep link without `CLEAR_TOP`) → Tier C handoff with a 280 ms fade mask (D3).
+- Feature tiles (`FeatureTile`, re-exported as `DarkTile`) render on a white `c.card` surface with hairline border and subtle shadow in Day theme while preserving `tileDark` in Night; `UploadDropCard` makes the entire card the drop/click target with an explicit upload state machine (D5, D6).
+- Teacher uploads keep originals in a private `module-sources` bucket (`module_sources` + `source-signed-url`), generate private `quiz_drafts` with 800 ms autosave and optimistic version checks, and publish immutable snapshots to `class_modules` only through `assign_quiz` (D7).
+- Media pausing uses transient audio focus only (never `KEYCODE_MEDIA_PLAY`), `lastUsedPkg` records only recent (<10 min) distracting non-audio apps, and `Tracker` fallback uses non-sticky `lastTimeVisible` tagged `confidence = 'inferred'` so Guardians never see false LIVE Spotify rows (D8).

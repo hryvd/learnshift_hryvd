@@ -28,6 +28,7 @@ import { radius, space } from '@/design/tokens';
 import { useNightGuard } from '@/hooks/useNightGuard';
 import { useLive } from '@/hooks/useLive';
 import { useL, useT } from '@/i18n/useT';
+import { breakRewardKey, newRewardSessionId, REWARD_RULES } from '@/lib/rewards';
 import { respondToNudge } from '@/services/backend/api';
 import { exitToHome, exitToLastApp } from '@/services/exitBreak';
 import { lastUsedApp } from '@/services/monitor';
@@ -37,7 +38,7 @@ const SECONDS = 45;
 
 /** Seconds elapsed since an epoch-ms timestamp (kept out of render code). */
 const secondsSince = (t: number) => (Date.now() - t) / 1000;
-const REWARD = 20;
+const REWARD = REWARD_RULES.breakAmount;
 
 type Phase = { kind: 'concept'; i: number } | { kind: 'q'; i: number } | { kind: 'result' };
 
@@ -51,6 +52,7 @@ export default function BreakPlayer() {
   const lesson = lessonFor(skill);
   useNightGuard();
   const live = useLive();
+  const [breakId] = useState(() => newRewardSessionId('brk'));
   const [before] = useState(() => useAppStore.getState().mastery[lesson.id]);
   const [phase, setPhase] = useState<Phase>({ kind: 'concept', i: 0 });
   const [left, setLeft] = useState(SECONDS);
@@ -130,7 +132,12 @@ export default function BreakPlayer() {
       ) : null}
 
       {phase.kind === 'result' ? (
-        <Result skillLabel={L(SHORT[lesson.id])} from={before} to={useAppStore.getState().mastery[lesson.id]} />
+        <Result
+          breakId={breakId}
+          skillLabel={L(SHORT[lesson.id])}
+          from={before}
+          to={useAppStore.getState().mastery[lesson.id]}
+        />
       ) : null}
     </View>
   );
@@ -344,28 +351,31 @@ function QuestionStep({ qid, label, last, onNext }: { qid: string; label: string
   );
 }
 
-function Result({ skillLabel, from, to }: { skillLabel: string; from: number; to: number }) {
+function Result({ breakId, skillLabel, from, to }: { breakId: string; skillLabel: string; from: number; to: number }) {
   const t = useT();
   const { c } = useTheme();
+  const coins = useAppStore((s) => s.coins);
   const [appName] = useState(() => lastUsedApp());
-  const [start] = useState(() => useAppStore.getState().coins);
-  const [shown, setShown] = useState(start);
   const [box, setBox] = useState<{ w: number; label: LayoutRectangle | null }>({ w: 0, label: null });
   const [play, setPlay] = useState(0);
-  const committed = useRef(false);
+
+  // Claim immediately when the result screen mounts; CoinFly is decoration only.
+  useEffect(() => {
+    useAppStore.getState().claimReward({
+      key: breakRewardKey(breakId),
+      kind: 'break',
+      ref: breakId,
+      meta: {},
+    });
+  }, [breakId]);
 
   useEffect(() => {
     const id = setTimeout(() => setPlay(1), 450);
     return () => clearTimeout(id);
   }, []);
 
-  const arrive = (i: number) => {
+  const arrive = () => {
     haptic.light();
-    setShown(start + Math.round(((i + 1) / 6) * REWARD));
-    if (i === 5 && !committed.current) {
-      committed.current = true;
-      useAppStore.getState().addCoins(REWARD);
-    }
   };
 
   const fromPt = box.label ? { x: box.label.x + box.label.width / 2, y: box.label.y + box.label.height / 2 } : null;
@@ -375,7 +385,7 @@ function Result({ skillLabel, from, to }: { skillLabel: string; from: number; to
     <View style={styles.flex}>
       <View style={styles.result} onLayout={(e) => setBox((b) => ({ ...b, w: e.nativeEvent.layout.width }))}>
         <View style={styles.counter}>
-          <CoinCounter value={shown} />
+          <CoinCounter value={coins} />
         </View>
         <Paty expression="cheering" size={150} />
         <Text variant="largeTitle" align="center">

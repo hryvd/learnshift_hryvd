@@ -13,12 +13,15 @@ type Session = {
   lockRequestId: string | null;
   /** Epoch ms when the last Sentinel overlay card appeared. */
   lastCardAt: number | null;
+  /** Transient student toast message (e.g., daily reward cap). */
+  toast: string | null;
   setSimMinutes: (n: number) => void;
   setShiftOpen: (v: boolean) => void;
   setFocusUntil: (t: number | null) => void;
   bumpScenario: () => void;
   setLockRequestId: (id: string | null) => void;
   setLastCardAt: (t: number | null) => void;
+  showToast: (msg: string | null) => void;
 };
 
 export const useSession = create<Session>()((set) => ({
@@ -28,10 +31,12 @@ export const useSession = create<Session>()((set) => ({
   scenarioRun: 0,
   lockRequestId: null,
   lastCardAt: null,
+  toast: null,
   setSimMinutes: (simMinutes) => set({ simMinutes }),
   setShiftOpen: (shiftOpen) => set({ shiftOpen }),
   setFocusUntil: (focusUntil) => set({ focusUntil }),
   bumpScenario: () => set((s) => ({ scenarioRun: s.scenarioRun + 1 })),
   setLockRequestId: (lockRequestId) => set({ lockRequestId }),
   setLastCardAt: (lastCardAt) => set({ lastCardAt }),
+  showToast: (toast) => set({ toast }),
 }));

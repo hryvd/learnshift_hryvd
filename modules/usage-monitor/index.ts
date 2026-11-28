@@ -70,11 +70,16 @@ type UsageMonitorNative = {
     lastVideoId?: string;
     lastVideoTitle?: string;
     catalogCount?: number;
+    mirrorTrigger?: 'smart' | 'timer' | 'both';
+    mirrorTimerMin?: number;
+    timerRemainingSec?: number | null;
+    timerPaused?: boolean;
   };
   provisionMirrorWorkProfile?(): boolean;
   openOemAutostart?(): void;
   requestSmartStudyGuard?(enabled: boolean): Promise<boolean>;
   setMirrorAutoEnabled?(enabled: boolean): boolean;
+  setMirrorTrigger?(mode: 'smart' | 'timer' | 'both', minutes: number): boolean;
   triggerMirrorIntervention?(targetPkg: string): string;
   triggerMirrorLearningShift?(targetPkg: string): Promise<{
     tier: string;

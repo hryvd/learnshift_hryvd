@@ -18,7 +18,7 @@ import type { BuildingId } from '@/data/seed';
 import { Platform } from 'react-native';
 
 import { errorText, functionError, supabase } from '@/lib/supabase';
-import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
+import type { ClassModule, ModuleFlashcard, ModuleQuestion, QuizDraft } from '@/services/ai/moduleGenerator';
 import type { Lang, Role } from '@/store/useAppStore';
 import { refreshProfile, useAuth } from '@/store/useAuth';
 import type { TutorAnswer, TutorVariant } from '@/services/types';
@@ -37,8 +37,8 @@ export async function signUp(input: {
   grade?: number | null;
   lang: Lang;
 }) {
-  if (input.role === 'student' && (!Number.isInteger(input.grade) || input.grade! < 1 || input.grade! > 10)) {
-    throw new Error('Choose a grade from 1 to 10.');
+  if (input.role === 'student' && (!Number.isInteger(input.grade) || input.grade! < 1 || input.grade! > 12)) {
+    throw new Error('Choose a grade from 1 to 12.');
   }
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
@@ -207,8 +207,8 @@ export async function updateClassModule(mod: ClassModule) {
 }
 
 export async function updateClass(id: string, patch: { name?: string; grade?: number }) {
-  if (patch.grade !== undefined && (!Number.isInteger(patch.grade) || patch.grade < 1 || patch.grade > 10)) {
-    throw new Error('Choose a grade from 1 to 10.');
+  if (patch.grade !== undefined && (!Number.isInteger(patch.grade) || patch.grade < 1 || patch.grade > 12)) {
+    throw new Error('Choose a grade from 1 to 12.');
   }
   if (patch.name !== undefined && !patch.name.trim()) throw new Error('Class name is required.');
   const { error } = await supabase
@@ -221,6 +221,194 @@ export async function updateClass(id: string, patch: { name?: string; grade?: nu
 export async function deleteClassModule(id: string) {
   const { error } = await supabase.from('class_modules').delete().eq('id', id);
   if (error) fail(error);
+}
+
+// ── Quiz drafts, immutable class assignments & signed original URLs ──────
+
+type RawDraft = {
+  id: string;
+  source_id: string | null;
+  title: string;
+  subject: string;
+  summary: string | null;
+  flashcards: unknown;
+  questions: unknown;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  module_sources?: { file_name: string } | { file_name: string }[] | null;
+};
+
+function mapDraft(d: RawDraft): QuizDraft {
+  const src = Array.isArray(d.module_sources) ? d.module_sources[0] : d.module_sources;
+  return {
+    id: d.id,
+    sourceId: d.source_id ?? null,
+    sourceName: src?.file_name ?? null,
+    title: d.title,
+    subject: d.subject,
+    summary: d.summary ?? '',
+    flashcards: (d.flashcards ?? []) as ModuleFlashcard[],
+    questions: (d.questions ?? []) as ModuleQuestion[],
+    version: d.version ?? 1,
+    createdAt: d.created_at,
+    updatedAt: d.updated_at,
+  };
+}
+
+export async function listQuizDrafts(): Promise<QuizDraft[]> {
+  const me = useAuth.getState().profile?.id;
+  if (!me) return [];
+  const { data, error } = await supabase
+    .from('quiz_drafts')
+    .select('id, source_id, title, subject, summary, flashcards, questions, version, created_at, updated_at, module_sources(file_name)')
+    .eq('teacher_id', me)
+    .is('archived_at', null)
+    .order('updated_at', { ascending: false })
+    .limit(60);
+  if (error) fail(error);
+  return ((data ?? []) as RawDraft[]).map(mapDraft);
+}
+
+export async function createQuizDraft(input: {
+  sourceId?: string | null;
+  title: string;
+  subject: string;
+  summary: string;
+  flashcards: ModuleFlashcard[];
+  questions: ModuleQuestion[];
+}): Promise<QuizDraft> {
+  const { data, error } = await supabase
+    .from('quiz_drafts')
+    .insert({
+      source_id: input.sourceId ?? null,
+      title: input.title.trim().slice(0, 120) || 'Lesson Module',
+      subject: input.subject.trim().slice(0, 40) || 'general',
+      summary: input.summary,
+      flashcards: input.flashcards,
+      questions: input.questions,
+    })
+    .select('id, source_id, title, subject, summary, flashcards, questions, version, created_at, updated_at, module_sources(file_name)')
+    .single();
+  if (error || !data) fail(error ?? new Error('Could not save draft.'));
+  return mapDraft(data as RawDraft);
+}
+
+export async function updateQuizDraft(
+  id: string,
+  expectedVersion: number,
+  patch: {
+    title: string;
+    subject: string;
+    summary: string;
+    flashcards: ModuleFlashcard[];
+    questions: ModuleQuestion[];
+  },
+): Promise<{ conflict: false; draft: QuizDraft } | { conflict: true; latest: QuizDraft | null }> {
+  const { data, error } = await supabase
+    .from('quiz_drafts')
+    .update({
+      title: patch.title.trim().slice(0, 120) || 'Lesson Module',
+      subject: patch.subject.trim().slice(0, 40) || 'general',
+      summary: patch.summary,
+      flashcards: patch.flashcards,
+      questions: patch.questions,
+    })
+    .eq('id', id)
+    .eq('version', expectedVersion)
+    .is('archived_at', null)
+    .select('id, source_id, title, subject, summary, flashcards, questions, version, created_at, updated_at, module_sources(file_name)');
+  if (error) fail(error);
+  const updated = (data as RawDraft[] | null)?.[0];
+  if (updated) return { conflict: false, draft: mapDraft(updated) };
+
+  const { data: latestRow } = await supabase
+    .from('quiz_drafts')
+    .select('id, source_id, title, subject, summary, flashcards, questions, version, created_at, updated_at, module_sources(file_name)')
+    .eq('id', id)
+    .maybeSingle();
+  return { conflict: true, latest: latestRow ? mapDraft(latestRow as RawDraft) : null };
+}
+
+export async function archiveQuizDraft(id: string) {
+  const { error } = await supabase
+    .from('quiz_drafts')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) fail(error);
+}
+
+type RawAssignedMod = {
+  id: string;
+  class_id: string;
+  title: string;
+  subject: string;
+  source_name: string | null;
+  summary: string | null;
+  flashcards: unknown;
+  questions: unknown;
+  published: boolean;
+  quiz_id: string | null;
+  quiz_version: number | null;
+  assigned_at: string | null;
+  share_source: boolean;
+  source_id: string | null;
+  created_at: string;
+};
+
+export async function assignQuiz(
+  quizId: string,
+  expectedVersion: number,
+  classIds: string[],
+  shareSource = false,
+): Promise<
+  | { status: 'assigned'; version: number; modules: ClassModule[] }
+  | { status: 'conflict'; currentVersion: number }
+> {
+  const { data, error } = await supabase.rpc('assign_quiz', {
+    p_quiz_id: quizId,
+    p_expected_version: expectedVersion,
+    p_class_ids: classIds,
+    p_share_source: shareSource,
+  });
+  if (error) fail(error);
+  const res = data as {
+    status: 'assigned' | 'conflict';
+    version?: number;
+    current_version?: number;
+    modules?: RawAssignedMod[];
+  };
+  if (res.status === 'conflict') {
+    return { status: 'conflict', currentVersion: res.current_version ?? expectedVersion + 1 };
+  }
+  const modules: ClassModule[] = (res.modules ?? []).map((m) => ({
+    id: m.id,
+    classId: m.class_id,
+    title: m.title,
+    subject: m.subject,
+    sourceName: m.source_name,
+    summary: m.summary ?? '',
+    flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+    questions: (m.questions ?? []) as ModuleQuestion[],
+    published: !!m.published,
+    createdAt: m.created_at,
+    quizId: m.quiz_id,
+    quizVersion: m.quiz_version,
+    assignedAt: m.assigned_at,
+    shareSource: !!m.share_source,
+    sourceId: m.source_id,
+  }));
+  return { status: 'assigned', version: res.version ?? expectedVersion, modules };
+}
+
+export async function getSourceSignedUrl(input: {
+  moduleId?: string;
+  draftId?: string;
+  sourceId?: string;
+}): Promise<{ url: string; expiresIn: number; fileName: string; mime: string; sizeBytes: number; sha256: string }> {
+  const { data, error } = await supabase.functions.invoke('source-signed-url', { body: input });
+  if (error) throw new Error(await functionError(error));
+  return data as { url: string; expiresIn: number; fileName: string; mime: string; sizeBytes: number; sha256: string };
 }
 
 // ── Time requests and controls ───────────────────────────────────────────

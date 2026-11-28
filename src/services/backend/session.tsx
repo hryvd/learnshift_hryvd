@@ -69,7 +69,7 @@ export function SessionEffects() {
       role: p.role,
       lang: p.lang,
       studentName: p.role === 'student' ? p.display_name : '',
-      ...(p.grade && s.userId !== id ? { learningGrade: Math.max(1, Math.min(10, p.grade)) } : {}),
+      ...(p.grade && s.userId !== id ? { learningGrade: Math.max(1, Math.min(12, p.grade)) } : {}),
       // Guardians and teachers finish setup inside their own home screens.
       ...(p.role !== 'student' ? { onboarded: true } : {}),
     });

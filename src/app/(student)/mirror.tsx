@@ -25,6 +25,7 @@ import {
   PillButton,
   PressableScale,
   ProgressBar,
+  SegmentedControl,
   Stagger,
   Text,
   Toggle,
@@ -46,17 +47,21 @@ import {
   getCatalogByPlatform,
   getMirrorStatus,
   MIRROR_PLATFORMS,
+  MIRROR_TIMER_MINUTES,
   OFFLINE_DECELERATION_CARDS,
   openLearningSeed,
   openOemAutostartSettings,
   provisionWorkProfile,
   setMirrorAuto,
+  setMirrorTrigger,
   setSmartStudyGuard,
   triggerMirrorLearningShift,
   type LearningVideoSeed,
   type MirrorPlatform,
   type MirrorShiftResult,
   type MirrorStatus,
+  type MirrorTimerMinutes,
+  type MirrorTriggerMode,
   type PacingMode,
   type VideoDisplayRecord,
 } from '@/services/monitor/mirror';
@@ -187,6 +192,30 @@ export default function MirrorAppScreen() {
 
   const lastVideoTitle = status.lastVideoTitle || lastShift?.video?.titleOrTopic || '';
 
+  const showTriggerControls = !status.nativeSupported || status.triggerSupported;
+  const timerModeActive = status.mirrorTrigger === 'timer' || status.mirrorTrigger === 'both';
+  const timerStatusLine = (() => {
+    if (!status.mirrorAutoEnabled || !timerModeActive) return null;
+    if (status.timerPaused) return t.mirror.timerStatusPaused;
+    if (status.timerRemainingSec != null) {
+      if (status.timerRemainingSec < 60) return t.mirror.timerStatusSoon;
+      return t.mirror.timerStatusNext(Math.max(1, Math.round(status.timerRemainingSec / 60)));
+    }
+    return t.mirror.timerStatusNext(status.mirrorTimerMin);
+  })();
+
+  const handleTriggerChange = (mode: MirrorTriggerMode, minutes: MirrorTimerMinutes) => {
+    haptic.select();
+    setMirrorTrigger(mode, minutes);
+    setStatus((s) => ({
+      ...s,
+      mirrorTrigger: mode,
+      mirrorTimerMin: minutes,
+      timerRemainingSec:
+        s.mirrorAutoEnabled && (mode === 'timer' || mode === 'both') ? minutes * 60 : null,
+    }));
+  };
+
   return (
     <View style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}>
       <NavBar
@@ -266,6 +295,44 @@ export default function MirrorAppScreen() {
                 accessibilityLabel={t.mirror.autoTitle}
               />
             </View>
+
+            {showTriggerControls ? (
+              <View style={styles.triggerBlock}>
+                <Text variant="overline">{t.mirror.triggerLabel}</Text>
+                <SegmentedControl<MirrorTriggerMode>
+                  options={[
+                    { value: 'smart', label: t.mirror.triggerSmart },
+                    { value: 'timer', label: t.mirror.triggerTimer },
+                    { value: 'both', label: t.mirror.triggerBoth },
+                  ]}
+                  value={status.mirrorTrigger}
+                  onChange={(mode) => handleTriggerChange(mode, status.mirrorTimerMin)}
+                  compact
+                />
+                {timerModeActive ? (
+                  <View style={styles.timerPickerBlock}>
+                    <Text variant="caption" color="textSecondary">
+                      {t.mirror.timerEvery}
+                    </Text>
+                    <View style={styles.chipRow}>
+                      {MIRROR_TIMER_MINUTES.map((mins) => (
+                        <Chip
+                          key={mins}
+                          label={`${mins} min`}
+                          kind={status.mirrorTimerMin === mins ? 'accent' : 'outline'}
+                          onPress={() => handleTriggerChange(status.mirrorTrigger, mins)}
+                        />
+                      ))}
+                    </View>
+                    {timerStatusLine ? (
+                      <Text variant="caption" color="accent" style={fontFor(600)}>
+                        {timerStatusLine}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
 
             <View style={styles.rowBetween}>
               <View style={styles.flex}>
@@ -609,6 +676,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   gap: { gap: 12 },
+  triggerBlock: { gap: 8, paddingTop: 4 },
+  timerPickerBlock: { gap: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionsGap: { gap: 10 },
   rowBetween: {
     flexDirection: 'row',

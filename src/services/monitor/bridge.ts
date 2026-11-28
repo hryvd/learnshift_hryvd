@@ -8,6 +8,7 @@ import { create } from 'zustand';
 
 import type { LiveSession, NativeDay } from '../../../modules/usage-monitor';
 import { UsageMonitor } from '../../../modules/usage-monitor';
+import { practiceGrade } from '@/data/localQuestions';
 import { gapEngine } from '@/services/ai/gapEngine';
 import { onPulled, pullStudent } from '@/services/backend/sync';
 import { refreshProfile } from '@/store/useAuth';
@@ -108,7 +109,7 @@ export function useMonitorBridge(userId: string | null) {
       parentBreakIntervalSec: s.guardian.linked ? s.limits.breakIntervalSec : null,
       overlayIntervalSec,
       monitorAllApps,
-      grade: s.learningGrade,
+      grade: practiceGrade(s.learningGrade),
       subject: s.learningSubject,
     })
       .then(() => useDevice.getState().refresh())
@@ -167,7 +168,7 @@ export function useMonitorBridge(userId: string | null) {
         parentBreakIntervalSec: cur.guardian.linked ? cur.limits.breakIntervalSec : null,
         overlayIntervalSec: cur.sentinel?.overlayIntervalSec ?? 15,
         monitorAllApps: cur.sentinel?.monitorAllApps ?? false,
-        grade: cur.learningGrade,
+        grade: practiceGrade(cur.learningGrade),
         subject: cur.learningSubject,
       })
         .then(() => refresh())
