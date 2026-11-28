@@ -51,5 +51,5 @@ One line each. Newest at the bottom.
 - Motion tokens: presses go in with a 110 ms strong ease-out and come back on a critically damped spring (`spring.release`); `spring.ui` (280 ms, ratio 1) for thumbs, toggles and tabs. The underdamped `snappy` spring made every button wobble on release.
 - The + → Shift card morph is three layers (shape frame/radius/color, unscaled content, flying + → × glyph). Scaling one card non-uniformly squashed its text and squared its corners. Open `spring.morphOpen` (680 ms, ratio 0.92), close `spring.morphClose` (680 ms, ratio 1, same pace as open by request); the screen behind recedes (scale 0.97, 6 px down).
 - Tab changes no longer pop or bounce: they happen 100+ times a day.
-- Day feature tiles are warm paper `#E4E2DD` with a layered `boxShadow` (contact + ambient + 1 px top highlight), no border.
+- Day feature tiles are warm paper `#E9E7E2` with a layered `boxShadow` (contact + ambient + 1 px top highlight), no border.
 - Floating tab bar: ~5% blur (intensity 5), light tint for legibility, no sheen or strokes; edges get an inset-glow "light wrap" via `boxShadow`.
