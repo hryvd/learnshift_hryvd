@@ -52,6 +52,7 @@ class LearnShiftAdminReceiver : DeviceAdminReceiver() {
     const val EXTRA_DEEP_LINK_URL = "EXTRA_DEEP_LINK_URL"
     const val EXTRA_BADGE_TEXT = "EXTRA_BADGE_TEXT"
     const val EXTRA_SHOW_LOCAL_PILL = "EXTRA_SHOW_LOCAL_PILL"
+    const val EXTRA_SAME_APP_FRONT = "EXTRA_SAME_APP_FRONT"
 
     fun getComponentName(context: Context): ComponentName =
       ComponentName(context.applicationContext, LearnShiftAdminReceiver::class.java)
@@ -195,6 +196,12 @@ class WorkBridgeActivity : Activity() {
     val badgeText = intent.getStringExtra(EXTRA_BADGE_TEXT)?.takeIf { it.isNotBlank() }
       ?: "${sessionMin.coerceAtLeast(1)}m break · Learning Feed Mode"
     val showLocalPill = intent.getBooleanExtra(LearnShiftAdminReceiver.EXTRA_SHOW_LOCAL_PILL, true)
+    val sameAppFront = intent.getBooleanExtra(LearnShiftAdminReceiver.EXTRA_SAME_APP_FRONT, false)
+    val launchFlags = if (sameAppFront) {
+      Intent.FLAG_ACTIVITY_NEW_TASK
+    } else {
+      Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    }
 
     if (rawTargetPkg.isNullOrBlank() || !LearningMirrorPolicy.isAllowedTargetPackage(rawTargetPkg)) {
       finish()
@@ -209,7 +216,7 @@ class WorkBridgeActivity : Activity() {
     val launchedDirectVideo = if (safeDeepLink != null && resolvedPkg != null) {
       val videoIntent = Intent(Intent.ACTION_VIEW, Uri.parse(safeDeepLink)).apply {
         setPackage(resolvedPkg)
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        addFlags(launchFlags)
       }
       runCatching {
         if (videoIntent.resolveActivity(packageManager) != null) {
@@ -226,7 +233,7 @@ class WorkBridgeActivity : Activity() {
     // Priority 2: Launch the installed Work-Profile app's seeded learning home feed.
     val launchedAppHome = if (!launchedDirectVideo && resolvedPkg != null) {
       val homeIntent = packageManager.getLaunchIntentForPackage(resolvedPkg)?.apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        addFlags(launchFlags)
       }
       homeIntent != null && runCatching {
         startActivity(homeIntent)

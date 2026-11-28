@@ -9,9 +9,13 @@
 import { AppState } from 'react-native';
 
 import type { NudgeEntry } from '@/data/seed';
+import type { SubjectId } from '@/data/localQuestions';
 import { SKILLS, type SkillId } from '@/data/skills';
-import { supabase } from '@/lib/supabase';
+import en from '@/i18n/en';
+import fil from '@/i18n/fil';
 import { clampBedtimeStart } from '@/lib/bedtime';
+import { displayedCoins } from '@/lib/rewards';
+import { supabase } from '@/lib/supabase';
 import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
 import type { ArmStats } from '@/services/types';
 import {
@@ -20,9 +24,12 @@ import {
   useAppStore,
   type AccountRequest,
   type BedtimeDays,
+  type OutboxOp,
   type TimeRequest,
   type UsageDay,
 } from '@/store/useAppStore';
+import { refreshProfile } from '@/store/useAuth';
+import { useSession } from '@/store/useSession';
 
 const DAY_MS = 24 * 3600 * 1000;
 const isoDay = (offsetDays: number) => todayKey(new Date(Date.now() - offsetDays * DAY_MS));
@@ -89,7 +96,7 @@ export async function pullStudent(userId: string) {
       .eq('student_id', userId)
       .gte('created_at', new Date(Date.now() - 154 * DAY_MS).toISOString())
       .limit(5000),
-    supabase.from('profiles').select('display_name, lang').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('display_name, lang, grade').eq('id', userId).maybeSingle(),
     // Study minutes for the whole 22-week learning heatmap (the usage pull above keeps only 14 days).
     supabase
       .from('usage_daily')
@@ -109,9 +116,14 @@ export async function pullStudent(userId: string) {
 
   if (profile.data) patch.studentName = profile.data.display_name;
 
+  // Coins are server-derived from reward_events; always adopt server confirmed balance.
+  if (prog.data) {
+    patch.coinsConfirmed = prog.data.coins;
+    patch.coins = displayedCoins(prog.data.coins, s.pendingRewards);
+  }
+
   if (prog.data && !dirty.progress) {
     const p = prog.data;
-    patch.coins = p.coins;
     patch.answers = p.answers;
     patch.built = p.built?.length ? p.built : ['bahay'];
     patch.offline = p.offline ?? [];
@@ -146,6 +158,27 @@ export async function pullStudent(userId: string) {
     patch.bedtimeDays = st.bedtime_days as BedtimeDays;
     patch.paused = st.paused;
     patch.guardian = { ...(patch.guardian ?? s.guardian), limitStyle: st.limit_style };
+  }
+
+  // Item 2: Personalization sync + one-time upgrade carry-over.
+  if (!dirty.personalization) {
+    let needsCarryOverPush = false;
+    if (profile.data?.grade != null && profile.data.grade >= 1 && profile.data.grade <= 12) {
+      patch.learningGrade = profile.data.grade;
+    } else if (profile.data && profile.data.grade == null && s.learningGrade >= 1 && s.learningGrade <= 12) {
+      needsCarryOverPush = true;
+    }
+    if (settings.data) {
+      if (settings.data.learning_subject != null) {
+        patch.learningSubject = settings.data.learning_subject as SubjectId | 'mixed';
+      } else {
+        // Carry over existing local subject selection on first pull after upgrade.
+        needsCarryOverPush = true;
+      }
+    }
+    if (needsCarryOverPush) {
+      patch.dirty = { ...(patch.dirty ?? dirty), personalization: true };
+    }
   }
 
   const guardians = (links.data ?? []).map((l) => ({
@@ -183,7 +216,9 @@ export async function pullStudent(userId: string) {
   if (joinedClasses.length > 0) {
     const { data: modRows } = await supabase
       .from('class_modules')
-      .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+      .select(
+        'id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at, quiz_id, quiz_version, assigned_at, share_source, source_id',
+      )
       .in(
         'class_id',
         joinedClasses.map((c) => c.id),
@@ -203,6 +238,11 @@ export async function pullStudent(userId: string) {
         questions: (m.questions ?? []) as ModuleQuestion[],
         published: !!m.published,
         createdAt: m.created_at,
+        quizId: m.quiz_id ?? null,
+        quizVersion: m.quiz_version ?? null,
+        assignedAt: m.assigned_at ?? null,
+        shareSource: !!m.share_source,
+        sourceId: m.source_id ?? null,
       }));
     }
   } else {
@@ -338,7 +378,6 @@ export async function flushStudent(userId: string) {
       const { error } = await supabase
         .from('progress')
         .update({
-          coins: s.coins,
           answers: s.answers,
           breaks_total: s.usage.reduce((a, u) => a + u.breaks, 0),
           built: s.built,
@@ -365,6 +404,21 @@ export async function flushStudent(userId: string) {
       });
       if (error) throw error;
       useAppStore.getState().clean({ settings: false });
+    }
+
+    if (dirty.personalization) {
+      const [{ error: gErr }, { error: sErr }] = await Promise.all([
+        supabase.from('profiles').update({ grade: s.learningGrade }).eq('id', userId),
+        supabase.from('student_settings').upsert({
+          student_id: userId,
+          learning_subject: s.learningSubject,
+          updated_at: now,
+        }),
+      ]);
+      if (gErr) throw gErr;
+      if (sErr) throw sErr;
+      useAppStore.getState().clean({ personalization: false });
+      refreshProfile().catch(() => {});
     }
 
     if (dirty.mastery.length) {
@@ -416,6 +470,7 @@ export async function flushStudent(userId: string) {
 
     if (outbox.length) {
       const batch = outbox.slice(0, 100);
+      const settled: OutboxOp[] = [];
       const attempts = batch.filter((o) => o.kind === 'attempt');
       if (attempts.length) {
         const { error } = await supabase.from('attempts').upsert(
@@ -423,6 +478,7 @@ export async function flushStudent(userId: string) {
           { onConflict: 'student_id,client_id', ignoreDuplicates: true },
         );
         if (error) throw error;
+        settled.push(...attempts);
       }
       const flags = batch.filter((o) => o.kind === 'flag');
       if (flags.length) {
@@ -434,8 +490,62 @@ export async function flushStudent(userId: string) {
           })),
         );
         if (error) throw error;
+        settled.push(...flags);
       }
-      useAppStore.getState().clean({ outbox: batch });
+      // Flush rewards AFTER attempts so quiz/overlay evidence lands first.
+      const rewards = batch.filter((o): o is Extract<OutboxOp, { kind: 'reward' }> => o.kind === 'reward');
+      const retryUpdates = new Map<OutboxOp, number>();
+      for (const r of rewards) {
+        const { data, error } = await supabase.rpc('claim_reward', {
+          p_key: r.row.key,
+          p_kind: r.row.kind,
+          p_ref: r.row.ref,
+          p_meta: r.row.meta,
+        });
+        if (error) {
+          // Authorization/validation errors won't recover on retry; drop after logging.
+          const code = (error as { code?: string }).code ?? '';
+          if (code === '42501' || code === '22023') {
+            console.warn('[rewards] dropping invalid reward claim:', r.row.key, error.message);
+            useAppStore.getState().settleReward(r.row.key, { status: 'dropped' });
+            settled.push(r);
+          }
+          continue;
+        }
+        const res = data as { status?: string; amount?: number; coins?: number } | null;
+        if (res?.status === 'applied' || res?.status === 'duplicate') {
+          useAppStore.getState().settleReward(r.row.key, { status: res.status, coins: res.coins });
+          settled.push(r);
+        } else if (res?.status === 'capped') {
+          const { showCapToast } = useAppStore.getState().settleReward(r.row.key, {
+            status: 'capped',
+            coins: res.coins,
+          });
+          if (showCapToast) {
+            const lang = useAppStore.getState().lang;
+            useSession.getState().showToast((lang === 'fil' ? fil : en).rewards.capReached);
+          }
+          settled.push(r);
+        } else if (res?.status === 'pending_evidence') {
+          const nextTries = (r.tries ?? 0) + 1;
+          if (nextTries >= 5) {
+            console.warn('[rewards] dropping reward after 5 pending_evidence retries:', r.row.key);
+            useAppStore.getState().settleReward(r.row.key, { status: 'dropped' });
+            settled.push(r);
+          } else {
+            retryUpdates.set(r, nextTries);
+          }
+        }
+      }
+      if (settled.length) useAppStore.getState().clean({ outbox: settled });
+      if (retryUpdates.size) {
+        const curOutbox = useAppStore.getState().outbox;
+        useAppStore.getState().hydrate({
+          outbox: curOutbox.map((o) =>
+            retryUpdates.has(o) && o.kind === 'reward' ? { ...o, tries: retryUpdates.get(o)! } : o,
+          ),
+        });
+      }
     }
   } finally {
     flushing = false;
@@ -451,6 +561,7 @@ export function hasPending() {
   return (
     dirty.progress ||
     dirty.settings ||
+    dirty.personalization ||
     dirty.usageToday ||
     dirty.mastery.length > 0 ||
     dirty.nudges.length > 0 ||

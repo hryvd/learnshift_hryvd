@@ -42,6 +42,7 @@ import kotlin.math.abs
  */
 object OverlayController {
   private const val TAG = "LearnShiftOverlay"
+  private const val MEDIA_TAG = "LearnShift/Media"
   private val mainHandler = Handler(Looper.getMainLooper())
   @Volatile private var activeView: View? = null
   @Volatile private var quizShowing = false
@@ -49,9 +50,9 @@ object OverlayController {
   private var activePackage: String? = null
   private var audioManager: AudioManager? = null
   private var focusRequest: AudioFocusRequest? = null
-  private var pausedByUs = false
   private val focusListener = AudioManager.OnAudioFocusChangeListener { }
   private var pendingRunnable: Runnable? = null
+  private var handoffReleaseRunnable: Runnable? = null
   @Volatile private var cachedMainFont: Typeface? = null
   @Volatile private var cachedSecondaryFont: Typeface? = null
 
@@ -118,58 +119,130 @@ object OverlayController {
   }
 
   /**
-   * Pauses whatever is playing: a standard media Pause key for the active
-   * session, plus a transient audio-focus request so cooperating players stay
-   * quiet. Returns true when media was playing and a pause was sent.
+   * Requests transient audio focus so cooperating players pause cleanly and
+   * decide for themselves whether to resume when focus is abandoned. Never
+   * dispatches KEYCODE_MEDIA_PLAY; sends KEYCODE_MEDIA_PAUSE only if audio
+   * focus is denied AND the overlaid app is the foreground app.
    */
   @Suppress("DEPRECATION")
-  private fun pauseMedia(ctx: Context): Boolean {
+  private fun pauseMedia(ctx: Context, overlaidPkg: String? = activePackage): Boolean {
     val manager = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     audioManager = manager
     val wasPlaying = runCatching { manager.isMusicActive }.getOrDefault(false)
-    if (wasPlaying) {
-      sendMediaKey(manager, KeyEvent.KEYCODE_MEDIA_PAUSE)
-      pausedByUs = true
-    }
     // Apps targeting Android 15+ need foreground eligibility to request focus.
-    if (Build.VERSION.SDK_INT >= 35 && !MonitorService.running) return wasPlaying
-    runCatching {
+    if (Build.VERSION.SDK_INT >= 35 && !MonitorService.running) {
+      Log.d(MEDIA_TAG, "pauseMedia skipped focus request on API 35+ (service not running) pkg=$overlaidPkg")
+      return false
+    }
+    val focusResult = runCatching {
       if (Build.VERSION.SDK_INT >= 26) {
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-          .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+          .setAudioAttributes(
+            AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_MEDIA)
+              .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+              .build(),
+          )
           .setAcceptsDelayedFocusGain(false)
-          .setOnAudioFocusChangeListener(focusListener, mainHandler).build()
+          .setOnAudioFocusChangeListener(focusListener, mainHandler)
+          .build()
         focusRequest = request
         manager.requestAudioFocus(request)
-      } else manager.requestAudioFocus(focusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+      } else {
+        manager.requestAudioFocus(focusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+      }
+    }.getOrDefault(AudioManager.AUDIOFOCUS_REQUEST_FAILED)
+
+    val granted = focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+    Log.d(MEDIA_TAG, "pauseMedia pkg=$overlaidPkg activePkg=$activePackage wasPlaying=$wasPlaying focusGranted=$granted")
+    if (!granted && wasPlaying && !overlaidPkg.isNullOrBlank() && overlaidPkg == activePackage) {
+      Log.d(MEDIA_TAG, "pauseMedia fallback KEYCODE_MEDIA_PAUSE for foreground overlaid pkg=$overlaidPkg")
+      sendMediaKey(manager, KeyEvent.KEYCODE_MEDIA_PAUSE)
     }
-    return wasPlaying
+    return granted
   }
 
-  /** Releases focus; resumes playback only if we paused it and the break was completed. */
+  /** Abandons transient audio focus. Never sends KEYCODE_MEDIA_PLAY. */
   @Suppress("DEPRECATION")
-  private fun releaseMedia(resume: Boolean = false) {
+  private fun releaseMedia() {
     val manager = audioManager
     val request = focusRequest
-    val resumeNow = resume && pausedByUs
     audioManager = null
     focusRequest = null
-    pausedByUs = false
+    if (manager == null && request == null) return
     runCatching {
       if (Build.VERSION.SDK_INT >= 26 && request != null) manager?.abandonAudioFocusRequest(request)
       else manager?.abandonAudioFocus(focusListener)
     }
-    if (resumeNow && manager != null) {
-      mainHandler.postDelayed({ if (activeView == null) sendMediaKey(manager, KeyEvent.KEYCODE_MEDIA_PLAY) }, 320L)
-    }
+    Log.d(MEDIA_TAG, "releaseMedia abandoned transient audio focus")
   }
 
   private fun returnToExternalApp(ctx: Context, pkg: String?) {
-    if (pkg.isNullOrBlank() || pkg == ctx.packageName) return
+    if (pkg.isNullOrBlank() || pkg == ctx.packageName || pkg in NOT_FREE_TIME) return
+    if (!Categories.of(ctx, pkg).distracting || Categories.isAudioOrMusic(ctx, pkg)) {
+      Log.d(MEDIA_TAG, "returnToExternalApp blocked non-distracting/audio pkg=$pkg")
+      return
+    }
     val intent = ctx.packageManager.getLaunchIntentForPackage(pkg) ?: return
     intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { ctx.startActivity(intent) }
+  }
+
+  /**
+   * 280 ms fade-to-surface handoff mask used by App Mirror before launching a
+   * deep link so the transition feels continuous without a launcher flash.
+   * Requests transient audio focus across the handoff only (never media keys).
+   */
+  fun showHandoffMask(ctx: Context, onHandoff: () -> Unit) {
+    val appCtx = ctx.applicationContext
+    mainHandler.post {
+      handoffReleaseRunnable?.let { mainHandler.removeCallbacks(it) }
+      pauseMedia(appCtx, overlaidPkg = null)
+      val releaseTask = Runnable {
+        if (activeView == null) releaseMedia()
+      }
+      handoffReleaseRunnable = releaseTask
+      mainHandler.postDelayed(releaseTask, 650L)
+
+      if (!canOverlay(appCtx)) {
+        onHandoff()
+        return@post
+      }
+      val wm = appCtx.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+      if (wm == null) {
+        onHandoff()
+        return@post
+      }
+      val isNight = (appCtx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+        android.content.res.Configuration.UI_MODE_NIGHT_YES
+      val maskView = View(appCtx).apply {
+        setBackgroundColor(Color.parseColor(if (isNight) "#121212" else "#F6F5F1"))
+        alpha = 0f
+      }
+      val params = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.MATCH_PARENT,
+        overlayWindowType(),
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+          WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+          WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+        PixelFormat.TRANSLUCENT,
+      )
+      val added = runCatching {
+        wm.addView(maskView, params)
+        true
+      }.getOrDefault(false)
+      if (!added) {
+        onHandoff()
+        return@post
+      }
+      maskView.animate().alpha(1f).setDuration(140L).withEndAction {
+        runCatching { onHandoff() }
+        maskView.animate().alpha(0f).setStartDelay(40L).setDuration(140L).withEndAction {
+          runCatching { wm.removeViewImmediate(maskView) }
+        }.start()
+      }.start()
+    }
   }
 
   private fun lockNavNotice(ctx: Context): String =
@@ -189,13 +262,13 @@ object OverlayController {
   }
 
   internal fun pauseMediaForLockdown(ctx: Context) {
-    pauseMedia(ctx)
+    pauseMedia(ctx, overlaidPkg = null)
   }
 
   private fun removeActive(ctx: Context, completed: Boolean = false) {
     val overlayPkg = activePackage
     val wasQuiz = quizShowing
-    releaseMedia(completed)
+    releaseMedia()
     quizShowing = false
     statusHintView = null
     val v = activeView ?: return
@@ -229,8 +302,7 @@ object OverlayController {
       Store.putLong(ctx, "snoozeUntil", System.currentTimeMillis() + 3_000L)
     }
     if (completed) {
-      val targetPkg = overlayPkg ?: Store.getString(ctx, "lastUsedPkg")
-      returnToExternalApp(ctx, targetPkg)
+      returnToExternalApp(ctx, overlayPkg)
     }
   }
 
@@ -803,12 +875,12 @@ object OverlayController {
           PixelFormat.TRANSLUCENT,
         )
         // Pause playback silently while the break sheet is open.
-        pauseMedia(appCtx)
+        activePackage = pkg
+        pauseMedia(appCtx, pkg)
         wm.addView(root, params)
         activeView = root
         quizShowing = true
         statusHintView = swipeCue
-        activePackage = pkg
         Store.putLong(appCtx, "lastNudge", System.currentTimeMillis())
         hideSystemBars(root)
         root.requestFocus()

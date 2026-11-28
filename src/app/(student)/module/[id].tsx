@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CaretLeft, CheckCircle, Lightning, Sparkle, XCircle } from '@/components/ui/icons';
+import { CaretLeft, CheckCircle, FileText, Lightning, Sparkle, XCircle } from '@/components/ui/icons';
 
 import { Paty } from '@/components/mascot/Paty';
 import { Card, Chip, NavBar, PillButton, PressableScale, ProgressBar, SegmentedControl, Text } from '@/components/ui';
@@ -10,9 +10,16 @@ import { haptic } from '@/design/haptics';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { fontFor } from '@/design/typography';
+import { IS_PITCH } from '@/lib/config';
+import { moduleRewardKey } from '@/lib/rewards';
+import * as api from '@/services/backend/api';
 import { useAppStore } from '@/store/useAppStore';
 
 type Mode = 'flashcards' | 'quiz';
+
+function elapsedSec(startedAt: number): number {
+  return startedAt > 0 ? Math.max(1, (Date.now() - startedAt) / 1000) : 8;
+}
 
 export default function ModuleStudyScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -29,7 +36,23 @@ export default function ModuleStudyScreen() {
   const [picked, setPicked] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [rewarded, setRewarded] = useState(false);
+  const [earnedNow, setEarnedNow] = useState(false);
+  const [openingSource, setOpeningSource] = useState(false);
+  const questionStartRef = useRef<number>(0);
+
+  const openOriginalSource = async () => {
+    if (!mod || !mod.shareSource || !mod.sourceId || IS_PITCH || openingSource) return;
+    setOpeningSource(true);
+    try {
+      const signed = await api.getSourceSignedUrl({ moduleId: mod.id });
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.open(signed.url, '_blank', 'noopener,noreferrer');
+      else await Linking.openURL(signed.url);
+    } catch {
+      // ignore if offline
+    } finally {
+      setOpeningSource(false);
+    }
+  };
 
   if (!mod) {
     return (
@@ -55,7 +78,16 @@ export default function ModuleStudyScreen() {
   const chooseOption = (optIndex: number) => {
     if (!activeQ || picked !== null) return;
     setPicked(optIndex);
-    if (optIndex === activeQ.answer) {
+    const correct = optIndex === activeQ.answer;
+    const elapsed = elapsedSec(questionStartRef.current);
+    useAppStore.getState().recordModuleAttempt({
+      moduleId: mod.id,
+      questionId: activeQ.id,
+      chosen: optIndex,
+      correct,
+      seconds: elapsed,
+    });
+    if (correct) {
       haptic.success();
       setCorrectCount((n) => n + 1);
     } else {
@@ -66,13 +98,20 @@ export default function ModuleStudyScreen() {
   const nextQuestion = () => {
     if (qIdx + 1 >= questions.length) {
       setFinished(true);
-      if (!rewarded) {
-        setRewarded(true);
-        useAppStore.getState().addCoins(25);
+      const res = useAppStore.getState().claimReward({
+        key: moduleRewardKey(mod.id),
+        kind: 'module',
+        ref: mod.id,
+        meta: {},
+      });
+      if (res.applied) {
+        setEarnedNow(true);
+        // Guard Agos effort break count with the same idempotent module key.
         useAppStore.getState().recordBreak(3);
       }
       return;
     }
+    questionStartRef.current = Date.now();
     setQIdx((i) => i + 1);
     setPicked(null);
   };
@@ -99,6 +138,18 @@ export default function ModuleStudyScreen() {
             <Text variant="subhead" color="textSecondary">
               {mod.summary}
             </Text>
+          ) : null}
+          {mod.shareSource && mod.sourceId && !IS_PITCH ? (
+            <View style={styles.sourceRow}>
+              <PillButton
+                label={openingSource ? (fil ? 'Binubuksan…' : 'Opening…') : fil ? 'Tingnan ang orihinal na file' : 'View original file'}
+                kind="secondary"
+                size="sm"
+                icon={<FileText size={15} weight="bold" color={c.accent} />}
+                disabled={openingSource}
+                onPress={() => void openOriginalSource()}
+              />
+            </View>
           ) : null}
         </View>
 
@@ -195,7 +246,7 @@ export default function ModuleStudyScreen() {
               {fil ? 'Magaling! Tapos na ang module quiz.' : 'Nice work finishing your teacher module quiz.'}
             </Text>
             <Chip
-              label="+25 coins"
+              label={earnedNow ? '+25 coins' : fil ? 'Tapos na dati' : 'Already earned'}
               icon={<Sparkle size={14} weight="fill" color={c.success} />}
               tint={{ bg: c.success + '1A', fg: c.success }}
             />
@@ -280,6 +331,7 @@ const styles = StyleSheet.create({
   missing: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: space.screen },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', maxWidth: 560, alignSelf: 'center' },
   head: { gap: 6, marginTop: 4 },
+  sourceRow: { alignItems: 'flex-start', marginTop: 4 },
   gap: { gap: 12 },
   row: { flexDirection: 'row', gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },

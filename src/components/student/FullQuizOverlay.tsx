@@ -18,12 +18,13 @@ import { ArrowUp, Check, CheckCircle, House, Lightbulb } from '@/components/ui/i
 import { Paty } from '@/components/mascot/Paty';
 import { QuestionVisual } from '@/components/student/QuestionVisual';
 import { Text } from '@/components/ui';
-import { SUBJECTS, type LocalQuestion } from '@/data/localQuestions';
+import { practiceGrade, SUBJECTS, type LocalQuestion, type SubjectId } from '@/data/localQuestions';
 import { pickSession } from '@/data/pickQuestions';
 import type { SkillId } from '@/data/skills';
 import { haptic } from '@/design/haptics';
 import { useReducedMotion } from '@/design/motion';
 import { ThemeProvider } from '@/design/theme';
+import { newRewardSessionId, overlayQuizRewardKey, rewardAmount } from '@/lib/rewards';
 import { DEFAULT_QUIET_MIN } from '@/services/sentinel';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -38,6 +39,7 @@ export function FullQuizOverlay({
   onHome,
   onDismiss,
   animateIn = false,
+  subjectOverride,
 }: {
   skillId?: SkillId;
   appName: string;
@@ -48,10 +50,19 @@ export function FullQuizOverlay({
   onDismiss: () => void;
   /** Glide the sheet up from the bottom when it first appears. */
   animateIn?: boolean;
+  /** Session-only subject choice (e.g. from Learn tab); never overwrites saved Personalization. */
+  subjectOverride?: SubjectId | 'mixed';
 }) {
   return (
     <ThemeProvider mode="day">
-      <LearningFeed appName={appName} onUnlock={onUnlock} onHome={onHome} onDismiss={onDismiss} animateIn={animateIn} />
+      <LearningFeed
+        appName={appName}
+        onUnlock={onUnlock}
+        onHome={onHome}
+        onDismiss={onDismiss}
+        animateIn={animateIn}
+        subjectOverride={subjectOverride}
+      />
     </ThemeProvider>
   );
 }
@@ -64,20 +75,23 @@ function LearningFeed({
   onHome,
   onDismiss,
   animateIn,
+  subjectOverride,
 }: {
   appName: string;
   onUnlock: () => void;
   onHome?: () => void;
   onDismiss: () => void;
   animateIn: boolean;
+  subjectOverride?: SubjectId | 'mixed';
 }) {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const fil = useAppStore((s) => s.lang === 'fil');
+  const [sessionId] = useState(() => newRewardSessionId('ov'));
   // Unseen questions come first; the session's picks are recorded once it mounts.
   const [session] = useState(() => {
     const { learningGrade, learningSubject, seenQuestions } = useAppStore.getState();
-    return pickSession(learningGrade, learningSubject, seenQuestions ?? {}, COUNT);
+    return pickSession(practiceGrade(learningGrade), subjectOverride ?? learningSubject, seenQuestions ?? {}, COUNT);
   });
   const questions: LocalQuestion[] = session.questions;
   useEffect(() => {
@@ -150,6 +164,8 @@ function LearningFeed({
       subject: q.subject,
       chosen: choice,
       correct,
+      clientId: `${sessionId}:${index + 1}`,
+      context: 'overlay',
     });
     if (correct) {
       setScore((n) => n + 1);
@@ -179,9 +195,18 @@ function LearningFeed({
     const update = () => {
       if (index + 1 === questions.length && !completed.current) {
         completed.current = true;
-        useAppStore.getState().recordDeckComplete(DEFAULT_QUIET_MIN);
-        useAppStore.getState().recordBreak(1);
-        useAppStore.getState().logNudge('break', [], 'took');
+        const s = useAppStore.getState();
+        s.recordDeckComplete(DEFAULT_QUIET_MIN);
+        s.recordBreak(1);
+        s.logNudge('break', [], 'took');
+        if (score > 0) {
+          s.claimReward({
+            key: overlayQuizRewardKey(sessionId),
+            kind: 'overlay_quiz',
+            ref: sessionId,
+            meta: { sessionId, correct: score },
+          });
+        }
       }
       answered.current = false;
       setPicked(null);
@@ -301,7 +326,15 @@ function LearningFeed({
             </Text>
             <View style={styles.resultBadge}>
               <CheckCircle size={22} color={GREEN} />
-              <Text color={GREEN}>{fil ? 'Tapos na ang iyong pahinga' : 'Your break is complete'}</Text>
+              <Text color={GREEN}>
+                {score > 0
+                  ? fil
+                    ? `Tapos na · +${rewardAmount('overlay_quiz', { correct: score })} barya`
+                    : `Break complete · +${rewardAmount('overlay_quiz', { correct: score })} coins`
+                  : fil
+                    ? 'Tapos na ang iyong pahinga'
+                    : 'Your break is complete'}
+              </Text>
             </View>
             {onHome ? (
               <>

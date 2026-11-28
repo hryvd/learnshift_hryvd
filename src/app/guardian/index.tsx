@@ -263,6 +263,7 @@ function usePitchView(): GView {
       category: 'video',
       sessionMin: 12,
       screenOn: true,
+      confidence: 'visible',
       updatedAt: pitchUpdatedAt,
     },
     learningProfile: {

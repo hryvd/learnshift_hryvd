@@ -1,4 +1,4 @@
-import { LOCAL_QUESTIONS, SUBJECTS, type LocalQuestion, type SubjectId } from './localQuestions';
+import { LOCAL_QUESTIONS, practiceGrade, SUBJECTS, type LocalQuestion, type SubjectId } from './localQuestions';
 
 type Rand = () => number;
 
@@ -53,13 +53,14 @@ export function pickSession(
   count: number,
   rand: Rand = Math.random,
 ): { questions: LocalQuestion[]; seen: Record<string, string[]> } {
+  const g = practiceGrade(grade);
   const subjects = subject === 'mixed' ? SUBJECTS.map((s) => s.id) : [subject];
   const per = subject === 'mixed' ? 1 : count;
   const seen: Record<string, string[]> = {};
   const questions: LocalQuestion[] = [];
   for (const id of subjects) {
-    const key = poolKey(grade, id);
-    const pool = LOCAL_QUESTIONS.filter((q) => q.grade === grade && q.subject === id);
+    const key = poolKey(g, id);
+    const pool = LOCAL_QUESTIONS.filter((q) => q.grade === g && q.subject === id);
     if (!pool.length) continue;
     const draw = drawFromPool(pool, seenBy[key] ?? [], per, rand);
     seen[key] = draw.seen;
@@ -69,5 +70,7 @@ export function pickSession(
 }
 
 /** Questions available for one grade, per subject (for labels such as "60 questions"). */
-export const countFor = (grade: number, subject: SubjectId | 'mixed') =>
-  LOCAL_QUESTIONS.filter((q) => q.grade === grade && (subject === 'mixed' || q.subject === subject)).length;
+export const countFor = (grade: number, subject: SubjectId | 'mixed') => {
+  const g = practiceGrade(grade);
+  return LOCAL_QUESTIONS.filter((q) => q.grade === g && (subject === 'mixed' || q.subject === subject)).length;
+};

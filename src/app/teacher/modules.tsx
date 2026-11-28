@@ -9,10 +9,10 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BookOpenText, Plus, WifiHigh } from '@/components/ui/icons';
+import { BookOpenText, FileText, Plus, WifiHigh } from '@/components/ui/icons';
 
 import { ConfirmDialog } from '@/components/teacher/ConfirmDialog';
-import { CopyModuleDialog, EditModuleDialog } from '@/components/teacher/ModuleEditDialogs';
+import { AssignDraftDialog, EditDraftDialog, openOriginalSource } from '@/components/teacher/ModuleEditDialogs';
 import {
   BottomSheet,
   Card,
@@ -33,10 +33,17 @@ import { usePullRefresh } from '@/hooks/useAutoRefresh';
 import { useDesktop } from '@/hooks/useDesktop';
 import { teacherStrings as T } from '@/i18n/staff';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
-import type { ClassModule } from '@/services/ai/moduleGenerator';
+import type { ClassModule, QuizDraft } from '@/services/ai/moduleGenerator';
 import * as api from '@/services/backend/api';
 import { getPeerLanBaseUrl } from '@/services/backend/peerModuleSync';
-import { addLocalModule, refreshTeacher, removeLocalModule, useTeacher } from '@/services/backend/teacher';
+import {
+  addLocalModule,
+  archiveDraft,
+  assignDraftToClasses,
+  refreshTeacher,
+  removeLocalModule,
+  useTeacher,
+} from '@/services/backend/teacher';
 import { useAppStore } from '@/store/useAppStore';
 
 const EMPTY_MODULES: ClassModule[] = [];
@@ -52,8 +59,8 @@ export default function TeacherModules() {
   const selected = useTeacher((s) => s.selected);
   const setUploadOpen = useTeacher((s) => s.setUploadOpen);
   const selectedModules = useTeacher((s) => (s.selected ? s.modules[s.selected] : undefined));
+  const drafts = useTeacher((s) => s.drafts);
   const realModules = selectedModules ?? EMPTY_MODULES;
-  // Modules for this class haven't arrived yet: show skeletons, not "No modules yet".
   const modulesLoading = !IS_PITCH && !!selected && selectedModules === undefined;
   const pitchModules = useAppStore((s) => s.classModules);
 
@@ -67,12 +74,14 @@ export default function TeacherModules() {
   const [error, setError] = useState<string | null>(null);
   const [previewMod, setPreviewMod] = useState<ClassModule | null>(null);
   const [toDelete, setToDelete] = useState<ClassModule | null>(null);
-  const [editing, setEditing] = useState<ClassModule | null>(null);
-  const [copying, setCopying] = useState<ClassModule | null>(null);
+  const [toArchive, setToArchive] = useState<QuizDraft | null>(null);
+  const [editingDraft, setEditingDraft] = useState<QuizDraft | null>(null);
+  const [assigningDraft, setAssigningDraft] = useState<{ draft: QuizDraft; defaultClassIds?: string[] } | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [subjectFilter, setSubjectFilter] = useState<string>('All');
+
   const subjects = ['All', ...Array.from(new Set(modules.map((m) => m.subject)))];
   const listed = subjectFilter === 'All' ? modules : modules.filter((m) => m.subject === subjectFilter);
-  // Laptop: the first module previews in the right pane until one is picked.
   const selectedMod = isDesktop ? (modules.find((m) => m.id === previewMod?.id) ?? modules[0] ?? null) : null;
 
   const handleDelete = async (mod: ClassModule) => {
@@ -86,222 +95,403 @@ export default function TeacherModules() {
     try {
       await api.deleteClassModule(mod.id);
     } catch (e) {
-      addLocalModule(mod); // put it back: students still have it
-      throw new Error(`Could not delete "${mod.title}". ${(e as Error).message}`);
+      addLocalModule(mod);
+      throw new Error(`Could not unassign "${mod.title}". ${(e as Error).message}`);
+    }
+  };
+
+  const handleUpdateStudents = async (mod: ClassModule, draft: QuizDraft) => {
+    setError(null);
+    setUpdatingId(mod.id);
+    try {
+      const res = await assignDraftToClasses(draft, [mod.classId], !!mod.shareSource);
+      if (res.status === 'conflict') {
+        setError('This draft changed on another device. Reloaded latest version — tap Update again.');
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleViewOriginal = async (input: { moduleId?: string; draftId?: string }) => {
+    setError(null);
+    try {
+      await openOriginalSource(input);
+    } catch (e) {
+      setError((e as Error).message);
     }
   };
 
   return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={[styles.root, { backgroundColor: c.bg, paddingTop: insets.top }]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.body,
+          { maxWidth: isDesktop ? 1400 : wide ? 1100 : 560, paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
+          isDesktop && styles.bodyDesktop,
+        ]}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          IS_PITCH ? undefined : (
+            <RefreshControl
+              refreshing={pull.refreshing}
+              onRefresh={pull.onRefresh}
+              tintColor={c.accent}
+              colors={[c.accent]}
+            />
+          )
+        }
       >
-          <ScrollView
-            contentContainerStyle={[
-              styles.body,
-              { maxWidth: isDesktop ? 1400 : wide ? 1100 : 560, paddingBottom: insets.bottom + (isDesktop ? 40 : 110) },
-              isDesktop && styles.bodyDesktop,
-            ]}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              IS_PITCH ? undefined : (
-                <RefreshControl
-                  refreshing={pull.refreshing}
-                  onRefresh={pull.onRefresh}
-                  tintColor={c.accent}
-                  colors={[c.accent]}
-                />
-              )
-            }
-          >
-            {!isDesktop ? (
-              <Stagger index={0} style={styles.header}>
-                <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
-                  <BookOpenText size={22} weight="fill" color="#FFFFFF" />
-                </View>
-                <View style={styles.flex}>
-                  <Text variant="largeTitle">{T.modules}</Text>
-                  <Text variant="subhead">{activeClassName}</Text>
-                </View>
-              </Stagger>
-            ) : null}
+        {!isDesktop ? (
+          <Stagger index={0} style={styles.header}>
+            <View style={[styles.badge, { backgroundColor: c.tabInsights }]}>
+              <BookOpenText size={22} weight="fill" color="#FFFFFF" />
+            </View>
+            <View style={styles.flex}>
+              <Text variant="largeTitle">{T.modules}</Text>
+              <Text variant="subhead">{activeClassName}</Text>
+            </View>
+          </Stagger>
+        ) : null}
 
-            {!IS_PITCH && classes.length === 0 ? (
-              <Card style={styles.gap}>
-                <Text variant="title">Create a class first</Text>
-                <Text variant="subhead">
-                  Create at least one class so you can publish AI flashcards and quiz modules to your students.
+        {!IS_PITCH && classes.length === 0 ? (
+          <Card style={styles.gap}>
+            <Text variant="title">Create a class first</Text>
+            <Text variant="subhead">
+              Create at least one class so you can build private drafts and assign approved quizzes to your students.
+            </Text>
+            <PillButton label={T.createTitle} block onPress={() => router.replace('/teacher')} />
+          </Card>
+        ) : null}
+
+        {!IS_PITCH && classes.length > 1 && !isDesktop ? (
+          <SegmentedControl
+            options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
+            value={activeClassId}
+            onChange={(id) => useTeacher.getState().select(id)}
+          />
+        ) : null}
+
+        {error ? <Notice text={error} /> : null}
+
+        <Stagger index={1}>
+          <Card style={styles.centerCard}>
+            <Text variant="title" align="center">
+              {T.uploadModule}
+            </Text>
+            <Text variant="subhead" align="center">
+              Upload a lesson to build a private draft, review and edit every question, then assign the approved version to your classes.
+            </Text>
+            <PillButton
+              label={isDesktop ? 'Upload module  (U)' : 'Upload module'}
+              icon={<Plus size={18} weight="bold" color={c.onAccent} />}
+              size="lg"
+              onPress={() => setUploadOpen(true)}
+            />
+            <View style={[styles.syncRow, { backgroundColor: c.inset }]}>
+              <WifiHigh size={16} weight="bold" color={c.success} />
+              <Text variant="caption" color="success" style={styles.flex}>
+                {Platform.OS === 'web'
+                  ? 'Drafts stay private. Assigned snapshots sync to enrolled students.'
+                  : lanUrl
+                    ? `Direct phone sync live (${lanUrl}) — only assigned snapshots are shared`
+                    : 'Drafts stay private; only assigned snapshots sync to students'}
+              </Text>
+            </View>
+          </Card>
+        </Stagger>
+
+        {/* Section 1: Private Drafts */}
+        <Stagger index={2}>
+          <Card style={styles.gap}>
+            <View style={styles.rowBetween}>
+              <View style={styles.flex}>
+                <Text variant="title">Drafts</Text>
+                <Text variant="caption" color="textSecondary">
+                  Private to you — students never see drafts until you assign them.
                 </Text>
-                <PillButton label={T.createTitle} block onPress={() => router.replace('/teacher')} />
-              </Card>
-            ) : null}
-
-            {!IS_PITCH && classes.length > 1 && !isDesktop ? (
-              <SegmentedControl
-                options={classes.map((cl) => ({ value: cl.id, label: cl.name }))}
-                value={activeClassId}
-                onChange={(id) => useTeacher.getState().select(id)}
-              />
-            ) : null}
-
-            {error ? <Notice text={error} /> : null}
-
-            <Stagger index={1}>
-              <Card style={styles.centerCard}>
-                <Text variant="title" align="center">
-                  {T.uploadModule}
-                </Text>
-                <Text variant="subhead" align="center">
-                  {isDesktop
-                    ? 'Drop a PDF, Word file or text, review the flashcards and quiz, then publish to your classes.'
-                    : 'Tap the centered + button below to flip open the drag-and-drop card, approve flashcards & quizzes, and pick classes.'}
-                </Text>
-                <PillButton
-                  label={isDesktop ? 'Upload module  (U)' : 'Open Upload Card'}
-                  icon={<Plus size={18} weight="bold" color={c.onAccent} />}
-                  size="lg"
-                  onPress={() => setUploadOpen(true)}
-                />
-                <View style={[styles.syncRow, { backgroundColor: c.inset }]}>
-                  <WifiHigh size={16} weight="bold" color={c.success} />
-                  <Text variant="caption" color="success" style={styles.flex}>
-                    {Platform.OS === 'web'
-                      ? 'Published modules sync to students through LearnShift cloud.'
-                      : lanUrl
-                        ? `Direct phone sync live (${lanUrl}) — students download straight from your phone`
-                        : 'Phone-to-phone sync ready — minimizes cloud storage usage'}
+              </View>
+              <Chip label={`${drafts.length}`} kind="neutral" style={styles.smallChip} />
+            </View>
+            {drafts.length === 0 ? (
+              <Text variant="subhead" color="textSecondary">
+                No drafts yet. Upload a lesson file to generate one.
+              </Text>
+            ) : (
+              drafts.map((d) => (
+                <View key={d.id} style={[styles.modRowInner, styles.modRow, { backgroundColor: c.inset }]}>
+                  <View style={styles.rowBetween}>
+                    <Text variant="headline" style={styles.flex} numberOfLines={1}>
+                      {d.title}
+                    </Text>
+                    <Chip label={`v${d.version}`} kind="tinted" style={styles.smallChip} />
+                    <Chip label={d.subject} kind="neutral" style={styles.smallChip} />
+                  </View>
+                  {d.summary ? (
+                    <Text variant="caption" numberOfLines={2}>
+                      {d.summary}
+                    </Text>
+                  ) : null}
+                  <Text variant="caption" color="textSecondary">
+                    {d.flashcards.length} flashcards · {d.questions.length} quiz Qs
+                    {d.sourceName ? ` · ${d.sourceName}` : ''}
                   </Text>
+                  <View style={styles.actionRow}>
+                    <PillButton
+                      label="Edit draft"
+                      kind="secondary"
+                      size="sm"
+                      onPress={() => setEditingDraft(d)}
+                    />
+                    <PillButton
+                      label="Assign"
+                      size="sm"
+                      onPress={() => setAssigningDraft({ draft: d })}
+                    />
+                    {d.sourceId && !IS_PITCH ? (
+                      <PillButton
+                        label="View original"
+                        kind="neutral"
+                        size="sm"
+                        icon={<FileText size={14} weight="bold" color={c.text} />}
+                        onPress={() => void handleViewOriginal({ draftId: d.id })}
+                      />
+                    ) : null}
+                    <View style={styles.flex} />
+                    <IconButton
+                      kind="remove"
+                      tone="danger"
+                      size={32}
+                      accessibilityLabel={`Archive draft ${d.title}`}
+                      onPress={() => setToArchive(d)}
+                    />
+                  </View>
                 </View>
-              </Card>
-            </Stagger>
+              ))
+            )}
+          </Card>
+        </Stagger>
 
-            <Stagger index={2} style={isDesktop ? styles.columns : undefined}>
-              <Card style={[styles.gap, isDesktop && styles.listCol]}>
-                <Text variant="title">{T.publishedModules}</Text>
-                {isDesktop && subjects.length > 2 ? (
-                  <View style={styles.chipRow}>
-                    {subjects.map((s) => (
-                      <Chip key={s} label={s} kind={subjectFilter === s ? 'tinted' : 'neutral'} selected={subjectFilter === s} onPress={() => setSubjectFilter(s)} />
-                    ))}
-                  </View>
-                ) : null}
-                {modulesLoading ? (
-                  <View style={styles.gap} accessibilityLabel="Loading modules">
-                    {[0, 1, 2].map((k) => (
-                      <Skeleton key={k} height={92} r={14} />
-                    ))}
-                  </View>
-                ) : modules.length === 0 ? (
-                  <EmptyState title={T.noModules} subtitle={T.noModulesSub} expression="curious" />
-                ) : (
-                  listed.map((m) => (
-                    <Card
-                      key={m.id}
-                      onPress={() => setPreviewMod(m)}
-                      accessibilityLabel={`${m.title}, ${m.flashcards.length} flashcards, ${m.questions.length} quiz questions`}
-                      style={[
-                        styles.modRow,
-                        { backgroundColor: c.inset },
-                        selectedMod?.id === m.id && { borderWidth: 2, borderColor: c.accent },
-                      ]}
-                      padded={false}
-                    >
-                      <View style={styles.modRowInner}>
-                        <View style={styles.rowBetween}>
-                          <Text variant="headline" style={styles.flex} numberOfLines={1}>
-                            {m.title}
-                          </Text>
-                          <Chip label={m.subject} kind="neutral" style={styles.smallChip} />
-                        </View>
-                        <Text variant="caption" numberOfLines={2}>
-                          {m.summary}
+        {/* Section 2: Assigned Snapshots */}
+        <Stagger index={3} style={isDesktop ? styles.columns : undefined}>
+          <Card style={[styles.gap, isDesktop && styles.listCol]}>
+            <View style={styles.rowBetween}>
+              <Text variant="title">Assigned · {activeClassName}</Text>
+              <Chip label={`${modules.length}`} kind="neutral" style={styles.smallChip} />
+            </View>
+            {isDesktop && subjects.length > 2 ? (
+              <View style={styles.chipRow}>
+                {subjects.map((s) => (
+                  <Chip
+                    key={s}
+                    label={s}
+                    kind={subjectFilter === s ? 'tinted' : 'neutral'}
+                    selected={subjectFilter === s}
+                    onPress={() => setSubjectFilter(s)}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {modulesLoading ? (
+              <View style={styles.gap} accessibilityLabel="Loading modules">
+                {[0, 1, 2].map((k) => (
+                  <Skeleton key={k} height={92} r={14} />
+                ))}
+              </View>
+            ) : modules.length === 0 ? (
+              <EmptyState title={T.noModules} subtitle={T.noModulesSub} expression="curious" />
+            ) : (
+              listed.map((m) => {
+                const matchingDraft = m.quizId ? drafts.find((d) => d.id === m.quizId) : undefined;
+                const hasNewerDraft =
+                  !!matchingDraft && m.quizVersion != null && matchingDraft.version > m.quizVersion;
+                return (
+                  <Card
+                    key={m.id}
+                    onPress={() => setPreviewMod(m)}
+                    accessibilityLabel={`${m.title}, ${m.flashcards.length} flashcards, ${m.questions.length} quiz questions`}
+                    style={[
+                      styles.modRow,
+                      { backgroundColor: c.inset },
+                      selectedMod?.id === m.id && { borderWidth: 2, borderColor: c.accent },
+                    ]}
+                    padded={false}
+                  >
+                    <View style={styles.modRowInner}>
+                      <View style={styles.rowBetween}>
+                        <Text variant="headline" style={styles.flex} numberOfLines={1}>
+                          {m.title}
                         </Text>
-                        <View style={styles.rowBetween}>
-                          <Text variant="caption" color="accent" style={[fontFor(600), styles.flex]}>
-                            {m.flashcards.length} {T.flashcards.toLowerCase()} · {m.questions.length} quiz Qs
-                            {isDesktop ? (
-                              <Text variant="caption">
-                                {'  ·  '}
-                                {new Date(m.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </Text>
-                            ) : null}
+                        {m.quizVersion != null ? (
+                          <Chip label={`v${m.quizVersion}`} kind="tinted" style={styles.smallChip} />
+                        ) : null}
+                        <Chip label={m.subject} kind="neutral" style={styles.smallChip} />
+                      </View>
+                      <Text variant="caption" numberOfLines={2}>
+                        {m.summary}
+                      </Text>
+
+                      {hasNewerDraft && matchingDraft ? (
+                        <View style={[styles.updateBanner, { backgroundColor: c.accentTint }]}>
+                          <Text variant="caption" color="accent" style={[styles.flex, fontFor(600)]}>
+                            Edited since assigning (v{matchingDraft.version} ready). Update students?
                           </Text>
-                          {isDesktop ? (
-                            <>
-                              <PillButton label="Edit" kind="neutral" size="sm" onPress={() => setEditing(m)} accessibilityLabel={`Edit ${m.title}`} />
-                              {!IS_PITCH && classes.length > 1 ? (
-                                <PillButton label="Copy" kind="neutral" size="sm" onPress={() => setCopying(m)} accessibilityLabel={`Copy ${m.title} to another class`} />
-                              ) : null}
-                            </>
-                          ) : null}
-                          <IconButton
-                            kind="remove"
-                            tone="danger"
-                            size={32}
-                            accessibilityLabel={T.deleteModule}
-                            onPress={() => setToDelete(m)}
+                          <PillButton
+                            label={updatingId === m.id ? 'Updating…' : 'Update students'}
+                            size="sm"
+                            disabled={updatingId === m.id}
+                            onPress={() => void handleUpdateStudents(m, matchingDraft)}
                           />
                         </View>
+                      ) : null}
+
+                      <View style={styles.actionRow}>
+                        <Text variant="caption" color="accent" style={[fontFor(600), styles.flex]}>
+                          {m.flashcards.length} flashcards · {m.questions.length} quiz Qs
+                        </Text>
+                        {matchingDraft ? (
+                          <PillButton
+                            label="Edit draft"
+                            kind="neutral"
+                            size="sm"
+                            onPress={() => setEditingDraft(matchingDraft)}
+                          />
+                        ) : null}
+                        {m.sourceId && !IS_PITCH ? (
+                          <PillButton
+                            label="View original"
+                            kind="neutral"
+                            size="sm"
+                            onPress={() => void handleViewOriginal({ moduleId: m.id })}
+                          />
+                        ) : null}
+                        {matchingDraft && !IS_PITCH && classes.length > 1 ? (
+                          <PillButton
+                            label="Assign"
+                            kind="neutral"
+                            size="sm"
+                            onPress={() => setAssigningDraft({ draft: matchingDraft })}
+                          />
+                        ) : null}
+                        <IconButton
+                          kind="remove"
+                          tone="danger"
+                          size={32}
+                          accessibilityLabel={`Unassign ${m.title}`}
+                          onPress={() => setToDelete(m)}
+                        />
                       </View>
-                    </Card>
-                  ))
-                )}
-              </Card>
-              {isDesktop && selectedMod ? <ModulePreview mod={selectedMod} /> : null}
-            </Stagger>
-          </ScrollView>
-
-        <EditModuleDialog mod={editing} onClose={() => setEditing(null)} />
-        <CopyModuleDialog mod={copying} onClose={() => setCopying(null)} />
-
-        <ConfirmDialog
-          visible={!!toDelete}
-          title={`Delete "${toDelete?.title ?? ''}"?`}
-          body="Students in this class lose these flashcards and quiz questions. This can't be undone."
-          confirmLabel="Delete module"
-          onClose={() => setToDelete(null)}
-          onConfirm={() => (toDelete ? handleDelete(toDelete) : undefined)}
-        />
-
-        <BottomSheet
-          visible={!isDesktop && !!previewMod}
-          onClose={() => setPreviewMod(null)}
-          accessibilityLabel={previewMod?.title ?? ''}
-        >
-          {previewMod ? (
-            <View style={styles.gap}>
-              <Text variant="title">{previewMod.title}</Text>
-              <Text variant="subhead">{previewMod.summary}</Text>
-              <Text variant="overline">
-                {previewMod.flashcards.length} {T.flashcards} · {previewMod.questions.length} {T.quizzes}
-              </Text>
-              <PillButton label="Close" kind="neutral" block onPress={() => setPreviewMod(null)} />
-            </View>
+                    </View>
+                  </Card>
+                );
+              })
+            )}
+          </Card>
+          {isDesktop && selectedMod ? (
+            <ModulePreview
+              mod={selectedMod}
+              onViewOriginal={
+                selectedMod.sourceId && !IS_PITCH
+                  ? () => void handleViewOriginal({ moduleId: selectedMod.id })
+                  : undefined
+              }
+            />
           ) : null}
-        </BottomSheet>
+        </Stagger>
+      </ScrollView>
 
-      </KeyboardAvoidingView>
+      <EditDraftDialog
+        draft={editingDraft}
+        onClose={() => setEditingDraft(null)}
+        onAssign={(latest) => setAssigningDraft({ draft: latest })}
+      />
+      <AssignDraftDialog
+        draft={assigningDraft?.draft ?? null}
+        defaultClassIds={assigningDraft?.defaultClassIds}
+        onClose={() => setAssigningDraft(null)}
+      />
+
+      <ConfirmDialog
+        visible={!!toDelete}
+        title={`Unassign "${toDelete?.title ?? ''}"?`}
+        body="Students in this class will no longer see this module. Your private draft stays safe."
+        confirmLabel="Unassign"
+        onClose={() => setToDelete(null)}
+        onConfirm={() => (toDelete ? handleDelete(toDelete) : undefined)}
+      />
+
+      <ConfirmDialog
+        visible={!!toArchive}
+        title={`Archive draft "${toArchive?.title ?? ''}"?`}
+        body="This hides the draft from your workspace. Already-assigned student snapshots stay intact."
+        confirmLabel="Archive draft"
+        onClose={() => setToArchive(null)}
+        onConfirm={() => (toArchive ? archiveDraft(toArchive.id) : undefined)}
+      />
+
+      <BottomSheet
+        visible={!isDesktop && !!previewMod}
+        onClose={() => setPreviewMod(null)}
+        accessibilityLabel={previewMod?.title ?? ''}
+      >
+        {previewMod ? (
+          <View style={styles.gap}>
+            <Text variant="title">{previewMod.title}</Text>
+            <Text variant="subhead">{previewMod.summary}</Text>
+            <Text variant="overline">
+              {previewMod.flashcards.length} {T.flashcards} · {previewMod.questions.length} {T.quizzes}
+            </Text>
+            {previewMod.sourceId && !IS_PITCH ? (
+              <PillButton
+                label="View original file"
+                kind="secondary"
+                block
+                onPress={() => void handleViewOriginal({ moduleId: previewMod.id })}
+              />
+            ) : null}
+            <PillButton label="Close" kind="neutral" block onPress={() => setPreviewMod(null)} />
+          </View>
+        ) : null}
+      </BottomSheet>
+    </KeyboardAvoidingView>
   );
 }
 
-/** Laptop: everything students receive, so the teacher can audit it. */
-function ModulePreview({ mod }: { mod: ClassModule }) {
+/** Laptop: everything students receive in this assigned snapshot. */
+function ModulePreview({ mod, onViewOriginal }: { mod: ClassModule; onViewOriginal?: () => void }) {
   const { c } = useTheme();
-  const [tab, setTab] = useState<'cards' | 'quiz'>('cards');
+  const [tab, setTab] = useState<'cards' | 'quiz'>('quiz');
   return (
     <Card style={[styles.gap, styles.previewCol]}>
       <View style={styles.rowBetween}>
         <Text variant="title" style={styles.flex}>
           {mod.title}
         </Text>
+        {mod.quizVersion != null ? <Chip label={`v${mod.quizVersion}`} kind="tinted" style={styles.smallChip} /> : null}
         <Chip label={mod.subject} kind="neutral" style={styles.smallChip} />
       </View>
-      {mod.sourceName ? <Text variant="caption">From {mod.sourceName}</Text> : null}
+      <View style={styles.rowBetween}>
+        {mod.sourceName ? <Text variant="caption">From {mod.sourceName}</Text> : <View />}
+        {onViewOriginal ? (
+          <PillButton
+            label="View original"
+            kind="secondary"
+            size="sm"
+            icon={<FileText size={14} weight="bold" color={c.accent} />}
+            onPress={onViewOriginal}
+          />
+        ) : null}
+      </View>
       <Text variant="body">{mod.summary}</Text>
       <SegmentedControl
         options={[
-          { value: 'cards', label: `${T.flashcards} (${mod.flashcards.length})` },
           { value: 'quiz', label: `Quiz (${mod.questions.length})` },
+          { value: 'cards', label: `${T.flashcards} (${mod.flashcards.length})` },
         ]}
         value={tab}
         onChange={(v) => setTab(v as 'cards' | 'quiz')}
@@ -320,7 +510,12 @@ function ModulePreview({ mod }: { mod: ClassModule }) {
                 {i + 1}. {q.prompt}
               </Text>
               {q.options.map((o, k) => (
-                <Text key={k} variant="subhead" color={k === q.answer ? 'success' : 'textSecondary'} style={k === q.answer ? fontFor(700) : undefined}>
+                <Text
+                  key={k}
+                  variant="subhead"
+                  color={k === q.answer ? 'success' : 'textSecondary'}
+                  style={k === q.answer ? fontFor(700) : undefined}
+                >
                   {k === q.answer ? '✓ ' : '• '}
                   {o}
                 </Text>
@@ -337,8 +532,8 @@ const styles = StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   bodyDesktop: { paddingHorizontal: 28, paddingTop: 12 },
   columns: { flexDirection: 'row', gap: space.gap, alignItems: 'flex-start' },
-  listCol: { flex: 0.9, minWidth: 0 },
-  previewCol: { flex: 1.4, minWidth: 0 },
+  listCol: { flex: 0.95, minWidth: 0 },
+  previewCol: { flex: 1.35, minWidth: 0 },
   previewItem: { borderRadius: radius.inset, padding: 14, gap: 6 },
   flex: { flex: 1 },
   body: { paddingHorizontal: space.screen, gap: space.gap, width: '100%', alignSelf: 'center' },
@@ -355,7 +550,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 4 },
+  updateBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: radius.sm,
+  },
   modRow: { borderRadius: radius.inset },
-  modRowInner: { padding: 14, gap: 6 },
+  modRowInner: { padding: 14, gap: 8 },
   smallChip: { height: 26, paddingHorizontal: 10 },
 });
