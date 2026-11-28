@@ -22,8 +22,8 @@ type Props = {
 
 /**
  * Feature tile with a two-line label and corner illustration.
- * Day theme: crisp white card surface with hairline edge and subtle shadow.
- * Night theme: elevated dark surface (`tileDark`) for low-glare reading.
+ * Day: warm paper (#F0EEE9) lifted by a layered contact + ambient shadow and a
+ * thin top highlight; no border. Night: `tileDark` with the same layered depth.
  */
 export function FeatureTile({ title, status, statusAccent, art, onPress, style, height = 120 }: Props) {
   const { c, isNight } = useTheme();
@@ -39,11 +39,11 @@ export function FeatureTile({ title, status, statusAccent, art, onPress, style, 
   const content = (
     <>
       <View style={styles.label}>
-        <Text variant="headline" color={titleColor} numberOfLines={1}>
+        <Text variant="headline" color={titleColor} numberOfLines={2}>
           {title}
         </Text>
         {status ? (
-          <Text variant="subhead" color={statusColor} numberOfLines={1}>
+          <Text variant="subhead" color={statusColor} numberOfLines={2}>
             {status}
           </Text>
         ) : null}
@@ -58,9 +58,7 @@ export function FeatureTile({ title, status, statusAccent, art, onPress, style, 
   const s = [
     styles.tile,
     Platform.OS === 'ios' && ({ borderCurve: 'continuous' } as const),
-    isNight
-      ? { backgroundColor: c.tileDark, height }
-      : [styles.daySurface, { backgroundColor: c.card, borderColor: c.hairline, height }],
+    { backgroundColor: isNight ? c.tileDark : PAPER, boxShadow: isNight ? NIGHT_SHADOW : DAY_SHADOW, height },
     style,
   ];
   if (onPress) {
@@ -81,16 +79,16 @@ export function FeatureTile({ title, status, statusAccent, art, onPress, style, 
 /** Backwards-compatible alias for `FeatureTile`. */
 export const DarkTile = FeatureTile;
 
+/** Warm "dirty white" paper, a step below the #F6F5F1 canvas so tiles read as objects. */
+const PAPER = '#F0EEE9';
+/** Contact shadow + soft ambient lift + a 1px top highlight. */
+const DAY_SHADOW =
+  '0 1px 2px rgba(28,25,20,0.06), 0 8px 22px -10px rgba(28,25,20,0.18), inset 0 1px 0 rgba(255,255,255,0.7)';
+const NIGHT_SHADOW =
+  '0 1px 2px rgba(0,0,0,0.30), 0 10px 24px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)';
+
 const styles = StyleSheet.create({
   tile: { borderRadius: radius.tile, overflow: 'hidden', padding: 16 },
-  daySurface: {
-    borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 0,
-  },
-  label: { gap: 2, maxWidth: '70%', zIndex: 1 },
-  art: { position: 'absolute', right: -8, bottom: -8 },
+  label: { gap: 2, maxWidth: '78%', zIndex: 1 },
+  art: { position: 'absolute', right: -8, bottom: -8, transform: [{ scale: 0.8 }], transformOrigin: 'right bottom' },
 });

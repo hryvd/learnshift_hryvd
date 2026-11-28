@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
 
   const thumb = useAnimatedStyle(() => ({
     width: segW,
-    transform: [{ translateX: withSpring(index * segW, spring.snappy) }],
+    transform: [{ translateX: withSpring(index * segW, spring.ui) }],
   }));
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);

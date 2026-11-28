@@ -5,17 +5,18 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text as RNText,
   useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +25,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { Text } from '@/components/ui';
 import type { WindowRect } from '@/components/ui/FloatingBar';
 import { haptic } from '@/design/haptics';
-import { spring, useReducedMotion } from '@/design/motion';
+import { ease, spring, useReducedMotion } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { FONT_MAIN } from '@/design/typography';
@@ -32,24 +33,34 @@ import { useT } from '@/i18n/useT';
 
 import { ShiftSheetContent } from './ShiftSheet';
 
-const BTN_SIZE = 58;
+const BTN = 58;
+const MAX_W = 560;
+const CLOSE = 36;
 
 /**
- * Morphs the center '+' button directly into the full Shift card, covering the
- * floating tab bar so all taps stay inside the open card. Animates transform
- * and opacity only (compositor-friendly 60fps on Android and web).
+ * The center '+' becomes the Shift card as ONE object, in three layers:
+ *  1. Shape: a plain rounded rect whose frame, radius and color travel from the
+ *     button circle to the card. It has no children, so nothing is ever stretched.
+ *  2. Content: header + tiles at their final position; fades/rises in late and
+ *     out early, never scaled non-uniformly.
+ *  3. Glyph: the '+' itself flies to the close button and turns into '×'.
+ * Open is unhurried (~520 ms, no visible bounce); close is quicker (~380 ms).
+ * Springs keep velocity, so tapping mid-animation reverses smoothly.
  */
 export function ShiftMorph({
   visible,
   origin,
   onClose,
   onPresenceChange,
+  progress,
 }: {
   visible: boolean;
   origin: WindowRect | null;
   onClose: () => void;
-  /** True while the morph card is mounted and owns the center button visual. */
+  /** True while the morph is mounted and owns the center button visual. */
   onPresenceChange?: (mounted: boolean) => void;
+  /** 0 = closed, 1 = open. Owned by the layout so the screen behind can recede. */
+  progress: SharedValue<number>;
 }) {
   const { c } = useTheme();
   const t = useT();
@@ -63,10 +74,10 @@ export function ShiftMorph({
     visibleRef.current = visible;
   }, [visible]);
 
-  const progress = useSharedValue(visible ? 1 : 0);
   const drag = useSharedValue(0);
-  const cardW = useSharedValue(Math.min(winW, 560));
-  const cardH = useSharedValue(Math.min(Math.round(winH * 0.78), 640));
+  const cardH = useSharedValue(Math.min(Math.round(winH * 0.78), 680));
+  const rowY = useSharedValue(23);
+  const rowH = useSharedValue(CLOSE);
 
   if (visible && !mounted) setMounted(true);
 
@@ -82,16 +93,15 @@ export function ShiftMorph({
     if (!mounted) return;
     if (visible) {
       drag.set(0);
-      progress.set(reduced ? withTiming(1, { duration: 150 }) : withSpring(1, spring.smooth));
+      haptic.light();
+      progress.set(reduced ? withTiming(1, { duration: 180, easing: ease.out }) : withSpring(1, spring.morphOpen));
     } else {
+      const done = (finished?: boolean) => {
+        'worklet';
+        if (finished) scheduleOnRN(finishUnmount);
+      };
       progress.set(
-        reduced
-          ? withTiming(0, { duration: 150 }, (finished) => {
-              if (finished) scheduleOnRN(finishUnmount);
-            })
-          : withSpring(0, { ...spring.snappy, overshootClamping: true }, (finished) => {
-              if (finished) scheduleOnRN(finishUnmount);
-            }),
+        reduced ? withTiming(0, { duration: 160, easing: ease.out }, done) : withSpring(0, spring.morphClose, done),
       );
     }
   }, [visible, mounted, reduced, progress, drag]);
@@ -106,129 +116,154 @@ export function ShiftMorph({
     return () => sub.remove();
   }, [visible, onClose]);
 
-  // Fallback button center when measureInWindow hasn't fired yet.
-  const btnCx = origin ? origin.x + origin.width / 2 : winW / 2;
-  const btnCy = origin ? origin.y + origin.height / 2 : winH - Math.max(insets.bottom - 10, 12) - 32 - 18;
+  // Geometry (JS constants captured by worklets).
+  const cardW = Math.min(winW, MAX_W);
+  const cardX = (winW - cardW) / 2;
+  const fromX = origin ? origin.x + (origin.width - BTN) / 2 : winW / 2 - BTN / 2;
+  const fromY = origin ? origin.y + (origin.height - BTN) / 2 : winH - Math.max(insets.bottom, 12) - 58;
+  const closeCx = cardX + cardW - space.screen - CLOSE / 2;
+  const sheetR = radius.sheet;
 
   const pan = usePanGesture({
     activeOffsetY: [-8, 8],
     onUpdate: (e) => {
       'worklet';
-      drag.set(Math.max(0, e.translationY));
+      // Follows the finger down; resists upward drags instead of hitting a wall.
+      const y = e.translationY;
+      drag.set(y >= 0 ? y : -Math.sqrt(-y) * 2.2);
     },
     onDeactivate: (e) => {
       'worklet';
-      if (e.translationY > 110 || e.velocityY > 900) {
+      if (e.translationY > 110 || e.velocityY > 550) {
         scheduleOnRN(onClose);
       } else {
-        drag.set(withSpring(0, spring.snappy));
+        drag.set(withSpring(0, spring.ui));
       }
     },
   });
 
   const scrimStyle = useAnimatedStyle(() => ({
-    opacity: progress.get(),
+    opacity: interpolate(progress.get(), [0, 1], [0, 1], Extrapolation.CLAMP),
   }));
 
-  // Compositor-only transform morph from the button rect to the anchored bottom card.
-  const cardStyle = useAnimatedStyle(() => {
+  // 1. Shape: frame + radius + color, from the button circle to the card.
+  const shapeStyle = useAnimatedStyle(() => {
     const p = progress.get();
+    const h = cardH.get();
+    const toY = winH - h;
     if (reduced) {
       return {
+        left: cardX,
+        top: toY + drag.get(),
+        width: cardW,
+        height: h,
+        borderTopLeftRadius: sheetR,
+        borderTopRightRadius: sheetR,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
         opacity: p,
-        transform: [{ translateY: drag.get() }],
+        backgroundColor: c.bg,
       };
     }
-    const w = Math.max(BTN_SIZE, cardW.get());
-    const h = Math.max(BTN_SIZE, cardH.get());
-    const targetCx = winW / 2;
-    const targetCy = winH - h / 2;
-    const startDx = btnCx - targetCx;
-    const startDy = btnCy - targetCy;
-    const sx = BTN_SIZE / w;
-    const sy = BTN_SIZE / h;
+    const q = Math.max(0, p); // springs may dip below 0 on close; never invert the frame
+    const top = interpolate(q, [0, 1], [BTN / 2, sheetR], Extrapolation.CLAMP);
+    const bottom = interpolate(q, [0, 1], [BTN / 2, 0], Extrapolation.CLAMP);
     return {
-      opacity: interpolate(p, [0, 0.06], [0.9, 1], Extrapolation.CLAMP),
+      left: interpolate(q, [0, 1], [fromX, cardX]),
+      top: interpolate(q, [0, 1], [fromY, toY]) + drag.get(),
+      width: interpolate(q, [0, 1], [BTN, cardW]),
+      height: interpolate(q, [0, 1], [BTN, h]),
+      borderTopLeftRadius: top,
+      borderTopRightRadius: top,
+      borderBottomLeftRadius: bottom,
+      borderBottomRightRadius: bottom,
+      opacity: 1,
+      backgroundColor: interpolateColor(q, [0, 0.55], [c.accent, c.bg]),
+    };
+  });
+
+  const opening = visible;
+  // 2. Content: late in on open, early out on close; uniform scale only.
+  const contentStyle = useAnimatedStyle(() => {
+    const p = progress.get();
+    // Open: content arrives late. Close: it leaves first, before the shape shrinks.
+    const cp = opening
+      ? interpolate(p, [0.38, 0.92], [0, 1], Extrapolation.CLAMP)
+      : interpolate(p, [0.66, 0.97], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: reduced ? p : cp,
       transform: [
-        { translateX: interpolate(p, [0, 1], [startDx, 0], Extrapolation.CLAMP) },
-        { translateY: interpolate(p, [0, 1], [startDy, 0], Extrapolation.CLAMP) + drag.get() },
-        { scaleX: interpolate(p, [0, 1], [sx, 1], Extrapolation.CLAMP) },
-        { scaleY: interpolate(p, [0, 1], [sy, 1], Extrapolation.CLAMP) },
+        { translateY: drag.get() + (reduced ? 0 : (1 - cp) * 10) },
+        { scale: reduced ? 1 : 0.97 + 0.03 * cp },
       ],
     };
   });
 
-  // Accent shell fades out quickly as the button morphs into the card surface.
-  const accentShellStyle = useAnimatedStyle(() => ({
-    opacity: reduced ? 0 : interpolate(progress.get(), [0, 0.42], [1, 0], Extrapolation.CLAMP),
+  // 3. Glyph: the '+' travels to the close button and turns into '×'.
+  const glyphStyle = useAnimatedStyle(() => {
+    const p = Math.max(0, progress.get());
+    const closeCy = winH - cardH.get() + rowY.get() + rowH.get() / 2;
+    const cx = interpolate(p, [0, 1], [fromX + BTN / 2, closeCx]);
+    const cy = interpolate(p, [0, 1], [fromY + BTN / 2, closeCy]) + drag.get();
+    return {
+      opacity: reduced ? p : 1,
+      transform: [
+        { translateX: cx - GLYPH / 2 },
+        { translateY: cy - GLYPH / 2 },
+        { rotate: `${p * 45}deg` },
+        { scale: interpolate(p, [0, 1], [1, 0.7]) },
+      ],
+    };
+  });
+  const glyphColor = useAnimatedStyle(() => ({
+    color: interpolateColor(Math.max(0, progress.get()), [0, 0.6], [c.onAccent, c.text]),
   }));
-
-  // Tile grid fades and rises in from progress 0.55 to 1.
-  const contentStyle = useAnimatedStyle(() => {
-    const p = progress.get();
-    const cp = interpolate(p, [0.55, 1], [0, 1], Extrapolation.CLAMP);
-    return {
-      opacity: reduced ? p : cp,
-      transform: [{ translateY: reduced ? 0 : (1 - cp) * 18 }],
-    };
-  });
-
-  // '+' rotates 45° into '×' and rides smoothly to the top-right close button.
-  const closeGlyphStyle = useAnimatedStyle(() => {
-    const p = progress.get();
-    return {
-      transform: [{ rotate: `${p * 45}deg` }],
-    };
-  });
-
-  const maxCardHeight = Math.round(winH * 0.85);
 
   if (!mounted) return null;
 
   return (
     <View
-      style={styles.overlay}
+      style={StyleSheet.absoluteFill}
       pointerEvents={visible ? 'auto' : 'none'}
       accessibilityViewIsModal
       accessibilityLabel={t.shift.title}
     >
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim }, scrimStyle]}>
-        <Pressable
-          style={styles.fill}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={t.common.close}
-        />
+        <Pressable style={styles.fill} onPress={onClose} accessibilityRole="button" accessibilityLabel={t.common.close} />
       </Animated.View>
+
+      <Animated.View pointerEvents="none" style={[styles.shape, shapeStyle]} />
 
       <Animated.View
         onLayout={(e) => {
-          const { width, height } = e.nativeEvent.layout;
-          if (width > 0) cardW.set(width);
+          const { height } = e.nativeEvent.layout;
           if (height > 0) cardH.set(height);
         }}
         style={[
-          styles.card,
+          styles.content,
           {
-            backgroundColor: c.bg,
-            maxHeight: maxCardHeight,
+            left: cardX,
+            width: cardW,
+            maxHeight: Math.round(winH * 0.85),
             paddingBottom: Math.max(insets.bottom, 20),
           },
-          cardStyle,
+          contentStyle,
         ]}
       >
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.accentFill, { backgroundColor: c.accent }, accentShellStyle]}
-        />
-
         <GestureDetector gesture={pan}>
           <View style={styles.header}>
             <View style={[styles.grabber, { backgroundColor: c.textTertiary }]} />
-            <View style={styles.headerRow}>
+            <View
+              style={styles.headerRow}
+              onLayout={(e) => {
+                rowY.set(e.nativeEvent.layout.y);
+                rowH.set(e.nativeEvent.layout.height);
+              }}
+            >
               <Text variant="title" style={styles.flex}>
                 {t.shift.title}
               </Text>
+              {/* The visible × is the flying glyph; this is its hit target and disc. */}
               <Pressable
                 onPress={() => {
                   haptic.select();
@@ -237,98 +272,64 @@ export function ShiftMorph({
                 hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel={t.common.close}
-                style={[styles.closeBtn, { backgroundColor: c.inset }]}
-              >
-                <Animated.View style={closeGlyphStyle}>
-                  <RNText allowFontScaling={false} style={[styles.plusGlyph, { color: c.text }]}>
-                    +
-                  </RNText>
-                </Animated.View>
-              </Pressable>
+                style={({ pressed }) => [
+                  styles.closeBtn,
+                  { backgroundColor: c.inset, transform: [{ scale: pressed ? 0.92 : 1 }] },
+                ]}
+              />
             </View>
           </View>
         </GestureDetector>
 
-        <Animated.View style={[styles.bodyWrap, contentStyle]}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <ShiftSheetContent onClose={onClose} />
-          </ScrollView>
-        </Animated.View>
+        <ScrollView showsVerticalScrollIndicator={false} bounces={false} contentContainerStyle={styles.scrollContent}>
+          <ShiftSheetContent onClose={onClose} />
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View pointerEvents="none" style={[styles.glyph, glyphStyle]}>
+        <Animated.Text allowFontScaling={false} style={[styles.plusGlyph, glyphColor]}>
+          +
+        </Animated.Text>
       </Animated.View>
     </View>
   );
 }
 
+const GLYPH = 40;
+
 const styles = StyleSheet.create({
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 50,
-    elevation: 50,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
   fill: { flex: 1 },
   flex: { flex: 1 },
-  card: {
-    width: '100%',
-    maxWidth: 560,
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
+  shape: {
+    position: 'absolute',
     ...(Platform.OS === 'ios' ? ({ borderCurve: 'continuous' } as const) : null),
-    overflow: 'hidden',
+    boxShadow: '0 -6px 28px rgba(0,0,0,0.16)',
+  },
+  content: {
+    position: 'absolute',
+    bottom: 0,
     paddingHorizontal: space.screen,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: -6 },
-    elevation: 24,
   },
-  accentFill: {
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-  },
-  header: {
-    paddingTop: 10,
-    paddingBottom: space.sm,
-    gap: 8,
-  },
-  grabber: {
-    width: 36,
-    height: 5,
-    borderRadius: 3,
-    alignSelf: 'center',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  header: { paddingTop: 10, paddingBottom: space.sm, gap: 8 },
+  grabber: { width: 36, height: 5, borderRadius: 3, alignSelf: 'center' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  scrollContent: { paddingBottom: 6 },
+  closeBtn: { width: CLOSE, height: CLOSE, borderRadius: CLOSE / 2 },
+  glyph: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: GLYPH,
+    height: GLYPH,
     alignItems: 'center',
     justifyContent: 'center',
   },
   plusGlyph: {
     fontFamily: FONT_MAIN,
-    fontSize: 24,
-    lineHeight: 28,
+    fontWeight: 'normal',
+    fontSize: 34,
+    lineHeight: 40,
     textAlign: 'center',
     includeFontPadding: false,
-  },
-  bodyWrap: {
-    flexShrink: 1,
-  },
-  scrollContent: {
-    paddingBottom: 6,
   },
 });
