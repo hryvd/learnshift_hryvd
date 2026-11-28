@@ -1,8 +1,8 @@
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { haptic } from '@/design/haptics';
-import { pressScale, spring } from '@/design/motion';
+import { ease, PRESS_IN_MS, pressScale, spring } from '@/design/motion';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -13,7 +13,10 @@ export type PressableScaleProps = Omit<PressableProps, 'style'> & {
   haptics?: boolean;
 };
 
-/** The one pressable in the app: spring scale + light selection haptic. */
+/**
+ * The one pressable in the app. Press-in is a quick strong ease-out (feels
+ * instant); release is a critically damped spring, so nothing wobbles.
+ */
 export function PressableScale({
   style,
   scaleTo = pressScale.button,
@@ -35,11 +38,11 @@ export function PressableScale({
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPressIn={(e) => {
-        scale.set(withSpring(scaleTo, spring.snappy));
+        scale.set(withTiming(scaleTo, { duration: PRESS_IN_MS, easing: ease.outStrong }));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        scale.set(withSpring(1, spring.snappy));
+        scale.set(withSpring(1, spring.release));
         onPressOut?.(e);
       }}
       onPress={(e) => {

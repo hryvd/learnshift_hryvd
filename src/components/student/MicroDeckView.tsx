@@ -320,11 +320,11 @@ export function MicroDeckView({
             </Text>
           </PressableScale>
           {!scrollCards ? (
-            <Pressable onPress={() => setStep(0)} style={styles.backStep}>
+            <PressableScale onPress={() => setStep(0)} style={styles.backStep}>
               <Text variant="caption" color={INK_SUB}>
                 ← Back to Hook
               </Text>
-            </Pressable>
+            </PressableScale>
           ) : null}
         </View>
       </View>
@@ -484,11 +484,11 @@ export function MicroDeckView({
             <GuardrailRow onDismiss={onDismiss} onNotNow1h={onNotNow1h} onWindDown={onWindDown} />
           )}
           {!scrollCards ? (
-            <Pressable onPress={() => setStep(1)} style={styles.backStep}>
+            <PressableScale onPress={() => setStep(1)} style={styles.backStep}>
               <Text variant="caption" color={INK_SUB}>
                 ← Back to Lesson
               </Text>
-            </Pressable>
+            </PressableScale>
           ) : null}
         </View>
       </View>

@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -624,11 +624,11 @@ function SignInStep() {
         textContentType="password"
         onSubmitEditing={submit}
       />
-      <Pressable onPress={forgot} accessibilityRole="button" style={styles.link} hitSlop={8}>
+      <PressableScale onPress={forgot} accessibilityRole="button" style={styles.link} hitSlop={8}>
         <Text variant="subhead" color="accent">
           {t.acct.forgot}
         </Text>
-      </Pressable>
+      </PressableScale>
     </Shell>
   );
 }
