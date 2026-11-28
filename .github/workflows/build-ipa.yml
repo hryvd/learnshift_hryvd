@@ -149,8 +149,15 @@ jobs:
           set -euo pipefail
           WORKSPACE="$(find ios -maxdepth 1 -name '*.xcworkspace' | head -n 1)"
           SCHEME="$(basename "$WORKSPACE" .xcworkspace)"
-          echo "Building workspace=$WORKSPACE scheme=$SCHEME (unsigned Release)"
+          echo "Building workspace=$WORKSPACE scheme=$SCHEME (unsigned Release archive)"
 
+          shopt -s nullglob
+          for ent in ios/*/*.entitlements; do
+            /usr/libexec/PlistBuddy -c "Delete :aps-environment" "$ent" >/dev/null 2>&1 || true
+          done
+          shopt -u nullglob
+
+          rm -rf ios/build/LearnShift.xcarchive
           LOG_FILE="xcodebuild-unsigned.log"
           set +e
           xcodebuild \
@@ -159,25 +166,26 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -derivedDataPath ios/build/DerivedData \
+            -archivePath ios/build/LearnShift.xcarchive \
             COMPILER_INDEX_STORE_ENABLE=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
-            build > "$LOG_FILE" 2>&1
+            CODE_SIGN_ENTITLEMENTS="" \
+            archive > "$LOG_FILE" 2>&1
           STATUS=$?
           set -e
 
           if [ "$STATUS" -ne 0 ]; then
-            echo "::error::xcodebuild failed (last 160 lines):"
+            echo "::error::xcodebuild archive failed (last 160 lines):"
             tail -n 160 "$LOG_FILE"
             exit "$STATUS"
           fi
 
-          APP_PATH="$(find ios/build/DerivedData/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -n 1)"
+          APP_PATH="$(find ios/build/LearnShift.xcarchive/Products/Applications -maxdepth 1 -name '*.app' | head -n 1)"
           if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
-            echo "::error::Built .app bundle not found in DerivedData"
+            echo "::error::Archived .app bundle not found in LearnShift.xcarchive/Products/Applications"
             exit 1
           fi
 
@@ -186,8 +194,8 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "$APP_PATH/main.jsbundle" ] && [ ! -d "$APP_PATH/EXUpdates.bundle" ]; then
-            echo "::error::Missing embedded JS bundle in $APP_PATH"
+          if [ ! -f "$APP_PATH/main.jsbundle" ]; then
+            echo "::error::Missing embedded main.jsbundle in $APP_PATH"
             ls -la "$APP_PATH"
             exit 1
           fi
@@ -196,7 +204,50 @@ jobs:
           mkdir -p build-ipa/Payload
           cp -R "$APP_PATH" build-ipa/Payload/
           APP_BASENAME="$(basename "$APP_PATH")"
-          codesign --force --deep --sign - "build-ipa/Payload/$APP_BASENAME"
+          APP_DST="build-ipa/Payload/$APP_BASENAME"
+
+          # Disable EXUpdates in unsigned/web-signer IPAs so launches always boot straight from main.jsbundle.
+          EXPO_PLIST="$APP_DST/Expo.plist"
+          if [ -f "$EXPO_PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Set :EXUpdatesEnabled false" "$EXPO_PLIST" || /usr/libexec/PlistBuddy -c "Add :EXUpdatesEnabled bool false" "$EXPO_PLIST"
+            /usr/libexec/PlistBuddy -c "Set :EXUpdatesCheckOnLaunch NEVER" "$EXPO_PLIST" || /usr/libexec/PlistBuddy -c "Add :EXUpdatesCheckOnLaunch string NEVER" "$EXPO_PLIST"
+          fi
+
+          # Strip prior signatures and ad-hoc sign inside-out (Frameworks -> PlugIns -> outer .app) without --deep.
+          find "$APP_DST" -name "_CodeSignature" -type d -exec rm -rf {} +
+
+          if [ -d "$APP_DST/Frameworks" ]; then
+            while IFS= read -r -d '' fw; do
+              echo "Ad-hoc signing embedded item: $(basename "$fw")"
+              codesign --force --sign - --timestamp=none "$fw"
+            done < <(find "$APP_DST/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0)
+          fi
+
+          if [ -d "$APP_DST/PlugIns" ]; then
+            while IFS= read -r -d '' ext; do
+              echo "Ad-hoc signing app extension: $(basename "$ext")"
+              codesign --force --sign - --timestamp=none "$ext"
+            done < <(find "$APP_DST/PlugIns" -maxdepth 1 -name '*.appex' -print0)
+          fi
+
+          codesign --force --sign - --timestamp=none "$APP_DST"
+          codesign --verify --deep --strict --verbose=2 "$APP_DST"
+
+          # Hard gate: confirm every embedded framework binary carries LC_CODE_SIGNATURE
+          if [ -d "$APP_DST/Frameworks" ]; then
+            while IFS= read -r -d '' fw; do
+              FW_NAME="$(basename "$fw" .framework)"
+              FW_BIN="$fw/$FW_NAME"
+              if [ -f "$FW_BIN" ]; then
+                codesign --verify --strict "$fw"
+                if ! otool -l "$FW_BIN" | grep -q "LC_CODE_SIGNATURE"; then
+                  echo "::error::Embedded framework binary missing LC_CODE_SIGNATURE: $FW_BIN"
+                  exit 1
+                fi
+              fi
+            done < <(find "$APP_DST/Frameworks" -maxdepth 1 -name '*.framework' -print0)
+          fi
+
           (cd build-ipa && zip -qry ../LearnShift.ipa Payload)
 
       - name: Build and export signed IPA
@@ -304,7 +355,9 @@ jobs:
             echo "::error::LearnShift.ipa looks too small ($SIZE_BYTES bytes)"
             exit 1
           fi
-          echo "LearnShift.ipa size: $SIZE_BYTES bytes"
+          UNPACKED_BYTES="$(unzip -l LearnShift.ipa | awk '/files$/{print $1}' | tail -n 1)"
+          FW_COUNT="$(unzip -Z1 LearnShift.ipa | grep -cE '\.app/Frameworks/[^/]+\.framework/?$' || true)"
+          echo "LearnShift.ipa compressed: $SIZE_BYTES bytes (unpacked: ${UNPACKED_BYTES:-unknown} bytes, frameworks: $FW_COUNT)"
           unzip -l LearnShift.ipa | head -n 30
 
           {
@@ -313,7 +366,9 @@ jobs:
             echo "| Field | Value |"
             echo "|---|---|"
             echo "| Packaging mode | \`${{ steps.mode.outputs.export_method }}\` |"
-            echo "| IPA size | \`${SIZE_BYTES}\` bytes |"
+            echo "| IPA size (compressed) | \`${SIZE_BYTES}\` bytes |"
+            echo "| App bundle size (unpacked) | \`${UNPACKED_BYTES:-unknown}\` bytes |"
+            echo "| Embedded frameworks | \`${FW_COUNT}\` |"
             echo "| Artifact name | \`LearnShift-ipa\` |"
           } >> "$GITHUB_STEP_SUMMARY"
 

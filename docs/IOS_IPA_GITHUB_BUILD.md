@@ -11,12 +11,14 @@ When complete, download the `LearnShift-ipa` zip from the workflow run's **Artif
 
 ## Packaging Modes
 
-### 1. Unsigned / Sideload-Ready `.ipa` (Default — no Apple Developer account required)
-If signing secrets are not set, the workflow builds a Release `iphoneos` binary, ad-hoc signs the bundle (`codesign --force --deep --sign -`), and packages `Payload/LearnShift.app` into `LearnShift.ipa`.
+### 1. Unsigned / Sideload & Web-Signer Ready `.ipa` (Default — no Apple Developer account required)
+If signing secrets are not set, the workflow creates a clean Release `iphoneos` archive (`xcodebuild archive`, stripped of `aps-environment` entitlements so free/web-signer profiles won't reject Push entitlements), disables `EXUpdates` in `Expo.plist` so launches boot straight from the embedded `main.jsbundle`, ad-hoc signs every embedded `.framework`, `.dylib`, and `.appex` **bottom-up (inside-out)** before signing the outer `.app` bundle (without deprecated `--deep`), verifies `LC_CODE_SIGNATURE` across all embedded frameworks, and packages `Payload/LearnShift.app` into `LearnShift.ipa`.
 
-To keep free-Apple-ID sideloading compatible, [prepare-ios-ci.mjs](../scripts/prepare-ios-ci.mjs) runs **only inside CI** to exclude unused native UI modules (`@expo/ui`, `expo-glass-effect`) and, when `APPLE_TEAM_ID` is unset, `react-native-device-activity` + `@kingstinct/expo-apple-targets` (already runtime-guarded in JS and `app.config.js`). Local `package.json` and Android builds remain completely untouched.
+To keep free-Apple-ID and web-signer installs compatible, [prepare-ios-ci.mjs](../scripts/prepare-ios-ci.mjs) runs **only inside CI** to exclude unused native UI modules (`@expo/ui`, `expo-glass-effect`) and, when `APPLE_TEAM_ID` is unset, `react-native-device-activity` + `@kingstinct/expo-apple-targets` (already runtime-guarded in JS and `app.config.js`). Local `package.json` and Android builds remain completely untouched.
 
-You can install the unsigned `.ipa` using **Sideloadly**, **AltStore**, **SideStore**, **Feather**, or **TrollStore**.
+Note on `.ipa` file size: `LearnShift.ipa` is ~21 MB compressed (~64 MB uncompressed `LearnShift.app`) because iOS compiles a single `arm64` release slice compressed inside a zip, whereas `LearnShift-release.apk` is larger mainly because it bundles 4 Android CPU architectures uncompressed.
+
+You can install the `.ipa` using **web signers**, **Sideloadly**, **AltStore**, **SideStore**, **Feather**, or **TrollStore**.
 
 ### 2. Signed `.ipa` (Optional — with Apple Developer credentials)
 To produce an `ad-hoc`, `development`, or `app-store-connect` signed `.ipa` automatically, add these **Repository Secrets** in **Settings -> Secrets and variables -> Actions**:
