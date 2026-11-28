@@ -23,16 +23,27 @@ import {
   type VideoDisplayRecord,
 } from './learningMirrorSelector';
 
+import {
+  MIRROR_TIMER_MINUTES,
+  normalizeMirrorMinutes,
+  normalizeMirrorTriggerMode,
+  type MirrorTimerMinutes,
+  type MirrorTriggerMode,
+} from './mirrorTimer';
+
 export {
   formatMirrorBadge,
   isAllowedLearningDeepLink,
   LEARNING_VIDEO_CATALOG,
   MIRROR_PLATFORMS,
+  MIRROR_TIMER_MINUTES,
   selectLearningVideo,
   type CanonicalMirrorPackage,
   type LearningVideoSeed,
   type MirrorPlatform,
   type MirrorPlatformInfo,
+  type MirrorTimerMinutes,
+  type MirrorTriggerMode,
   type PacingMode,
   type VideoDisplayRecord,
 };
@@ -43,6 +54,11 @@ export type MirrorStatus = {
   studyGuardEnabled: boolean;
   studyGuardRunning: boolean;
   mirrorAutoEnabled: boolean;
+  mirrorTrigger: MirrorTriggerMode;
+  mirrorTimerMin: MirrorTimerMinutes;
+  timerRemainingSec: number | null;
+  timerPaused: boolean;
+  triggerSupported: boolean;
   swipesPerMin: number;
   riskScore: number;
   batteryExempt: boolean;
@@ -52,6 +68,10 @@ export type MirrorStatus = {
   catalogCount: number;
   nativeSupported: boolean;
 };
+
+let fallbackAutoEnabled = false;
+let fallbackTrigger: MirrorTriggerMode = 'smart';
+let fallbackTimerMin: MirrorTimerMinutes = 15;
 
 export type MirrorShiftResult = {
   tier: string;
@@ -120,8 +140,14 @@ export function getMirrorStatus(): MirrorStatus {
   if (Platform.OS === 'android' && UsageMonitor?.getMirrorStatus) {
     try {
       const raw = UsageMonitor.getMirrorStatus();
+      const triggerSupported = typeof UsageMonitor?.setMirrorTrigger === 'function';
       return {
         ...raw,
+        mirrorTrigger: normalizeMirrorTriggerMode(raw.mirrorTrigger),
+        mirrorTimerMin: normalizeMirrorMinutes(raw.mirrorTimerMin),
+        timerRemainingSec: typeof raw.timerRemainingSec === 'number' ? raw.timerRemainingSec : null,
+        timerPaused: Boolean(raw.timerPaused),
+        triggerSupported,
         lastVideoId: raw.lastVideoId ?? '',
         lastVideoTitle: raw.lastVideoTitle ?? '',
         catalogCount: raw.catalogCount && raw.catalogCount > 0 ? raw.catalogCount : LEARNING_VIDEO_CATALOG.length,
@@ -136,7 +162,15 @@ export function getMirrorStatus(): MirrorStatus {
     tierAReady: false,
     studyGuardEnabled: false,
     studyGuardRunning: false,
-    mirrorAutoEnabled: false,
+    mirrorAutoEnabled: fallbackAutoEnabled,
+    mirrorTrigger: fallbackTrigger,
+    mirrorTimerMin: fallbackTimerMin,
+    timerRemainingSec:
+      fallbackAutoEnabled && (fallbackTrigger === 'timer' || fallbackTrigger === 'both')
+        ? fallbackTimerMin * 60
+        : null,
+    timerPaused: false,
+    triggerSupported: false,
     swipesPerMin: 0,
     riskScore: 0.18,
     batteryExempt: true,
@@ -169,9 +203,25 @@ export async function setSmartStudyGuard(enabled: boolean): Promise<boolean> {
 }
 
 export function setMirrorAuto(enabled: boolean): void {
+  fallbackAutoEnabled = enabled;
   if (Platform.OS === 'android' && UsageMonitor?.setMirrorAutoEnabled) {
     UsageMonitor.setMirrorAutoEnabled(enabled);
   }
+}
+
+export function setMirrorTrigger(mode: MirrorTriggerMode, minutes: MirrorTimerMinutes): boolean {
+  const safeMode = normalizeMirrorTriggerMode(mode);
+  const safeMin = normalizeMirrorMinutes(minutes);
+  fallbackTrigger = safeMode;
+  fallbackTimerMin = safeMin;
+  if (Platform.OS === 'android' && UsageMonitor?.setMirrorTrigger) {
+    try {
+      return UsageMonitor.setMirrorTrigger(safeMode, safeMin);
+    } catch {
+      return false;
+    }
+  }
+  return !Platform.OS || Platform.OS !== 'android';
 }
 
 export function triggerMirrorIntervention(targetPkg = 'com.zhiliaoapp.musically'): string | null {

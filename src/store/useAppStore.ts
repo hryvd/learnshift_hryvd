@@ -9,6 +9,14 @@ import { SEED_BUILT, seedNudges, type BuildingId, type NudgeEntry, type NudgeRes
 import { MIKA_HISTORY, MIKA_MASTERY, SKILLS, type SkillId } from '@/data/skills';
 import { clampBedtimeStart } from '@/lib/bedtime';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
+import {
+  displayedCoins,
+  manilaDayKey,
+  rewardAmount,
+  type PendingReward,
+  type RewardKind,
+  type RewardMeta,
+} from '@/lib/rewards';
 import { gapEngine } from '@/services/ai/gapEngine';
 import { SAMPLE_PITCH_MODULES, type ClassModule } from '@/services/ai/moduleGenerator';
 import { snapBreakIntervalSec } from '@/services/learningBreak';
@@ -78,7 +86,12 @@ export type UsageDay = {
   unlocks: number;
 };
 
-export type AttemptMeta = { questionId: string; chosen: number; context: 'quiz' | 'break' | 'pretest' | 'feed' };
+export type AttemptMeta = {
+  questionId: string;
+  chosen: number;
+  context: 'quiz' | 'break' | 'pretest' | 'feed' | 'module' | 'overlay';
+  clientId?: string;
+};
 
 /** Writes waiting to reach the server (kept across restarts, so offline works). */
 export type OutboxOp =
@@ -106,6 +119,16 @@ export type OutboxOp =
         content: unknown;
         confidence: number;
       };
+    }
+  | {
+      kind: 'reward';
+      row: {
+        key: string;
+        kind: RewardKind;
+        ref: string | null;
+        meta: RewardMeta;
+      };
+      tries?: number;
     };
 
 export type SentinelSlice = {
@@ -128,6 +151,7 @@ export type SentinelSlice = {
 export type Dirty = {
   progress: boolean;
   settings: boolean;
+  personalization: boolean;
   mastery: SkillId[];
   nudges: string[];
   usageToday: boolean;
@@ -144,7 +168,16 @@ type State = {
   onboarded: boolean;
   demo: DemoOverrides;
 
+  /** Displayed balance: coinsConfirmed + sum(pendingRewards). */
   coins: number;
+  /** Last server-confirmed coin balance. */
+  coinsConfirmed: number;
+  /** Optimistic rewards not yet settled by the server ledger. */
+  pendingRewards: PendingReward[];
+  /** Recently claimed reward keys (local idempotency across restarts). */
+  claimedRewardKeys: string[];
+  /** Asia/Manila YYYY-MM-DD when the daily coin-cap toast was last shown. */
+  cappedToastDay: string | null;
   breaksToday: number;
   breaksDay: string;
   mastery: Mastery;
@@ -195,11 +228,30 @@ type Actions = {
   setBedtime: (bedtime: Bedtime, days?: BedtimeDays) => void;
   setDemo: (patch: Partial<DemoOverrides>) => void;
   setOnboarded: (v: boolean) => void;
-  addCoins: (n: number) => void;
+  claimReward: (input: {
+    key: string;
+    kind: RewardKind;
+    ref?: string | null;
+    meta?: RewardMeta;
+  }) => { applied: boolean; amount: number };
+  settleReward: (
+    key: string,
+    result: { status: 'applied' | 'duplicate' | 'capped' | 'dropped'; coins?: number },
+  ) => { showCapToast: boolean };
+  hasClaimedReward: (key: string) => boolean;
   answer: (e: AnswerEvidence, meta?: AttemptMeta) => Mastery;
   recordFeedAttempt: (row: {
     questionId: string;
     subject: string;
+    chosen: number;
+    correct: boolean;
+    seconds?: number;
+    clientId?: string;
+    context?: 'feed' | 'overlay';
+  }) => void;
+  recordModuleAttempt: (row: {
+    moduleId: string;
+    questionId: string;
     chosen: number;
     correct: boolean;
     seconds?: number;
@@ -261,7 +313,14 @@ const EMPTY_HISTORY = Object.fromEntries(SKILLS.map((s) => [s.id, [] as number[]
   SkillId,
   number[]
 >;
-const CLEAN: Dirty = { progress: false, settings: false, mastery: [], nudges: [], usageToday: false };
+const CLEAN: Dirty = {
+  progress: false,
+  settings: false,
+  personalization: false,
+  mastery: [],
+  nudges: [],
+  usageToday: false,
+};
 
 export const DEFAULT_SENTINEL: SentinelSlice = {
   day: todayKey(),
@@ -314,6 +373,10 @@ const pitchState = (): State => ({
   lang: 'en',
   onboarded: true,
   coins: 1240,
+  coinsConfirmed: 1240,
+  pendingRewards: [],
+  claimedRewardKeys: [],
+  cappedToastDay: null,
   mastery: { ...MIKA_MASTERY },
   answers: 142,
   nudges: seedNudges(),
@@ -352,6 +415,10 @@ const realState = (): State => ({
   lang: 'en',
   onboarded: false,
   coins: 0,
+  coinsConfirmed: 0,
+  pendingRewards: [],
+  claimedRewardKeys: [],
+  cappedToastDay: null,
   mastery: { ...PRIOR_MASTERY },
   answers: 0,
   nudges: [],
@@ -398,10 +465,14 @@ export const useAppStore = create<State & Actions>()(
       setLang: (lang) => set({ lang }),
       setThemePref: (themePref) => set({ themePref }),
       setLearningGrade: (grade) => {
-        if (Number.isInteger(grade) && grade >= 1 && grade <= 10) set({ learningGrade: grade });
+        if (Number.isInteger(grade) && grade >= 1 && grade <= 12) {
+          set((s) => ({ learningGrade: grade, dirty: { ...s.dirty, personalization: true } }));
+        }
       },
       setLearningSubject: (subject) => {
-        if (subject === 'mixed' || SUBJECTS.some((s) => s.id === subject)) set({ learningSubject: subject });
+        if (subject === 'mixed' || SUBJECTS.some((s) => s.id === subject)) {
+          set((s) => ({ learningSubject: subject, dirty: { ...s.dirty, personalization: true } }));
+        }
       },
       setSeenQuestions: (pool, ids) => set((s) => ({ seenQuestions: { ...s.seenQuestions, [pool]: ids } })),
       setBedtime: (bedtime, days) =>
@@ -412,7 +483,51 @@ export const useAppStore = create<State & Actions>()(
         })),
       setDemo: (patch) => set((s) => ({ demo: { ...s.demo, ...patch } })),
       setOnboarded: (onboarded) => set((s) => ({ onboarded, dirty: { ...s.dirty, progress: true } })),
-      addCoins: (n) => set((s) => ({ coins: s.coins + n, dirty: { ...s.dirty, progress: true } })),
+      claimReward: ({ key, kind, ref = null, meta = {} }) => {
+        const s = get();
+        if (!key || s.claimedRewardKeys.includes(key) || s.pendingRewards.some((r) => r.key === key)) {
+          return { applied: false, amount: 0 };
+        }
+        const amount = rewardAmount(kind, meta);
+        const pendingItem: PendingReward = {
+          key,
+          kind,
+          amount,
+          ref,
+          meta,
+          createdAt: new Date().toISOString(),
+        };
+        const pendingRewards = [...s.pendingRewards, pendingItem];
+        const claimedRewardKeys = [...s.claimedRewardKeys, key].slice(-200);
+        const outbox: OutboxOp[] = IS_PITCH
+          ? s.outbox
+          : [...s.outbox, { kind: 'reward', row: { key, kind, ref, meta }, tries: 0 }];
+        set({
+          pendingRewards,
+          claimedRewardKeys,
+          coins: displayedCoins(s.coinsConfirmed, pendingRewards),
+          outbox,
+        });
+        return { applied: true, amount };
+      },
+      settleReward: (key, result) => {
+        const s = get();
+        const pendingRewards = s.pendingRewards.filter((r) => r.key !== key);
+        const coinsConfirmed = typeof result.coins === 'number' ? result.coins : s.coinsConfirmed;
+        const today = manilaDayKey();
+        const showCapToast = result.status === 'capped' && s.cappedToastDay !== today;
+        set({
+          pendingRewards,
+          coinsConfirmed,
+          coins: displayedCoins(coinsConfirmed, pendingRewards),
+          ...(showCapToast ? { cappedToastDay: today } : {}),
+        });
+        return { showCapToast };
+      },
+      hasClaimedReward: (key) => {
+        const s = get();
+        return s.claimedRewardKeys.includes(key) || s.pendingRewards.some((r) => r.key === key);
+      },
       answer: (e, meta) => {
         const s = get();
         const next = gapEngine.update(s.mastery, e, meta?.context === 'pretest' ? 0.5 : undefined);
@@ -423,7 +538,7 @@ export const useAppStore = create<State & Actions>()(
               {
                 kind: 'attempt',
                 row: {
-                  client_id: uid('a'),
+                  client_id: meta.clientId ?? uid('a'),
                   question_id: meta.questionId,
                   skill_id: e.skill,
                   chosen: meta.chosen,
@@ -445,7 +560,7 @@ export const useAppStore = create<State & Actions>()(
         });
         return next;
       },
-      recordFeedAttempt: ({ questionId, subject, chosen, correct, seconds = 6 }) =>
+      recordFeedAttempt: ({ questionId, subject, chosen, correct, seconds = 6, clientId, context = 'feed' }) =>
         set((s) => {
           const day = todayKey();
           return {
@@ -456,14 +571,40 @@ export const useAppStore = create<State & Actions>()(
               {
                 kind: 'attempt',
                 row: {
-                  client_id: uid('f'),
+                  client_id: clientId ?? uid('f'),
                   question_id: questionId,
                   skill_id: subject,
                   chosen,
                   correct,
                   seconds: Math.min(32000, Math.round(seconds)),
                   hints: 0,
-                  context: 'feed',
+                  context,
+                  created_at: new Date().toISOString(),
+                },
+              },
+            ],
+            dirty: { ...s.dirty, progress: true },
+          };
+        }),
+      recordModuleAttempt: ({ moduleId, questionId, chosen, correct, seconds = 8 }) =>
+        set((s) => {
+          const day = todayKey();
+          return {
+            answers: s.answers + 1,
+            learnDays: { ...s.learnDays, [day]: (s.learnDays[day] ?? 0) + 1 },
+            outbox: [
+              ...s.outbox,
+              {
+                kind: 'attempt',
+                row: {
+                  client_id: uid('m'),
+                  question_id: `${moduleId}:${questionId}`,
+                  skill_id: 'module',
+                  chosen,
+                  correct,
+                  seconds: Math.min(32000, Math.round(seconds)),
+                  hints: 0,
+                  context: 'module',
                   created_at: new Date().toISOString(),
                 },
               },
@@ -683,6 +824,7 @@ export const useAppStore = create<State & Actions>()(
           dirty: {
             progress: flags.progress === false ? false : s.dirty.progress,
             settings: flags.settings === false ? false : s.dirty.settings,
+            personalization: flags.personalization === false ? false : !!s.dirty.personalization,
             usageToday: flags.usageToday === false ? false : s.dirty.usageToday,
             mastery: flags.mastery ? s.dirty.mastery.filter((m) => !flags.mastery!.includes(m)) : s.dirty.mastery,
             nudges: flags.nudges ? s.dirty.nudges.filter((n) => !flags.nudges!.includes(n)) : s.dirty.nudges,
@@ -693,10 +835,35 @@ export const useAppStore = create<State & Actions>()(
     }),
     {
       name: IS_PITCH ? 'learnshift-pitch' : 'learnshift-app',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => AsyncStorage),
-      // Any older shape: start fresh.
-      migrate: () => initialState(),
+      // v3 → v4 preserves student state and moves legacy `coins` into `coinsConfirmed`.
+      migrate: (persisted: unknown, version: number) => {
+        if (!persisted || typeof persisted !== 'object' || version < 3) return initialState();
+        const prev = persisted as Partial<State>;
+        const base = initialState();
+        const coinsConfirmed =
+          typeof prev.coinsConfirmed === 'number'
+            ? prev.coinsConfirmed
+            : typeof prev.coins === 'number'
+              ? prev.coins
+              : base.coinsConfirmed;
+        const pendingRewards = Array.isArray(prev.pendingRewards) ? prev.pendingRewards : [];
+        return {
+          ...base,
+          ...prev,
+          coinsConfirmed,
+          pendingRewards,
+          claimedRewardKeys: Array.isArray(prev.claimedRewardKeys) ? prev.claimedRewardKeys : [],
+          cappedToastDay: prev.cappedToastDay ?? null,
+          coins: displayedCoins(coinsConfirmed, pendingRewards),
+          dirty: {
+            ...CLEAN,
+            ...(prev.dirty ?? {}),
+            personalization: !!(prev.dirty as Partial<Dirty> | undefined)?.personalization,
+          },
+        };
+      },
       // Today's break count and daily sentinel counters reset at midnight.
       onRehydrateStorage: () => (s) => {
         if (!s) return;

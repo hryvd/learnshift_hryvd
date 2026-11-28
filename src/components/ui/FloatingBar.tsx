@@ -118,7 +118,16 @@ const TONE = {
 };
 
 /** The glass card that floats above the content. `inline` renders it in flow (gallery). */
-export function FloatingBarShell({ children, inline }: { children: ReactNode; inline?: boolean }) {
+export function FloatingBarShell({
+  children,
+  inline,
+  blocked = false,
+}: {
+  children: ReactNode;
+  inline?: boolean;
+  /** Disables pointer and screen-reader interaction while a modal card covers the bar. */
+  blocked?: boolean;
+}) {
   const { c, isNight } = useTheme();
   const { bottom } = useFloatingBar();
   const target = useContext(BlurTargetContext);
@@ -173,7 +182,9 @@ export function FloatingBarShell({ children, inline }: { children: ReactNode; in
   return (
     <View
       style={inline ? styles.inline : [styles.pinned, { bottom }]}
-      pointerEvents="box-none"
+      pointerEvents={blocked ? 'none' : 'box-none'}
+      importantForAccessibility={blocked ? 'no-hide-descendants' : 'auto'}
+      accessibilityElementsHidden={blocked}
       accessibilityRole="tablist"
     >
       <View
@@ -256,19 +267,27 @@ export function BarTab({ label, Icon, active, tint, onPress, badge, accessibilit
   );
 }
 
-/** The raised accent circle with a Bungee "+"; it turns into × while its sheet is open. */
+export type WindowRect = { x: number; y: number; width: number; height: number };
+
+/** The raised accent circle with a Bungee "+"; reports its window rect so its card can morph out of it. */
 export function CenterPlusButton({
   open,
+  hidden = false,
   onPress,
+  onMeasure,
   label,
   openLabel,
 }: {
   open: boolean;
+  /** Hides the real button while its morphed card owns the surface. */
+  hidden?: boolean;
   onPress: () => void;
+  onMeasure?: (rect: WindowRect) => void;
   label: string;
   openLabel?: string;
 }) {
   const { c } = useTheme();
+  const btnRef = useRef<ComponentRef<typeof View> | null>(null);
   const r = useSharedValue(open ? 1 : 0);
   useEffect(() => {
     r.set(withSpring(open ? 1 : 0, spring.snappy));
@@ -277,21 +296,35 @@ export function CenterPlusButton({
     transform: [{ rotate: `${r.get() * 45}deg` }, { scale: 1 + r.get() * 0.06 }],
   }));
 
+  const handlePress = () => {
+    if (onMeasure && btnRef.current) {
+      btnRef.current.measureInWindow((x, y, width, height) => {
+        if (width > 0 && height > 0) onMeasure({ x, y, width, height });
+        onPress();
+      });
+      return;
+    }
+    onPress();
+  };
+
   return (
-    <View style={styles.slot}>
-      <PressableScale
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={open ? (openLabel ?? label) : label}
-        accessibilityState={{ expanded: open }}
-        style={[styles.center, { backgroundColor: c.accent, shadowColor: c.accent }]}
-      >
-        <Animated.View style={[styles.plusBox, plusStyle]}>
-          <RNText allowFontScaling={false} style={[styles.plus, { color: c.onAccent }]}>
-            +
-          </RNText>
-        </Animated.View>
-      </PressableScale>
+    <View style={styles.slot} pointerEvents={hidden ? 'none' : 'box-none'}>
+      <View ref={btnRef} collapsable={false} style={hidden ? styles.hiddenCenter : undefined}>
+        <PressableScale
+          onPress={handlePress}
+          disabled={hidden}
+          accessibilityRole="button"
+          accessibilityLabel={open ? (openLabel ?? label) : label}
+          accessibilityState={{ expanded: open }}
+          style={[styles.center, { backgroundColor: c.accent, shadowColor: c.accent }]}
+        >
+          <Animated.View style={[styles.plusBox, plusStyle]}>
+            <RNText allowFontScaling={false} style={[styles.plus, { color: c.onAccent }]}>
+              +
+            </RNText>
+          </Animated.View>
+        </PressableScale>
+      </View>
     </View>
   );
 }
@@ -320,6 +353,7 @@ const styles = StyleSheet.create({
   rim: { borderRadius: radius.card, borderTopWidth: 1, borderLeftWidth: 0.5, borderRightWidth: 0.5 },
   outline: { borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth },
   slot: { flex: 1, height: BAR_HEIGHT, alignItems: 'center', justifyContent: 'center', gap: LABEL_GAP },
+  hiddenCenter: { opacity: 0 },
   icon: { width: ICON, height: ICON },
   label: { fontSize: 10, lineHeight: LABEL_LINE },
   center: {

@@ -437,3 +437,6 @@ verify_jwt = false
 
 [functions.generate-module]
 verify_jwt = false
+
+[functions.source-signed-url]
+verify_jwt = false

@@ -68,15 +68,18 @@ export function NowCard({
   const updated = live ? Date.parse(live.updatedAt) : 0;
   // The phone reports a new app within seconds and active sessions every minute.
   const fresh = !!live && live.screenOn && !!live.label && now - updated < 4 * 60_000;
-  const sessionMin = fresh ? live!.sessionMin + Math.max(0, Math.floor((now - updated) / 60_000)) : 0;
+  const isVisibleLive = fresh && live!.confidence === 'visible';
+  const isInferredRecent = fresh && live!.confidence === 'inferred';
+  const inferredMinsAgo = Math.max(1, Math.round((now - updated) / 60_000));
+  const sessionMin = isVisibleLive ? live!.sessionMin + Math.max(0, Math.floor((now - updated) / 60_000)) : 0;
   const today = todayKey(new Date(now));
   const recordedTodayMin =
-    fresh && live!.package
+    isVisibleLive && live!.package
       ? apps.reduce((sum, a) => (a.day === today && a.package === live!.package ? sum + a.minutes : sum), 0)
       : 0;
-  const appTodayMin = fresh ? Math.max(sessionMin, recordedTodayMin) : 0;
-  const isStudying = fresh && live!.category === 'study';
-  const isLearnShiftLive = fresh && isLearnShiftApp(live!.package, live!.label);
+  const appTodayMin = isVisibleLive ? Math.max(sessionMin, recordedTodayMin) : 0;
+  const isStudying = isVisibleLive && live!.category === 'study';
+  const isLearnShiftLive = isVisibleLive && isLearnShiftApp(live!.package, live!.label);
   const learnShiftRecordedToday = apps.reduce(
     (sum, a) => (a.day === today && isLearnShiftApp(a.package, a.label) ? sum + a.minutes : sum),
     0,
@@ -84,9 +87,9 @@ export function NowCard({
   const learnShiftTodayMin = Math.max(learnShiftRecordedToday, isLearnShiftLive ? sessionMin : 0);
   const learnShiftIcon = appIcon('com.learnshift.app', 'LearnShift', 'study');
   const limit =
-    fresh && (live!.category === 'video' || live!.category === 'social')
+    isVisibleLive && (live!.category === 'video' || live!.category === 'social')
       ? scrollLimit
-      : fresh && live!.category === 'games'
+      : isVisibleLive && live!.category === 'games'
         ? gamesLimit
         : null;
   const d = new Date(updated);
@@ -102,7 +105,7 @@ export function NowCard({
               {g.liveStudying}
             </Text>
           </View>
-        ) : fresh ? (
+        ) : isVisibleLive ? (
           <View style={[styles.liveBadge, { backgroundColor: c.success + '1F' }]}>
             <View style={[styles.dot, { backgroundColor: c.success }]} />
             <Text variant="caption" color="success" style={styles.badgeLabel}>
@@ -118,7 +121,7 @@ export function NowCard({
           </View>
         )}
       </View>
-      {fresh ? (
+      {isVisibleLive ? (
         <View style={styles.nowRow}>
           {appIcon(live!.package, live!.label, live!.category) ? (
             <Image source={appIcon(live!.package, live!.label, live!.category)!} style={styles.appIcon} accessibilityIgnoresInvertColors />
@@ -149,7 +152,11 @@ export function NowCard({
           <View style={styles.flex}>
             <Text variant="headline">{g.nowIdle}</Text>
             <Text variant="subhead">
-              {live ? g.lastSeen(formatClock(d.getHours() * 60 + d.getMinutes())) : childName}
+              {isInferredRecent
+                ? g.recentlyUsed(live!.label!, inferredMinsAgo)
+                : live
+                  ? g.lastSeen(formatClock(d.getHours() * 60 + d.getMinutes()))
+                  : childName}
             </Text>
           </View>
         </View>

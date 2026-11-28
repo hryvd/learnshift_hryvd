@@ -24,6 +24,8 @@ object SentinelBus {
   @Volatile var lastInterventionStrategy: String = "WORK_PROFILE_REAL_APP"
   @Volatile var lastInterventionVideoId: String = ""
   @Volatile var lastInterventionVideoTitle: String = ""
+  @Volatile var timerRemainingSec: Int? = null
+  @Volatile var timerPaused: Boolean = false
 
   fun recordScrollEvent(timestampMs: Long) {
     scrollTimestampsMs.add(timestampMs)

@@ -9,6 +9,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
+import android.util.Log
 import java.util.Calendar
 import java.util.Locale
 
@@ -21,11 +22,19 @@ enum class Cat(val js: String) {
 /** App → category. Curated messaging/study/social lists plus Android's category. Names are shared only through the configured guardian reporting path. */
 object Categories {
   private val VIDEO = setOf(
-    "com.google.android.youtube", "com.google.android.apps.youtube.kids", "com.google.android.apps.youtube.music",
+    "com.google.android.youtube", "com.google.android.apps.youtube.kids",
     "com.zhiliaoapp.musically", "com.zhiliaoapp.musically.go", "com.ss.android.ugc.trill", "com.ss.android.ugc.aweme",
     "com.netflix.mediaclient", "tv.twitch.android.app", "com.amazon.avod.thirdpartyclient", "com.disney.disneyplus",
     "com.iqiyi.i18n", "com.viu.phone", "com.vivamax.app", "com.kwai.video", "com.snackvideo.app",
     "com.bilibili.app.in", "com.tubitv", "com.hbo.hbonow", "com.wbd.stream",
+  )
+  private val AUDIO_MUSIC = setOf(
+    "com.spotify.music", "com.spotify.lite",
+    "com.apple.android.music", "com.google.android.apps.youtube.music",
+    "com.soundcloud.android", "deezer.android.app", "com.amazon.mp3",
+    "com.aspiro.tidal", "com.pandora.android", "com.shazam.android",
+    "com.audible.application", "com.google.android.apps.podcasts",
+    "com.bambuna.podcastaddict", "com.anghami",
   )
   private val SOCIAL = setOf(
     "com.facebook.katana", "com.facebook.lite",
@@ -144,10 +153,21 @@ object Categories {
       setOf("com.android.systemui")
   }
 
+  /** True for music, podcast, and audio-category players (must never be relaunched after a break). */
+  fun isAudioOrMusic(ctx: Context, pkg: String?): Boolean {
+    if (pkg.isNullOrBlank()) return false
+    if (pkg in AUDIO_MUSIC) return true
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val cat = runCatching { ctx.packageManager.getApplicationInfo(pkg, 0).category }.getOrNull()
+      if (cat == ApplicationInfo.CATEGORY_AUDIO) return true
+    }
+    return false
+  }
+
   /** Whether an open foreground app should trigger scheduled learning overlays. */
   fun isTargetApp(ctx: Context, pkg: String?, monitorAll: Boolean): Boolean {
     if (pkg.isNullOrBlank() || pkg == ctx.packageName) return false
-    if (pkg in launchers(ctx) || pkg in SYSTEM_IGNORE || pkg in UTILITY) return false
+    if (pkg in launchers(ctx) || pkg in SYSTEM_IGNORE || pkg in UTILITY || isAudioOrMusic(ctx, pkg)) return false
     val c = of(ctx, pkg)
     if (c == Cat.STUDY || c == Cat.MESSAGING) return false
     if (c.distracting) return true
@@ -187,6 +207,7 @@ data class Live(
   val sessionMin: Double,
   val unlocksLastHour: Int,
   val appMin: Double = 0.0,
+  val confidence: String = "visible",
 )
 
 /** Follows the foreground app incrementally, so each tick reads only new events. */
@@ -201,7 +222,7 @@ class Tracker(private val ctx: Context) {
   private var lastAppAt = 0L
   private val unlocks = ArrayDeque<Long>()
 
-  fun update(now: Long): Live {
+  fun update(now: Long, screenAwake: Boolean = true): Live {
     if (lastQuery == 0L) lastQuery = now - 3 * 3600 * 1000L
     val events = usm.queryEvents(lastQuery, now)
     val e = UsageEvents.Event()
@@ -238,36 +259,37 @@ class Tracker(private val ctx: Context) {
       }
     }
     lastQuery = now
-    if (fgPkg == null) {
+
+    var effectivePkg: String? = fgPkg
+    var confidence = "visible"
+    // Fallback only on API 29+ while screen is unlocked and interactive; uses
+    // lastTimeVisible (never lastTimeUsed) and is NOT sticky (fgPkg stays null).
+    if (effectivePkg == null && screenAwake && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       val recent = runCatching {
         val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 60_000L, now)
         val ignore = Categories.launchers(ctx)
         stats
-          ?.filter { it.packageName != null && it.packageName !in ignore && it.lastTimeUsed >= now - 30_000L }
-          ?.maxByOrNull { it.lastTimeUsed }
+          ?.filter { it.packageName != null && it.packageName !in ignore && it.lastTimeVisible >= now - 30_000L }
+          ?.maxByOrNull { it.lastTimeVisible }
           ?.packageName
       }.getOrNull()
       if (recent != null) {
-        fgPkg = recent
-        if (Categories.of(ctx, recent).distracting) {
-          if (sessionStart == 0L) sessionStart = now
-          lastDistracting = now
-        }
-        if (recent != appPkg || now - lastAppAt > APP_GAP_MS || appStart == 0L) {
-          appPkg = recent
-          appStart = now
-        }
-        lastAppAt = now
+        effectivePkg = recent
+        confidence = "inferred"
+        Log.d("LearnShift/Tracker", "inferred recent visible pkg=$recent (non-sticky)")
       }
     }
-    val cat = fgPkg?.let { Categories.of(ctx, it) } ?: Cat.OTHER
-    if (cat.distracting) lastDistracting = now
-    if (fgPkg != null && fgPkg == appPkg) lastAppAt = now
+
+    val cat = effectivePkg?.let { Categories.of(ctx, it) } ?: Cat.OTHER
+    if (confidence == "visible") {
+      if (cat.distracting) lastDistracting = now
+      if (fgPkg != null && fgPkg == appPkg) lastAppAt = now
+    }
     if (now - lastDistracting > GAP_MS) sessionStart = 0L
     while (unlocks.isNotEmpty() && unlocks.first() < now - 3600 * 1000L) unlocks.removeFirst()
-    val minutes = if (cat.distracting && sessionStart > 0L) (now - sessionStart) / 60000.0 else 0.0
-    val appMinutes = if (fgPkg != null && fgPkg == appPkg && appStart > 0L) maxOf(0.0, (now - appStart) / 60000.0) else 0.0
-    return Live(fgPkg, cat, minutes, unlocks.size, appMinutes)
+    val minutes = if (confidence == "visible" && cat.distracting && sessionStart > 0L) (now - sessionStart) / 60000.0 else 0.0
+    val appMinutes = if (confidence == "visible" && fgPkg != null && fgPkg == appPkg && appStart > 0L) maxOf(0.0, (now - appStart) / 60000.0) else 0.0
+    return Live(effectivePkg, cat, minutes, unlocks.size, appMinutes, confidence)
   }
 }
 

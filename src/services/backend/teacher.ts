@@ -12,7 +12,7 @@ import { SKILLS, type SkillId } from '@/data/skills';
 import { AUTO_REFRESH_MS, useInterval, useResumeKey } from '@/hooks/useAutoRefresh';
 import { IS_PITCH } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
-import type { ClassModule, ModuleFlashcard, ModuleQuestion } from '@/services/ai/moduleGenerator';
+import type { ClassModule, ModuleFlashcard, ModuleQuestion, QuizDraft } from '@/services/ai/moduleGenerator';
 import * as api from '@/services/backend/api';
 import { isSharedLaptop } from '@/services/teacher/sharedLaptop';
 import {
@@ -50,6 +50,7 @@ type TeacherState = {
   uploadOpen: boolean;
   students: Record<string, LiveStudent[]>;
   modules: Record<string, ClassModule[]>;
+  drafts: QuizDraft[];
   review: ReviewRow[];
   reviewError: string | null;
   /** When the data on screen was last loaded from the server (ISO, UTC). */
@@ -68,6 +69,7 @@ export const useTeacher = create<TeacherState>()((set) => ({
   uploadOpen: false,
   students: {},
   modules: {},
+  drafts: [],
   review: [],
   reviewError: null,
   syncedAt: null,
@@ -87,6 +89,7 @@ export function resetTeacher(opts?: { signedOut?: boolean }) {
     uploadOpen: false,
     students: {},
     modules: {},
+    drafts: [],
     review: [],
     reviewError: null,
     syncedAt: null,
@@ -100,7 +103,10 @@ export function resetTeacher(opts?: { signedOut?: boolean }) {
 // Sign out deletes it, so a shared school laptop keeps no student data.
 const CACHE_KEY = 'learnshift:teacher-cache:v1';
 
-type Snapshot = Pick<TeacherState, 'classes' | 'selected' | 'students' | 'modules' | 'review' | 'syncedAt'> & {
+type Snapshot = Pick<
+  TeacherState,
+  'classes' | 'selected' | 'students' | 'modules' | 'drafts' | 'review' | 'syncedAt'
+> & {
   userId: string;
 };
 
@@ -124,6 +130,7 @@ function saveSnapshot() {
     selected: s.selected,
     students: s.students,
     modules: s.modules,
+    drafts: s.drafts,
     review: s.review,
     syncedAt: s.syncedAt,
   };
@@ -152,6 +159,7 @@ function restoreSnapshot(): boolean {
       selected: snap.selected,
       students: snap.students,
       modules: snap.modules,
+      drafts: Array.isArray(snap.drafts) ? snap.drafts : [],
       review: snap.review,
       syncedAt: snap.syncedAt,
       fromCache: true,
@@ -320,32 +328,144 @@ export async function loadReview() {
   markSynced();
 }
 
+/** Filters a class->modules map to published assigned snapshots only (never drafts). */
+function publishedOnlyMap(map: Record<string, ClassModule[]>): Record<string, ClassModule[]> {
+  const out: Record<string, ClassModule[]> = {};
+  for (const [cid, list] of Object.entries(map)) {
+    out[cid] = list.filter((m) => m.published);
+  }
+  return out;
+}
+
+export async function loadDrafts() {
+  if (IS_PITCH) return;
+  try {
+    const drafts = await api.listQuizDrafts();
+    useTeacher.setState({ drafts });
+    markSynced();
+  } catch {
+    // Keep existing local drafts while offline.
+  }
+}
+
+export async function createDraft(input: {
+  sourceId?: string | null;
+  sourceName?: string | null;
+  title: string;
+  subject: string;
+  summary: string;
+  flashcards: ModuleFlashcard[];
+  questions: ModuleQuestion[];
+}): Promise<QuizDraft> {
+  if (IS_PITCH) {
+    const now = new Date().toISOString();
+    const draft: QuizDraft = {
+      id: `draft-${Date.now().toString(36)}`,
+      sourceId: input.sourceId ?? null,
+      sourceName: input.sourceName ?? null,
+      title: input.title.trim() || 'Lesson Module',
+      subject: input.subject,
+      summary: input.summary,
+      flashcards: input.flashcards,
+      questions: input.questions,
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    useTeacher.setState((s) => ({ drafts: [draft, ...s.drafts.filter((d) => d.id !== draft.id)] }));
+    return draft;
+  }
+  const draft = await api.createQuizDraft(input);
+  useTeacher.setState((s) => ({ drafts: [draft, ...s.drafts.filter((d) => d.id !== draft.id)] }));
+  markSynced();
+  return draft;
+}
+
+export async function saveDraft(
+  id: string,
+  expectedVersion: number,
+  patch: {
+    title: string;
+    subject: string;
+    summary: string;
+    flashcards: ModuleFlashcard[];
+    questions: ModuleQuestion[];
+  },
+): Promise<{ conflict: false; draft: QuizDraft } | { conflict: true; latest: QuizDraft | null }> {
+  // Optimistic local save first.
+  const now = new Date().toISOString();
+  useTeacher.setState((s) => ({
+    drafts: s.drafts.map((d) =>
+      d.id === id ? { ...d, ...patch, updatedAt: now } : d,
+    ),
+  }));
+  if (IS_PITCH) {
+    const cur = useTeacher.getState().drafts.find((d) => d.id === id);
+    const updated: QuizDraft = {
+      id,
+      sourceId: cur?.sourceId ?? null,
+      sourceName: cur?.sourceName ?? null,
+      ...patch,
+      version: (cur?.version ?? expectedVersion) + 1,
+      createdAt: cur?.createdAt ?? now,
+      updatedAt: now,
+    };
+    useTeacher.setState((s) => ({ drafts: s.drafts.map((d) => (d.id === id ? updated : d)) }));
+    return { conflict: false, draft: updated };
+  }
+  const res = await api.updateQuizDraft(id, expectedVersion, patch);
+  if (res.conflict) {
+    if (res.latest) {
+      useTeacher.setState((s) => ({
+        drafts: s.drafts.map((d) => (d.id === id ? res.latest! : d)),
+      }));
+    }
+    return res;
+  }
+  useTeacher.setState((s) => ({
+    drafts: [res.draft, ...s.drafts.filter((d) => d.id !== id)],
+  }));
+  markSynced();
+  return res;
+}
+
+export async function archiveDraft(id: string) {
+  useTeacher.setState((s) => ({ drafts: s.drafts.filter((d) => d.id !== id) }));
+  if (!IS_PITCH) await api.archiveQuizDraft(id);
+  markSynced();
+}
+
 export async function loadModules(classId: string) {
   const localMap = await loadTeacherLocalModules();
-  const localRows = localMap[classId] ?? [];
+  const localRows = (localMap[classId] ?? []).filter((m) => m.published);
   const { data, error } = await supabase
     .from('class_modules')
-    .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
+    .select(
+      'id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at, quiz_id, quiz_version, assigned_at, share_source, source_id',
+    )
     .eq('class_id', classId)
+    .eq('published', true)
     .order('created_at', { ascending: false })
     .limit(40);
   const remoteRows: ClassModule[] = !error
     ? (data ?? []).map((m) => ({
-      id: m.id,
-      classId: m.class_id,
-      title: m.title,
-      subject: m.subject,
-      sourceName: m.source_name,
-      summary: m.summary ?? '',
-      flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
-      questions: (m.questions ?? []) as ModuleQuestion[],
-      published: !!m.published,
-      createdAt: m.created_at,
-    }))
+        id: m.id,
+        classId: m.class_id,
+        title: m.title,
+        subject: m.subject,
+        sourceName: m.source_name,
+        summary: m.summary ?? '',
+        flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
+        questions: (m.questions ?? []) as ModuleQuestion[],
+        published: !!m.published,
+        createdAt: m.created_at,
+        quizId: m.quiz_id ?? null,
+        quizVersion: m.quiz_version ?? null,
+        assignedAt: m.assigned_at ?? null,
+        shareSource: !!m.share_source,
+        sourceId: m.source_id ?? null,
+      }))
     : [];
-  // The server is the source of truth: a module deleted elsewhere must not come back.
-  // Only phone-only drafts (`local-*`, Android fallback) are kept from the local copy;
-  // when the server can't be reached, show the last local copy unchanged.
   const byId = new Map<string, ClassModule>();
   if (error) for (const l of localRows) byId.set(l.id, l);
   else {
@@ -354,16 +474,20 @@ export async function loadModules(classId: string) {
   }
   const merged = [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   useTeacher.setState((s) => ({ modules: { ...s.modules, [classId]: merged } }));
-  if (!error) void persistTeacherLocalModules({ ...useTeacher.getState().modules, [classId]: merged });
+  if (!error) void persistTeacherLocalModules(publishedOnlyMap({ ...useTeacher.getState().modules, [classId]: merged }));
 }
 
 export function addLocalModule(mod: ClassModule) {
+  if (!mod.published) return;
   useTeacher.setState((s) => {
+    const existing = (s.modules[mod.classId] ?? []).filter(
+      (x) => x.id !== mod.id && (!mod.quizId || x.quizId !== mod.quizId),
+    );
     const nextModules = {
       ...s.modules,
-      [mod.classId]: [mod, ...(s.modules[mod.classId] ?? []).filter((x) => x.id !== mod.id)],
+      [mod.classId]: [mod, ...existing],
     };
-    void persistTeacherLocalModules(nextModules);
+    void persistTeacherLocalModules(publishedOnlyMap(nextModules));
     return { modules: nextModules };
   });
 }
@@ -374,139 +498,84 @@ export function removeLocalModule(classId: string, id: string) {
       ...s.modules,
       [classId]: (s.modules[classId] ?? []).filter((x) => x.id !== id),
     };
-    void persistTeacherLocalModules(nextModules);
+    void persistTeacherLocalModules(publishedOnlyMap(nextModules));
     return { modules: nextModules };
   });
 }
 
-async function findRecentDuplicate(classId: string, title: string): Promise<ClassModule | null> {
-  const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-  const { data } = await supabase
-    .from('class_modules')
-    .select('id, class_id, title, subject, source_name, summary, flashcards, questions, published, created_at')
-    .eq('class_id', classId)
-    .eq('title', title.trim().slice(0, 120))
-    .gte('created_at', since)
-    .limit(1);
-  const m = data?.[0];
-  if (!m) return null;
-  return {
-    id: m.id,
-    classId: m.class_id,
-    title: m.title,
-    subject: m.subject,
-    sourceName: m.source_name,
-    summary: m.summary ?? '',
-    flashcards: (m.flashcards ?? []) as ModuleFlashcard[],
-    questions: (m.questions ?? []) as ModuleQuestion[],
-    published: !!m.published,
-    createdAt: m.created_at,
-  };
-}
-
-/** Saves teacher edits to a published module; students get the new version on their next sync. */
-export async function updateModule(mod: ClassModule) {
-  if (!IS_PITCH && !mod.id.startsWith('local-')) await api.updateClassModule(mod);
-  addLocalModule(mod);
-}
-
-/** Publishes a copy of a module to other classes. */
-export async function copyModuleToClasses(mod: ClassModule, classIds: string[]) {
-  return publishModulesToClasses(classIds, {
-    title: mod.title,
-    subject: mod.subject,
-    sourceName: mod.sourceName,
-    summary: mod.summary,
-    flashcards: mod.flashcards,
-    questions: mod.questions,
-  });
-}
-
 /**
- * Approves a generated module deck, saves full content locally on the teacher's phone,
- * serves it over LAN HTTP + P2P broadcast to every chosen class, and stores only lightweight
- * metadata in the database.
+ * Explicitly assigns a teacher-reviewed draft snapshot to the selected classes.
+ * Idempotent through `assign_quiz` (unique quiz_id + quiz_version + class_id).
+ * Broadcasts ONLY published snapshots to Android LAN/P2P, never private drafts.
  */
-export async function publishModulesToClasses(
+export async function assignDraftToClasses(
+  draft: QuizDraft,
   classIds: string[],
-  input: {
-    title: string;
-    subject: string;
-    sourceName: string | null;
-    summary: string;
-    flashcards: ModuleFlashcard[];
-    questions: ModuleQuestion[];
-  },
-): Promise<{ saved: ClassModule[]; lanUrl: string }> {
+  shareSource = false,
+): Promise<
+  | { status: 'assigned'; saved: ClassModule[]; version: number; lanUrl: string }
+  | { status: 'conflict'; currentVersion: number }
+> {
   const uniqueIds = Array.from(new Set(classIds.filter(Boolean)));
-  const saved: ClassModule[] = [];
-  for (const classId of uniqueIds) {
-    let mod: ClassModule;
-    // Retry after a partial failure: don't create a second copy in classes that already got it.
-    const already = !IS_PITCH ? await findRecentDuplicate(classId, input.title) : null;
-    if (already) {
-      addLocalModule(already);
-      saved.push(already);
-      continue;
+  if (uniqueIds.length === 0) throw new Error('Select at least one class.');
+
+  let saved: ClassModule[] = [];
+  let version = draft.version;
+
+  if (IS_PITCH) {
+    const now = new Date().toISOString();
+    saved = uniqueIds.map((classId) => ({
+      id: `mod-${draft.id}-v${draft.version}-${classId.slice(0, 4)}`,
+      classId,
+      title: draft.title.trim(),
+      subject: draft.subject,
+      sourceName: draft.sourceName,
+      summary: draft.summary,
+      flashcards: draft.flashcards,
+      questions: draft.questions,
+      published: true,
+      createdAt: now,
+      quizId: draft.id,
+      quizVersion: draft.version,
+      assignedAt: now,
+      shareSource,
+      sourceId: draft.sourceId,
+    }));
+  } else {
+    const res = await api.assignQuiz(draft.id, draft.version, uniqueIds, shareSource);
+    if (res.status === 'conflict') {
+      await loadDrafts();
+      return { status: 'conflict', currentVersion: res.currentVersion };
     }
-    if (IS_PITCH) {
-      mod = {
-        id: `mod-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
-        classId,
-        title: input.title.trim(),
-        subject: input.subject,
-        sourceName: input.sourceName,
-        summary: input.summary,
-        flashcards: input.flashcards,
-        questions: input.questions,
-        published: true,
-        createdAt: new Date().toISOString(),
-      };
-    } else {
-      try {
-        mod = await api.saveClassModule({
-          classId,
-          title: input.title,
-          subject: input.subject,
-          sourceName: input.sourceName,
-          sourceExcerpt: input.summary,
-          summary: input.summary,
-          flashcards: input.flashcards,
-          questions: input.questions,
-        });
-      } catch (e) {
-        // Laptops have no phone-to-phone path, so a failed save must say so.
-        if (Platform.OS !== 'android') {
-          throw new Error(
-            saved.length
-              ? `Published to ${saved.length} of ${uniqueIds.length} classes, then failed: ${(e as Error).message}`
-              : isOffline()
-                ? 'You are offline. Reconnect to publish; your draft stays open.'
-                : (e as Error).message,
-          );
-        }
-        mod = {
-          id: `local-${Date.now().toString(36)}-${classId.slice(0, 4)}`,
-          classId,
-          title: input.title.trim(),
-          subject: input.subject,
-          sourceName: input.sourceName,
-          summary: input.summary,
-          flashcards: input.flashcards,
-          questions: input.questions,
-          published: true,
-          createdAt: new Date().toISOString(),
-        };
-      }
-    }
-    addLocalModule(mod);
-    saved.push(mod);
+    saved = res.modules;
+    version = res.version;
   }
-  const lanUrl = await persistTeacherLocalModules(useTeacher.getState().modules);
-  await Promise.all(
-    saved.map((mod) => broadcastClassModules(mod.classId, useTeacher.getState().modules[mod.classId] ?? [mod], lanUrl)),
-  );
-  return { saved, lanUrl };
+
+  for (const mod of saved) addLocalModule(mod);
+  const pubMap = publishedOnlyMap(useTeacher.getState().modules);
+  const lanUrl = await persistTeacherLocalModules(pubMap);
+  await Promise.all(saved.map((mod) => broadcastClassModules(mod.classId, pubMap[mod.classId] ?? [mod], lanUrl)));
+  markSynced();
+  return { status: 'assigned', saved, version, lanUrl };
+}
+
+/** Assigns an already-assigned module's underlying draft to additional classes. */
+export async function copyModuleToClasses(mod: ClassModule, classIds: string[], shareSource = !!mod.shareSource) {
+  let draft = mod.quizId ? useTeacher.getState().drafts.find((d) => d.id === mod.quizId) : undefined;
+  if (!draft) {
+    draft = await createDraft({
+      sourceId: mod.sourceId ?? null,
+      sourceName: mod.sourceName,
+      title: mod.title,
+      subject: mod.subject,
+      summary: mod.summary,
+      flashcards: mod.flashcards,
+      questions: mod.questions,
+    });
+  }
+  const res = await assignDraftToClasses(draft, classIds, shareSource);
+  if (res.status === 'conflict') throw new Error('This draft changed on another device. Reload and try again.');
+  return { saved: res.saved, lanUrl: res.lanUrl };
 }
 
 export async function reviewAnswer(id: string, status: 'approved' | 'edited', note?: string) {
@@ -531,7 +600,7 @@ export function asSection(c: TeacherClass, students: LiveStudent[]): Section {
 
 /** Reloads classes, the review queue and the open roster now (pull-to-refresh, polling). */
 export async function refreshTeacher() {
-  await Promise.all([loadClasses(), loadReview()]);
+  await Promise.all([loadClasses(), loadReview(), loadDrafts()]);
   const id = useTeacher.getState().selected;
   if (id) await Promise.all([loadRoster(id), loadModules(id)]);
 }
@@ -552,14 +621,21 @@ export function useTeacherLive(enabled = true) {
     if (!activeId) return;
     loadClasses();
     loadReview();
+    loadDrafts();
     const ch = supabase
       .channel(`teacher-${activeId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tutor_answers' }, () => loadReview())
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'quiz_drafts', filter: `teacher_id=eq.${activeId}` },
+        () => loadDrafts(),
+      )
       .subscribe();
     const app = AppState.addEventListener('change', (st) => {
       if (st === 'active') {
         loadClasses();
         loadReview();
+        loadDrafts();
       }
     });
     return () => {
@@ -574,7 +650,7 @@ export function useTeacherLive(enabled = true) {
   useEffect(() => {
     if (!enabled || !classIdsKey) return;
     const ids = classIdsKey.split(',').filter(Boolean);
-    return startTeacherPeerHost(ids, (cid) => useTeacher.getState().modules[cid] ?? []);
+    return startTeacherPeerHost(ids, (cid) => (useTeacher.getState().modules[cid] ?? []).filter((m) => m.published));
   }, [enabled, classIdsKey]);
 
   useEffect(() => {

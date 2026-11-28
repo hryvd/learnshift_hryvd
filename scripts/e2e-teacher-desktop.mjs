@@ -188,45 +188,84 @@ try {
   await t.waitForTimeout(5000);
   log('Direct student URL loads with breadcrumb', (await t.getByText(/Mika O'Brien Santos/).count()) > 0 && (await t.getByRole('link', { name: /Classes/ }).count()) > 0);
 
-  // ── Module Studio ──
+  // ── Module Studio (UploadDropCard + Private Drafts + Immutable Snapshots) ──
   await t.goto(`${BASE}/teacher/modules`);
   await t.waitForTimeout(3500);
   await t.keyboard.press('u');
   await t.waitForTimeout(800);
+  await t.screenshot({ path: `${OUT}/upload-card-idle.png` });
+
+  // Unsupported file type fails with plain-language message in the card
+  const exePath = path.join(FIX, 'bad.exe');
+  fs.writeFileSync(exePath, 'MZ-not-a-lesson');
+  await t.locator('input[type=file]').last().setInputFiles(exePath);
+  await t.waitForTimeout(1000);
+  const badRejected = (await t.getByText(/can't read this file type/i).count()) > 0;
+  await t.screenshot({ path: `${OUT}/upload-card-failed.png` });
+  log('Upload card rejects .exe with plain-language error', badRejected);
+
+  // HTML lesson: scripts/styles stripped & uploaded privately
   await t.locator('input[type=file]').last().setInputFiles(path.join(FIX, 'slope.html'));
-  await t.waitForTimeout(2500);
+  await t.waitForTimeout(3000);
   const text = await t.getByRole('textbox', { name: /Lesson content/ }).inputValue().catch(() => '');
   log('HTML lesson: scripts/styles stripped', text.includes('rise over run') && !text.includes('alert(1)') && !text.includes('color:red'));
+
   await t.locator('input[type=file]').last().setInputFiles(path.join(FIX, 'slope.txt'));
-  await t.waitForTimeout(1500);
-  await t.getByRole('button', { name: 'Create flashcards & quiz' }).click();
-  await t.waitForSelector('text=Review and publish', { timeout: 60000 });
+  await t.waitForTimeout(3000);
+  await t.screenshot({ path: `${OUT}/upload-card-ready.png` });
+
+  // Generate creates a PRIVATE draft (student sees nothing!)
+  await t.getByRole('button', { name: 'Generate draft quiz' }).click();
+  await t.waitForSelector('text=Review & edit draft', { timeout: 60000 });
   await t.screenshot({ path: `${OUT}/studio-review.png` });
+
+  const { data: beforeAssign } = await student.c.from('class_modules').select('id').eq('class_id', klass.id);
+  log('Draft is invisible to students before assigning', (beforeAssign ?? []).length === 0, `${beforeAssign?.length ?? 0} rows`);
+
+  // Edit Question 2 prompt (default Quiz tab) + Flashcard Front (Flashcards tab) and wait for 800ms autosave
+  const q2Prompt = t.getByRole('textbox', { name: 'Question 2 prompt' });
+  const targetPrompt = (await q2Prompt.count()) > 0 ? q2Prompt : t.getByRole('textbox', { name: 'Question 1 prompt' });
+  await targetPrompt.fill('EDITED Q2: Which formula gives the slope of a line?');
+  await t.getByRole('tab', { name: /Flashcards \(/ }).click();
+  await t.waitForTimeout(300);
   const front = t.getByRole('textbox', { name: 'Front' }).first();
   await front.fill('EDITED: What is slope?');
-  await t.getByRole('button', { name: /Publish to 1 class/ }).click();
-  await t.waitForTimeout(5000);
-  const { data: mods } = await teacherA.c.from('class_modules').select('id, title, flashcards').eq('class_id', klass.id);
-  const edited = mods?.[0]?.flashcards?.some((f) => f.front === 'EDITED: What is slope?');
-  log('Inline edit → published with real UUID', !!mods?.length && /^[0-9a-f-]{36}$/.test(mods[0].id) && edited, `${mods?.length} rows`);
+  await t.waitForTimeout(2000);
+  await t.getByRole('button', { name: 'Save private draft' }).click();
+  await t.waitForTimeout(1500);
 
+  // Reload and verify draft edits persisted in DB
   await t.reload();
   await t.waitForTimeout(4000);
-  await t.getByRole('button', { name: /^Edit / }).first().click();
-  await t.waitForTimeout(800);
-  await t.getByRole('textbox', { name: 'Title' }).fill('Slope (revised)');
-  await t.getByRole('button', { name: 'Save changes' }).click();
-  await t.waitForTimeout(3000);
-  const { data: rev } = await student.c.from('class_modules').select('title').eq('class_id', klass.id);
-  log('Edit published module → student sees new title', rev?.[0]?.title === 'Slope (revised)', rev?.[0]?.title);
+  const { data: persistedDrafts } = await teacherA.c.from('quiz_drafts').select('id, version, flashcards, questions').eq('teacher_id', teacherA.id);
+  const persistedEdit =
+    persistedDrafts?.[0]?.flashcards?.some((f) => f.front === 'EDITED: What is slope?') &&
+    persistedDrafts?.[0]?.questions?.some((q) => q.prompt === 'EDITED Q2: Which formula gives the slope of a line?');
+  log('Draft edits persist after reload', !!persistedEdit, `v${persistedDrafts?.[0]?.version ?? 0}`);
 
-  await t.getByRole('button', { name: /^Copy / }).first().click();
+  // Assign draft to Class A only (klass)
+  await t.getByRole('button', { name: 'Assign', exact: true }).first().click();
   await t.waitForTimeout(800);
-  await t.getByRole('checkbox').first().click();
-  await t.getByRole('button', { name: /Copy to 1 class/ }).click();
+  await t.getByRole('button', { name: /Assign to 1 class/ }).click();
   await t.waitForTimeout(4000);
-  const { data: all } = await teacherA.c.from('class_modules').select('class_id');
-  log('Copy module to another class', (all ?? []).length === 2, `${all?.length} rows`);
+  const { data: mods } = await student.c.from('class_modules').select('id, title, quiz_version, flashcards, questions').eq('class_id', klass.id).eq('published', true);
+  const studentSeesEdit = mods?.[0]?.questions?.some((q) => q.prompt === 'EDITED Q2: Which formula gives the slope of a line?');
+  log('Assign publishes edited snapshot to class A', !!mods?.length && /^[0-9a-f-]{36}$/.test(mods[0].id) && studentSeesEdit, `${mods?.length} rows v${mods?.[0]?.quiz_version}`);
+
+  // Edit draft again WITHOUT re-assigning -> student still sees old snapshot until "Update students"
+  await t.getByRole('button', { name: 'Edit draft' }).first().click();
+  await t.waitForTimeout(800);
+  await t.getByRole('textbox', { name: 'Title' }).fill('Slope (revised v2)');
+  await t.getByRole('button', { name: 'Done', exact: true }).click();
+  await t.waitForTimeout(3000);
+  const { data: stillOld } = await student.c.from('class_modules').select('title').eq('class_id', klass.id).eq('published', true);
+  log('Editing draft does not mutate assigned snapshot', stillOld?.[0]?.title !== 'Slope (revised v2)', stillOld?.[0]?.title);
+
+  // Click "Update students" -> student now sees revised snapshot
+  await t.getByRole('button', { name: 'Update students' }).first().click();
+  await t.waitForTimeout(3500);
+  const { data: updatedSnap } = await student.c.from('class_modules').select('title, quiz_version').eq('class_id', klass.id).eq('published', true);
+  log('Update students publishes new snapshot version', updatedSnap?.[0]?.title === 'Slope (revised v2)', `${updatedSnap?.[0]?.title} v${updatedSnap?.[0]?.quiz_version}`);
   await t.screenshot({ path: `${OUT}/modules.png` });
 
   // ── Review workbench ──
@@ -310,6 +349,16 @@ try {
     await p.waitForTimeout(2000);
     await p.screenshot({ path: `${OUT}/mobile-390.png` });
     log('Mobile 390×844 keeps the phone layout', (await nav(p)) === 0);
+    await ctx.close();
+  }
+
+  // ── Dev gallery Day/Night visual check ──
+  {
+    const { ctx, p } = await page(1280, 900);
+    await p.goto(`${BASE}/dev/gallery?mode=both&full`);
+    await p.waitForTimeout(2500);
+    await p.screenshot({ path: `${OUT}/gallery-both.png`, fullPage: true });
+    log('Dev gallery ?mode=both renders Day & Night', (await p.locator('body').innerText()).trim().length > 20);
     await ctx.close();
   }
 

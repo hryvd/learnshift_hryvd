@@ -1,5 +1,6 @@
 package expo.modules.usagemonitor
 
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,6 +18,8 @@ import expo.modules.usagemonitor.mirror.LearningMirrorPolicy
 import expo.modules.usagemonitor.mirror.LearningMirrorSelector
 import expo.modules.usagemonitor.mirror.LearningSeedAssetLoader
 import expo.modules.usagemonitor.mirror.LearnShiftOfflineDb
+import expo.modules.usagemonitor.mirror.MirrorTimer
+import expo.modules.usagemonitor.mirror.MirrorTriggerMode
 import expo.modules.usagemonitor.mirror.NeutralSeedManager
 import expo.modules.usagemonitor.mirror.OemBatteryHardening
 import expo.modules.usagemonitor.mirror.OfflineContextCollector
@@ -45,6 +48,21 @@ class UsageMonitorModule : Module() {
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     val activity = appContext.currentActivity
     if (activity != null) activity.startActivity(intent) else ctx.startActivity(intent)
+  }
+
+  /**
+   * Returns (pkg, label) only when lastUsedPkg came from a recent (< 10 min)
+   * distracting non-audio app. Prevents relaunching Spotify or stale apps.
+   */
+  private fun eligibleLastUsed(context: Context): Pair<String, String>? {
+    val pkg = Store.getString(context, "lastUsedPkg")?.takeIf { it.isNotBlank() } ?: return null
+    val stamp = Store.getLong(context, "lastUsedAt")
+    if (stamp <= 0L || System.currentTimeMillis() - stamp >= 10 * 60_000L) return null
+    if (pkg == context.packageName || pkg in NOT_FREE_TIME) return null
+    if (!Categories.of(context, pkg).distracting || Categories.isAudioOrMusic(context, pkg)) return null
+    val label = Store.getString(context, "lastUsedLabel")?.takeIf { it.isNotBlank() }
+      ?: Categories.label(context, pkg)
+    return pkg to label
   }
 
   override fun definition() = ModuleDefinition {
@@ -269,7 +287,10 @@ class UsageMonitorModule : Module() {
     /** The session happening right now (for the Home screen's live gauge and risk chip). */
     AsyncFunction("getLive") {
       if (!Perms.hasUsageAccess(ctx)) return@AsyncFunction null
-      val live = Tracker(ctx).update(System.currentTimeMillis())
+      val power = ctx.getSystemService(Context.POWER_SERVICE) as PowerManager
+      val keyguard = ctx.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+      val screenAwake = power.isInteractive && !keyguard.isKeyguardLocked
+      val live = Tracker(ctx).update(System.currentTimeMillis(), screenAwake)
       mapOf(
         "category" to live.cat.js,
         "sessionMinutes" to live.sessionMin,
@@ -362,13 +383,11 @@ class UsageMonitorModule : Module() {
       true
     }
 
-    /** Returns directly to the last external app the student was using, or moves LearnShift to the background. */
+    /** Returns directly to the last eligible distracting app (< 10 min, non-audio), or moves LearnShift to the background. */
     Function("returnToLastApp") {
-      val targetPkg = Store.getString(ctx, "lastUsedPkg")?.takeIf { it.isNotBlank() }
-        ?: Store.getString(ctx, "watchedPkg")?.takeIf { it.isNotBlank() }
-        ?: runCatching { Tracker(ctx).update(System.currentTimeMillis()).pkg }.getOrNull()
-      if (!targetPkg.isNullOrBlank() && targetPkg != ctx.packageName && targetPkg !in NOT_FREE_TIME) {
-        val intent = ctx.packageManager.getLaunchIntentForPackage(targetPkg)
+      val eligible = eligibleLastUsed(ctx)
+      if (eligible != null) {
+        val intent = ctx.packageManager.getLaunchIntentForPackage(eligible.first)
         if (intent != null) {
           val started = runCatching {
             launch(intent)
@@ -385,9 +404,9 @@ class UsageMonitorModule : Module() {
       false
     }
 
-    /** Label of the most recent external app being used (e.g. "TikTok", "YouTube"). */
+    /** Label of the most recent eligible distracting app (< 10 min, non-audio), or empty to hide "Open <app>". */
     Function("lastUsedApp") {
-      Store.getString(ctx, "lastUsedLabel") ?: ""
+      eligibleLastUsed(ctx)?.second ?: ""
     }
 
     /** Launches a real installed app (or mobile web fallback) and arms a floating LearnShift overlay over it. */
@@ -429,10 +448,14 @@ class UsageMonitorModule : Module() {
       if (!started) return@Function false
 
       val finalPkg = resolvedPkg ?: pkg
+      val now = System.currentTimeMillis()
       Store.putString(ctx, "watchedPkg", finalPkg)
-      Store.putString(ctx, "lastUsedPkg", finalPkg)
-      Store.putString(ctx, "lastUsedLabel", appLabel)
-      Store.putLong(ctx, "watchedAt", System.currentTimeMillis())
+      if (Categories.of(ctx, finalPkg).distracting && !Categories.isAudioOrMusic(ctx, finalPkg)) {
+        Store.putString(ctx, "lastUsedPkg", finalPkg)
+        Store.putString(ctx, "lastUsedLabel", appLabel)
+        Store.putLong(ctx, "lastUsedAt", now)
+      }
+      Store.putLong(ctx, "watchedAt", now)
       MonitorService.start(ctx)
 
       // Monitoring uses fresh foreground usage events; a delayed launcher task
@@ -487,6 +510,10 @@ class UsageMonitorModule : Module() {
         "lastVideoId" to SentinelBus.lastInterventionVideoId,
         "lastVideoTitle" to SentinelBus.lastInterventionVideoTitle,
         "catalogCount" to catalogCount,
+        "mirrorTrigger" to MirrorTriggerMode.fromKey(prefs.getString("mirror_trigger", "smart")).key,
+        "mirrorTimerMin" to MirrorTimer.normalizeMinutes(prefs.getInt("mirror_timer_min", 15)),
+        "timerRemainingSec" to SentinelBus.timerRemainingSec,
+        "timerPaused" to SentinelBus.timerPaused,
       )
     }
 
@@ -527,6 +554,17 @@ class UsageMonitorModule : Module() {
       ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
         .edit()
         .putBoolean("mirror_auto_enabled", enabled)
+        .apply()
+      true
+    }
+
+    Function("setMirrorTrigger") { mode: String, minutes: Int ->
+      val safeMode = MirrorTriggerMode.fromKey(mode).key
+      val safeMin = MirrorTimer.normalizeMinutes(minutes)
+      ctx.getSharedPreferences("learnshift_prefs", Context.MODE_PRIVATE)
+        .edit()
+        .putString("mirror_trigger", safeMode)
+        .putInt("mirror_timer_min", safeMin)
         .apply()
       true
     }

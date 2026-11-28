@@ -1,7 +1,7 @@
 import { useTheme } from '@/design/theme';
 import type { Palette } from '@/design/tokens';
 
-import { BarTab, CenterPlusButton, FloatingBarShell } from './FloatingBar';
+import { BarTab, CenterPlusButton, FloatingBarShell, type WindowRect } from './FloatingBar';
 import { BookOpen, ChartBar, House, UserCircle, type IconProps } from './icons';
 
 export type TabKey = 'home' | 'learn' | 'insights' | 'profile';
@@ -19,8 +19,11 @@ type Props = {
   active: TabKey;
   onTab: (key: TabKey) => void;
   onShift: () => void;
-  /** Center button rotated to × while its sheet is open. */
+  onMeasureShift?: (rect: WindowRect) => void;
+  /** True while the Shift morph card is open and covering the bar. */
   shiftOpen?: boolean;
+  /** True while the center button is hidden because the morph card owns it. */
+  shiftHidden?: boolean;
   labels?: Partial<Record<TabKey | 'shift', string>>;
   /** Render inline (gallery) instead of floating over the screen. */
   inline?: boolean;
@@ -30,7 +33,16 @@ type Props = {
  * Floating five-slot bar: four tinted tabs (only the current one shows its name)
  * and the raised Shift button in the middle.
  */
-export function TabBar({ active, onTab, onShift, shiftOpen, labels, inline }: Props) {
+export function TabBar({
+  active,
+  onTab,
+  onShift,
+  onMeasureShift,
+  shiftOpen,
+  shiftHidden,
+  labels,
+  inline,
+}: Props) {
   const { c } = useTheme();
   const tab = (t: TabDef) => (
     <BarTab
@@ -44,9 +56,15 @@ export function TabBar({ active, onTab, onShift, shiftOpen, labels, inline }: Pr
   );
 
   return (
-    <FloatingBarShell inline={inline}>
+    <FloatingBarShell inline={inline} blocked={!!shiftOpen}>
       {TABS.slice(0, 2).map(tab)}
-      <CenterPlusButton open={!!shiftOpen} onPress={onShift} label={labels?.shift ?? 'Shift'} />
+      <CenterPlusButton
+        open={!!shiftOpen}
+        hidden={!!shiftHidden}
+        onPress={onShift}
+        onMeasure={onMeasureShift}
+        label={labels?.shift ?? 'Shift'}
+      />
       {TABS.slice(2).map(tab)}
     </FloatingBarShell>
   );

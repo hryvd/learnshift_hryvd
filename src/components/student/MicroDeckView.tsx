@@ -29,6 +29,7 @@ import {
 import { SHORT } from '@/data/skills';
 import { haptic } from '@/design/haptics';
 import { radius, space } from '@/design/tokens';
+import { deckRewardKey } from '@/lib/rewards';
 import { DEFAULT_QUIET_MIN } from '@/services/sentinel';
 import { DEFAULT_SENTINEL, useAppStore } from '@/store/useAppStore';
 
@@ -157,7 +158,14 @@ export function MicroDeckView({
   const finishDeck = (correct: boolean) => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    useAppStore.getState().recordDeckComplete(DEFAULT_QUIET_MIN);
+    const s = useAppStore.getState();
+    s.recordDeckComplete(DEFAULT_QUIET_MIN);
+    s.claimReward({
+      key: deckRewardKey(deck.card_id),
+      kind: 'deck',
+      ref: deck.card_id,
+      meta: {},
+    });
     haptic.success();
     onComplete?.({ correct, cardId: deck.card_id });
   };

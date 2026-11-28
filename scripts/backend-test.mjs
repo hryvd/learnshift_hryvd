@@ -413,6 +413,318 @@ try {
     const { error: ae } = await anon.rpc('claim_teacher_role');
     ok(!!ae, 'signed-out caller cannot claim a role');
   }
+
+  console.log('Item 1: Reward ledger, caps, evidence & coin freeze');
+  {
+    const rStudent = await user('student', 'Reward Student');
+    all.push(rStudent);
+
+    // Direct progress.coins write must be silently frozen (old APK compatibility).
+    const { error: freezeErr } = await rStudent.c.from('progress').update({ coins: 99999 }).eq('student_id', rStudent.id);
+    const prAfterFreeze = await rows(rStudent.c.from('progress').select('coins').eq('student_id', rStudent.id).single());
+    ok(!freezeErr && prAfterFreeze?.coins === 0, 'direct update to progress.coins leaves balance frozen at 0', { freezeErr, prAfterFreeze });
+
+    // Direct insert into reward_events denied by RLS / grants.
+    const { error: directInsErr } = await rStudent.c
+      .from('reward_events')
+      .insert({ student_id: rStudent.id, key: 'cheat:1', kind: 'break', amount: 500 });
+    ok(!!directInsErr, 'direct insert into reward_events is denied');
+
+    // Break idempotency: +20 once, duplicate on replay.
+    const { data: b1, error: b1e } = await rStudent.c.rpc('claim_reward', {
+      p_key: 'break:test-1',
+      p_kind: 'break',
+      p_ref: 'test-1',
+      p_meta: {},
+    });
+    ok(!b1e && b1?.status === 'applied' && b1?.amount === 20 && b1?.coins === 20, 'break claim applies +20', b1 ?? b1e);
+    const { data: b1Dup } = await rStudent.c.rpc('claim_reward', {
+      p_key: 'break:test-1',
+      p_kind: 'break',
+      p_ref: 'test-1',
+      p_meta: {},
+    });
+    ok(b1Dup?.status === 'duplicate' && b1Dup?.coins === 20, 'replayed break claim is duplicate with same balance', b1Dup);
+
+    // Quiz evidence check: pending_evidence before attempts, server-recounted after attempts.
+    const { data: qPend } = await rStudent.c.rpc('claim_reward', {
+      p_key: 'quiz:qsess1',
+      p_kind: 'quiz',
+      p_ref: 'qsess1',
+      p_meta: { sessionId: 'qsess1', correct: 5 },
+    });
+    ok(qPend?.status === 'pending_evidence' && qPend?.coins === 20, 'quiz claim returns pending_evidence without attempts', qPend);
+
+    await rStudent.c.from('attempts').insert([
+      { client_id: 'qsess1:1', question_id: 'fra-1', skill_id: 'fractions', chosen: 0, correct: true, seconds: 5, context: 'quiz' },
+      { client_id: 'qsess1:2', question_id: 'fra-2', skill_id: 'fractions', chosen: 0, correct: true, seconds: 5, context: 'quiz' },
+      { client_id: 'qsess1:3', question_id: 'fra-3', skill_id: 'fractions', chosen: 1, correct: false, seconds: 5, context: 'quiz' },
+    ]);
+    // Client lies claiming correct=5; server recounts 2 correct => 20 coins.
+    const { data: qOk } = await rStudent.c.rpc('claim_reward', {
+      p_key: 'quiz:qsess1',
+      p_kind: 'quiz',
+      p_ref: 'qsess1',
+      p_meta: { sessionId: 'qsess1', correct: 5 },
+    });
+    ok(qOk?.status === 'applied' && qOk?.amount === 20 && qOk?.coins === 40, 'quiz claim recounts attempts server-side (2 correct = 20)', qOk);
+
+    // Privacy: guardian and teacher cannot read reward_events.
+    ok((await rows(guardian.c.from('reward_events').select('*').eq('student_id', rStudent.id))).length === 0, 'guardian cannot read reward_events');
+    ok((await rows(teacher.c.from('reward_events').select('*').eq('student_id', rStudent.id))).length === 0, 'teacher cannot read reward_events');
+    ok((await rows(rStudent.c.from('reward_events').select('*').eq('student_id', rStudent.id))).length === 2, 'student sees own reward_events');
+
+    // Break daily cap (12/day): already used 1, claim 11 more, 13th must cap.
+    for (let i = 2; i <= 12; i++) {
+      await rStudent.c.rpc('claim_reward', { p_key: `break:cap-${i}`, p_kind: 'break', p_ref: `cap-${i}`, p_meta: {} });
+    }
+    const { data: bCap } = await rStudent.c.rpc('claim_reward', { p_key: 'break:cap-13', p_kind: 'break', p_ref: 'cap-13', p_meta: {} });
+    ok(bCap?.status === 'capped', '13th break in a Manila day is capped', bCap);
+
+    // Focus cap (240 min/day): 120 + 120 ok, next focus is capped.
+    const { data: f1 } = await rStudent.c.rpc('claim_reward', { p_key: 'focus:1', p_kind: 'focus', p_meta: { minutes: 120 } });
+    const { data: f2 } = await rStudent.c.rpc('claim_reward', { p_key: 'focus:2', p_kind: 'focus', p_meta: { minutes: 120 } });
+    const { data: f3 } = await rStudent.c.rpc('claim_reward', { p_key: 'focus:3', p_kind: 'focus', p_meta: { minutes: 25 } });
+    ok(f1?.amount === 72 && f2?.amount === 72 && f3?.status === 'capped', 'focus awards round(min/5)*3 and caps at 240 min/day', { f1, f2, f3 });
+
+    // Daily total 600-coin cap: current coins = 260 (breaks+quiz) + 144 (focus) = 404. Add 4 quizzes of 50 = 200 -> clamped to 600.
+    for (let q = 1; q <= 4; q++) {
+      const sid = `capq${q}`;
+      await rStudent.c.from('attempts').insert(
+        [1, 2, 3, 4, 5].map((n) => ({
+          client_id: `${sid}:${n}`,
+          question_id: `fra-${n}`,
+          skill_id: 'fractions',
+          chosen: 0,
+          correct: true,
+          seconds: 4,
+          context: 'overlay',
+        })),
+      );
+      await rStudent.c.rpc('claim_reward', { p_key: `overlay:${sid}`, p_kind: 'overlay_quiz', p_ref: sid, p_meta: { sessionId: sid } });
+    }
+    const prCap = await rows(rStudent.c.from('progress').select('coins').eq('student_id', rStudent.id).single());
+    const { data: deckCap } = await rStudent.c.rpc('claim_reward', { p_key: 'deck:cap-1', p_kind: 'deck', p_meta: {} });
+    ok(prCap?.coins === 600 && deckCap?.status === 'capped', 'daily 600-coin cap enforced cleanly', { coins: prCap?.coins, deckCap });
+  }
+
+  console.log('Item 2: Personalization learning_subject & guardian guard');
+  {
+    const { error: subjOk } = await student.c
+      .from('student_settings')
+      .update({ learning_subject: 'science' })
+      .eq('student_id', student.id);
+    const stRow = await rows(student.c.from('student_settings').select('learning_subject').eq('student_id', student.id).single());
+    ok(!subjOk && stRow?.learning_subject === 'science', 'student saves and reads learning_subject', { subjOk, stRow });
+
+    const { error: badSubj } = await student.c
+      .from('student_settings')
+      .update({ learning_subject: 'invalid-subject' })
+      .eq('student_id', student.id);
+    ok(!!badSubj, 'invalid learning_subject rejected by check constraint');
+
+    const { error: guardSubj } = await guardian.c
+      .from('student_settings')
+      .update({ learning_subject: 'math' })
+      .eq('student_id', student.id);
+    ok(!!guardSubj, 'guardian cannot change student learning_subject');
+
+    const { error: guardBed } = await guardian.c
+      .from('student_settings')
+      .update({ bedtime_start: 1320 })
+      .eq('student_id', student.id);
+    ok(!guardBed, 'guardian can still update bedtime_start', guardBed);
+  }
+
+  console.log('Item 7: Module sources, editable quiz drafts, immutable assign_quiz & signed URLs');
+  let uploadedStoragePath = null;
+  {
+    const teacher2 = await user('teacher', 'Other Teacher');
+    all.push(teacher2);
+    const { data: clsB } = await teacher.c.from('classes').insert({ name: 'Narra', grade: 8 }).select().single();
+    const studentB = await user('student', 'Student B');
+    all.push(studentB);
+    await studentB.c.rpc('join_class', { p_code: clsB.join_code });
+
+    // 1. Upload original file to private Storage bucket
+    const rawText = 'Slope is rise over run.\nY-intercept is where x = 0.';
+    const rawBytes = new TextEncoder().encode(rawText);
+    const hashBuf = await crypto.subtle.digest('SHA-256', rawBytes);
+    const sha256 = Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    uploadedStoragePath = `${teacher.id}/test-${run}.txt`;
+    const { error: upErr } = await teacher.c.storage
+      .from('module-sources')
+      .upload(uploadedStoragePath, rawBytes, { contentType: 'text/plain', upsert: true });
+    ok(!upErr, 'teacher uploads original file to private module-sources bucket', upErr);
+
+    const { data: srcRow, error: srcErr } = await teacher.c
+      .from('module_sources')
+      .insert({
+        storage_path: uploadedStoragePath,
+        file_name: 'slope-notes.txt',
+        mime: 'text/plain',
+        size_bytes: rawBytes.byteLength,
+        sha256,
+        extracted_text: rawText,
+      })
+      .select()
+      .single();
+    ok(!srcErr && !!srcRow?.id, 'teacher records module_sources row', srcErr);
+
+    // 2. Create private quiz draft
+    const makeQs = (prompt2, ans2) => [
+      { id: 'q1', prompt: 'What is slope?', options: ['Rise/run', 'Run/rise', 'x+y', '0'], answer: 0, explanation: 'Rise over run', topic: 'Slope' },
+      { id: 'q2', prompt: prompt2, options: ['x=0', 'y=0', 'x=1', 'y=1'], answer: ans2, explanation: 'At x=0', topic: 'Intercept' },
+    ];
+    const { data: draft, error: dErr } = await teacher.c
+      .from('quiz_drafts')
+      .insert({
+        source_id: srcRow.id,
+        title: 'Slope Quiz',
+        subject: 'Math',
+        summary: 'Linear equations summary',
+        flashcards: [{ id: 'f1', front: 'Slope', back: 'Rise over run' }],
+        questions: makeQs('Original Q2?', 0),
+      })
+      .select()
+      .single();
+    ok(!dErr && draft?.version === 1, 'teacher creates private draft v1', dErr);
+
+    // Privacy: student, guardian, and other teacher cannot see draft or source.
+    ok((await rows(student.c.from('quiz_drafts').select('*').eq('id', draft.id))).length === 0, 'student cannot see private draft');
+    ok((await rows(teacher2.c.from('quiz_drafts').select('*').eq('id', draft.id))).length === 0, 'other teacher cannot see private draft');
+    ok((await rows(teacher2.c.from('module_sources').select('*').eq('id', srcRow.id))).length === 0, 'other teacher cannot see module_sources');
+    const { error: t2DlErr } = await teacher2.c.storage.from('module-sources').download(uploadedStoragePath);
+    ok(!!t2DlErr, 'other teacher cannot download original from Storage');
+
+    // 3. Edit draft -> version bumps to 2; stale expected_version returns conflict.
+    const { data: draftV2, error: updErr } = await teacher.c
+      .from('quiz_drafts')
+      .update({ questions: makeQs('Edited Q2 prompt?', 1) })
+      .eq('id', draft.id)
+      .select()
+      .single();
+    ok(!updErr && draftV2?.version === 2, 'editing draft bumps version to 2', updErr);
+
+    const { data: conflictRes } = await teacher.c.rpc('assign_quiz', {
+      p_quiz_id: draft.id,
+      p_expected_version: 1,
+      p_class_ids: [cls.id],
+      p_share_source: false,
+    });
+    ok(conflictRes?.status === 'conflict' && conflictRes?.current_version === 2, 'assign_quiz rejects stale version with conflict', conflictRes);
+
+    // 4. Assign v2 to class A only (share_source = false); double-tap is idempotent.
+    const { data: asg1, error: asg1Err } = await teacher.c.rpc('assign_quiz', {
+      p_quiz_id: draft.id,
+      p_expected_version: 2,
+      p_class_ids: [cls.id],
+      p_share_source: false,
+    });
+    const { data: asg1Dup } = await teacher.c.rpc('assign_quiz', {
+      p_quiz_id: draft.id,
+      p_expected_version: 2,
+      p_class_ids: [cls.id],
+      p_share_source: false,
+    });
+    const studAMods = await rows(student.c.from('class_modules').select('*').eq('class_id', cls.id).eq('published', true));
+    const studBMods = await rows(studentB.c.from('class_modules').select('*').eq('class_id', clsB.id).eq('published', true));
+    ok(
+      !asg1Err &&
+        asg1?.status === 'assigned' &&
+        asg1Dup?.status === 'assigned' &&
+        studAMods.length === 1 &&
+        studAMods[0].questions[1].prompt === 'Edited Q2 prompt?' &&
+        studBMods.length === 0,
+      'assign_quiz publishes immutable v2 snapshot to class A only (idempotent on double-tap)',
+      { asg1, studAMods, studBMods },
+    );
+
+    // Student module reward: +25 once, duplicate on replay, denied for non-member.
+    const modId = studAMods[0].id;
+    const { data: mr1 } = await student.c.rpc('claim_reward', { p_key: `module:${modId}`, p_kind: 'module', p_ref: modId, p_meta: {} });
+    const { data: mr2 } = await student.c.rpc('claim_reward', { p_key: `module:${modId}`, p_kind: 'module', p_ref: modId, p_meta: {} });
+    const { error: mrOut } = await studentB.c.rpc('claim_reward', { p_key: `module:${modId}`, p_kind: 'module', p_ref: modId, p_meta: {} });
+    ok(mr1?.status === 'applied' && mr1?.amount === 25 && mr2?.status === 'duplicate' && !!mrOut, 'module reward applies once for enrolled student and denies non-member', { mr1, mr2, mrOut });
+
+    // Signed URL checks: teacher allowed + sha256 matches; student denied when share_source=false; other teacher denied.
+    const { data: tSigned, error: tSignErr } = await teacher.c.functions.invoke('source-signed-url', { body: { moduleId: modId } });
+    const dlRes = tSigned?.url ? await fetch(tSigned.url) : null;
+    const dlBytes = dlRes?.ok ? new Uint8Array(await dlRes.arrayBuffer()) : null;
+    const dlHash = dlBytes
+      ? Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', dlBytes)))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('')
+      : null;
+    ok(!tSignErr && dlHash === sha256, 'teacher signed URL downloads exact original bytes (sha256 match)', { tSignErr, dlHash, sha256 });
+
+    const { error: sDenySign } = await student.c.functions.invoke('source-signed-url', { body: { moduleId: modId } });
+    ok(!!sDenySign, 'student denied signed URL when share_source is false');
+    const { error: t2DenySign } = await teacher2.c.functions.invoke('source-signed-url', { body: { moduleId: modId } });
+    ok(!!t2DenySign, 'other teacher denied signed URL');
+
+    // 5. Edit draft to v3 without re-assigning -> student A still sees v2.
+    const { data: draftV3 } = await teacher.c
+      .from('quiz_drafts')
+      .update({ questions: makeQs('V3 Q2 prompt?', 2) })
+      .eq('id', draft.id)
+      .select()
+      .single();
+    const studAStillV2 = await rows(student.c.from('class_modules').select('quiz_version, questions').eq('class_id', cls.id).eq('published', true));
+    ok(draftV3?.version === 3 && studAStillV2.length === 1 && studAStillV2[0].quiz_version === 2, 'editing draft does not mutate already-assigned student snapshot', studAStillV2);
+
+    // 6. Re-assign v3 with share_source=true -> v2 unpublished, v3 published, student gets signed URL.
+    await teacher.c.rpc('assign_quiz', { p_quiz_id: draft.id, p_expected_version: 3, p_class_ids: [cls.id], p_share_source: true });
+    const studAV3 = await rows(student.c.from('class_modules').select('id, quiz_version, questions').eq('class_id', cls.id).eq('published', true));
+    const { data: sAllowSign, error: sAllowErr } = await student.c.functions.invoke('source-signed-url', { body: { moduleId: studAV3[0]?.id } });
+    ok(studAV3.length === 1 && studAV3[0].quiz_version === 3 && !sAllowErr && !!sAllowSign?.url, 're-assign publishes v3, unpublishes v2, and enables shared original', { studAV3, sAllowErr });
+
+    // 7. Security: student cannot call assign_quiz or insert/update quiz_id rows directly.
+    const { error: studAssignErr } = await student.c.rpc('assign_quiz', {
+      p_quiz_id: draft.id,
+      p_expected_version: 3,
+      p_class_ids: [cls.id],
+      p_share_source: false,
+    });
+    ok(!!studAssignErr, 'student cannot call assign_quiz');
+    const { error: studInsModErr } = await student.c.from('class_modules').insert({
+      class_id: cls.id,
+      title: 'Fake',
+      subject: 'Math',
+      source_excerpt: 'x',
+      quiz_id: draft.id,
+      quiz_version: 99,
+    });
+    ok(!!studInsModErr, 'student cannot insert class_modules directly');
+    const { error: teacherDirectUpdErr } = await teacher.c
+      .from('class_modules')
+      .update({ title: 'Mutated directly' })
+      .eq('id', studAV3[0].id);
+    const afterDirectUpd = await rows(teacher.c.from('class_modules').select('title').eq('id', studAV3[0].id).single());
+    ok(!!teacherDirectUpdErr || afterDirectUpd?.title === 'Slope Quiz', 'direct update of assigned snapshot is blocked', { teacherDirectUpdErr, afterDirectUpd });
+
+    // Cleanup uploaded object
+    await teacher.c.storage.from('module-sources').remove([uploadedStoragePath]);
+  }
+
+  console.log('Item 8: live_status confidence via ingest');
+  {
+    const infRes = await ingest(dt, {
+      platform: 'android',
+      live: { package: 'com.spotify.music', label: 'Spotify', category: 'other', session_min: 1, screen_on: true, confidence: 'inferred' },
+    });
+    const infRow = await rows(guardian.c.from('live_status').select('package, confidence').eq('student_id', student.id).single());
+    ok(infRes.ok && infRow?.confidence === 'inferred', 'ingest stores confidence=inferred', infRow);
+
+    const legRes = await ingest(dt, {
+      platform: 'android',
+      live: { package: 'com.google.android.youtube', label: 'YouTube', category: 'video', session_min: 3, screen_on: true },
+    });
+    const legRow = await rows(guardian.c.from('live_status').select('package, confidence').eq('student_id', student.id).single());
+    ok(legRes.ok && legRow?.confidence === 'visible', 'ingest defaults omitted confidence to visible for older APKs', legRow);
+  }
 } catch (e) {
   failed++;
   console.log('  ✗ crashed:', e.message);

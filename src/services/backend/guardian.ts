@@ -34,6 +34,7 @@ export type LiveNow = {
   category: AppCategory | null;
   sessionMin: number;
   screenOn: boolean;
+  confidence: 'visible' | 'inferred';
   updatedAt: string;
 };
 export type ChildFriend = {
@@ -234,6 +235,7 @@ async function fetchChild(id: string) {
           category: live.data.category,
           sessionMin: live.data.session_min,
           screenOn: live.data.screen_on,
+          confidence: live.data.confidence === 'inferred' ? 'inferred' : 'visible',
           updatedAt: live.data.updated_at,
         }
       : null,

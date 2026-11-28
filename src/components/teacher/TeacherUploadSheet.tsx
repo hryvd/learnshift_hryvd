@@ -17,31 +17,38 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
-import { BookOpenText, CheckCircle, FileArrowUp, Plus, Sparkle, WifiHigh } from '@/components/ui/icons';
+import { BookOpenText, CheckCircle, FileText, Sparkle } from '@/components/ui/icons';
 
-import { Chip, IconButton, Notice, PillButton, PressableScale, Text } from '@/components/ui';
+import { openOriginalSource } from '@/components/teacher/ModuleEditDialogs';
+import { QUIZ_SUBJECTS, QuizEditor, validateQuizValue, type EditableQuizValue } from '@/components/teacher/QuizEditor';
+import { UploadDropCard, type UploadCardState } from '@/components/teacher/UploadDropCard';
+import { Chip, IconButton, Notice, PillButton, PressableScale, Text, Toggle } from '@/components/ui';
 import { haptic } from '@/design/haptics';
 import { spring } from '@/design/motion';
 import { useTheme } from '@/design/theme';
 import { radius } from '@/design/tokens';
-import { FONT_SECONDARY, fontFor } from '@/design/typography';
+import { FONT_SECONDARY } from '@/design/typography';
 import { IS_PITCH, PITCH_NAMES } from '@/lib/config';
 import {
   generateModuleDeck,
   SAMPLE_MODULE_TEXT,
-  type GeneratedModuleDeck,
+  type ModuleSource,
+  type QuizDraft,
 } from '@/services/ai/moduleGenerator';
-import { publishModulesToClasses, useTeacher } from '@/services/backend/teacher';
-import { pickModuleFile } from '@/services/monitor';
+import { assignDraftToClasses, createDraft, saveDraft, useTeacher } from '@/services/backend/teacher';
 import { extractLessonFile, LESSON_FILE_ACCEPT } from '@/services/teacher/extractLessonFile';
-
-const SUBJECTS = ['Math', 'Science', 'English', 'Filipino', 'General'] as const;
+import {
+  pickNativeLessonFile,
+  resolveAllowedMime,
+  uploadModuleSource,
+  validateSourceFile,
+} from '@/services/teacher/uploadSource';
+import { useAppStore } from '@/store/useAppStore';
 
 /**
- * Center-docked 3D flip-and-grow card sheet triggered from the middle '+' button
- * on TeacherTabBar. Lets teachers drop/select a lesson file, generate & inspect
- * flashcards + quiz breaks, choose which class(es) receive them, and approve
- * direct phone-to-phone hosting.
+ * Mobile Teacher Upload Sheet:
+ * Uses the cohesive light-card `UploadDropCard` (whole card is tap/drop target, no separate Upload button),
+ * creates a private draft, lets the teacher review & edit with autosave, then explicitly assign to classes.
  */
 export function TeacherUploadSheet() {
   const { c } = useTheme();
@@ -54,17 +61,27 @@ export function TeacherUploadSheet() {
   const [mounted, setMounted] = useState(visible);
   const progress = useSharedValue(visible ? 1 : 0);
 
-  const [step, setStep] = useState<'upload' | 'approve'>('upload');
+  const [step, setStep] = useState<'upload' | 'edit' | 'assign'>('upload');
+  const [uploadState, setUploadState] = useState<UploadCardState>({ status: 'idle' });
+  const [source, setSource] = useState<ModuleSource | null>(null);
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState<string>('Math');
-  const [sourceName, setSourceName] = useState<string | null>(null);
   const [content, setContent] = useState('');
   const [showPaste, setShowPaste] = useState(false);
-  const [draggingOver, setDraggingOver] = useState(false);
-  const [deck, setDeck] = useState<GeneratedModuleDeck | null>(null);
+
+  const [draft, setDraft] = useState<QuizDraft | null>(null);
+  const [editVal, setEditVal] = useState<EditableQuizValue | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [conflictNotice, setConflictNotice] = useState<string | null>(null);
+  const versionRef = useRef(1);
+  const dirtyRef = useRef(false);
+  const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [pickedTargetIds, setPickedTargetIds] = useState<string[] | null>(null);
+  const [shareSource, setShareSource] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [publishing, setPublishing] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const assignLockRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [doneBanner, setDoneBanner] = useState<string | null>(null);
 
@@ -77,7 +94,7 @@ export function TeacherUploadSheet() {
   useEffect(() => {
     if (!mounted) return;
     if (visible) {
-      progress.set(withSpring(1, { damping: 16, stiffness: 165, mass: 0.9 }));
+      progress.set(withSpring(1, spring.smooth));
     } else {
       progress.set(
         withSpring(0, { ...spring.snappy, overshootClamping: true }, (finished) => {
@@ -87,85 +104,90 @@ export function TeacherUploadSheet() {
     }
   }, [visible, mounted, progress]);
 
+  useEffect(
+    () => () => {
+      if (autosaveRef.current) clearTimeout(autosaveRef.current);
+    },
+    [],
+  );
+
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: progress.get(),
   }));
 
-  const growWrapperStyle = useAnimatedStyle(() => {
+  const cardAnimStyle = useAnimatedStyle(() => {
     const p = progress.get();
     return {
+      opacity: interpolate(p, [0, 0.25], [0, 1], Extrapolation.CLAMP),
       transform: [
-        { perspective: 1200 },
-        { translateY: interpolate(p, [0, 1], [220, 0], Extrapolation.CLAMP) },
-        { scale: interpolate(p, [0, 1], [0.24, 1], Extrapolation.CLAMP) },
+        { translateY: interpolate(p, [0, 1], [140, 0], Extrapolation.CLAMP) },
+        { scale: interpolate(p, [0, 1], [0.88, 1], Extrapolation.CLAMP) },
       ],
-    };
-  });
-
-  const frontFaceStyle = useAnimatedStyle(() => {
-    const p = progress.get();
-    return {
-      opacity: p < 0.45 ? 1 : 0,
-      transform: [{ perspective: 1200 }, { rotateY: `${interpolate(p, [0, 0.5], [0, 90], Extrapolation.CLAMP)}deg` }],
-    };
-  });
-
-  const backFaceStyle = useAnimatedStyle(() => {
-    const p = progress.get();
-    return {
-      opacity: p >= 0.42 ? 1 : 0,
-      transform: [{ perspective: 1200 }, { rotateY: `${interpolate(p, [0.42, 1], [-90, 0], Extrapolation.CLAMP)}deg` }],
     };
   });
 
   const resetForm = () => {
     setStep('upload');
+    setUploadState({ status: 'idle' });
+    setSource(null);
     setTitle('');
     setSubject('Math');
-    setSourceName(null);
     setContent('');
     setShowPaste(false);
-    setDeck(null);
+    setDraft(null);
+    setEditVal(null);
+    setSaveStatus('idle');
+    setConflictNotice(null);
     setPickedTargetIds(null);
+    setShareSource(false);
     setError(null);
     setDoneBanner(null);
+    assignLockRef.current = false;
   };
 
   const closeSheet = () => {
+    if (autosaveRef.current) clearTimeout(autosaveRef.current);
     haptic.select();
     setUploadOpen(false);
   };
 
-  const applyUploadedText = (fileName: string, rawText: string) => {
+  const readWebFile = async (file: File) => {
     setError(null);
     setDoneBanner(null);
-    if (/[\u0000-\u0008\u000E-\u001F]/.test(rawText.slice(0, 800))) {
-      setError('Binary file detected. Choose a .pdf, .docx, .txt, .md, or .html file, or paste lesson notes.');
+    const valErr = validateSourceFile(file.name, file.size, file.type);
+    if (valErr) {
+      setUploadState({ status: 'failed', reason: valErr });
       return;
     }
-    const clean = rawText.trim().slice(0, 10000);
+    setUploadState({ status: 'reading', fileName: file.name });
+    const res = await extractLessonFile(file);
+    if ('error' in res) {
+      setUploadState({ status: 'failed', reason: res.error });
+      return;
+    }
+    const clean = res.text.trim().slice(0, 10000);
     if (clean.length < 30) {
-      setError('File has very little text. Try a fuller lesson file or paste your notes.');
+      setUploadState({ status: 'failed', reason: 'That file has very little text. Try a fuller lesson file.' });
       return;
     }
-    setSourceName(fileName);
-    if (!title.trim()) {
-      setTitle(fileName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80));
-    }
-    setContent(clean);
-    haptic.success();
-  };
-
-  const readWebFile = async (file: File) => {
+    const mime = resolveAllowedMime(file.name, file.type) ?? 'text/plain';
     try {
-      const res = await extractLessonFile(file);
-      if ('error' in res) {
-        setError(res.error);
-        return;
-      }
-      applyUploadedText(file.name, res.text);
-    } catch {
-      setError('Could not read that file.');
+      setUploadState({ status: 'uploading', fileName: file.name, pct: 10 });
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const uploaded = await uploadModuleSource({
+        bytes,
+        fileName: file.name,
+        mime,
+        extractedText: clean,
+        onProgress: (pct) => setUploadState({ status: 'uploading', fileName: file.name, pct }),
+      });
+      setSource(uploaded);
+      if (!title.trim()) setTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80));
+      setContent(clean);
+      setUploadState({ status: 'ready', fileName: file.name, charCount: clean.length, note: res.note });
+      haptic.success();
+    } catch (e) {
+      setUploadState({ status: 'failed', reason: (e as Error).message || 'Upload stopped, tap to try again' });
     }
   };
 
@@ -182,39 +204,141 @@ export function TeacherUploadSheet() {
       webInputRef.current?.click();
       return;
     }
-    const picked = await pickModuleFile();
-    if (!picked) return;
-    if (picked.error) {
-      setError(picked.error);
+    const picked = await pickNativeLessonFile();
+    if (picked.cancelled) return;
+    if ('error' in picked) {
+      setUploadState({ status: 'failed', reason: picked.error });
       return;
     }
-    applyUploadedText(picked.name, picked.text);
+    setUploadState({ status: 'uploading', fileName: picked.fileName, pct: 15 });
+    try {
+      const uploaded = await uploadModuleSource({
+        bytes: picked.bytes,
+        fileName: picked.fileName,
+        mime: picked.mime,
+        extractedText: picked.text.trim().slice(0, 10000),
+        onProgress: (pct) => setUploadState({ status: 'uploading', fileName: picked.fileName, pct }),
+      });
+      setSource(uploaded);
+      if (!title.trim()) setTitle(picked.fileName.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80));
+      if (picked.needsManualText) {
+        setShowPaste(true);
+        setUploadState({ status: 'ready', fileName: picked.fileName, charCount: 0, note: picked.note });
+      } else {
+        const clean = picked.text.trim().slice(0, 10000);
+        setContent(clean);
+        setUploadState({ status: 'ready', fileName: picked.fileName, charCount: clean.length, note: picked.note });
+      }
+      haptic.success();
+    } catch (e) {
+      setUploadState({ status: 'failed', reason: (e as Error).message || 'Upload stopped, tap to try again' });
+    }
   };
 
   const handleGenerate = async () => {
     setError(null);
     setDoneBanner(null);
-    const effectiveTitle = title.trim() || sourceName?.replace(/\.[^/.]+$/, '') || 'Lesson Module';
+    const effectiveTitle = title.trim() || source?.fileName.replace(/\.[^/.]+$/, '') || 'Lesson Module';
     if (content.trim().length < 30) {
-      setError('Drop/select a lesson file, load the sample lesson, or paste at least 2 sentences first.');
+      setError('Upload a lesson file, load the sample lesson, or paste at least 2 sentences first.');
       return;
     }
     if (!title.trim()) setTitle(effectiveTitle);
     setGenerating(true);
     try {
-      const generated = await generateModuleDeck({
+      const generated = await generateModuleDeck({ title: effectiveTitle, subject, content: content.trim() });
+      const created = await createDraft({
+        sourceId: source?.id ?? null,
+        sourceName: source?.fileName ?? null,
         title: effectiveTitle,
         subject,
-        content: content.trim(),
+        summary: generated.summary,
+        flashcards: generated.flashcards,
+        questions: generated.questions,
       });
-      setDeck(generated);
-      setStep('approve');
+      setDraft(created);
+      versionRef.current = created.version;
+      dirtyRef.current = false;
+      setEditVal({
+        title: created.title,
+        subject: created.subject,
+        summary: created.summary,
+        flashcards: created.flashcards,
+        questions: created.questions,
+      });
+      setSaveStatus('saved');
+      setStep('edit');
       haptic.success();
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setGenerating(false);
     }
+  };
+
+  const flushSave = async (val: EditableQuizValue): Promise<QuizDraft | null> => {
+    if (!draft) return null;
+    const vErr = validateQuizValue(val);
+    if (vErr) {
+      setError(vErr);
+      return null;
+    }
+    setError(null);
+    setSaveStatus('saving');
+    try {
+      const res = await saveDraft(draft.id, versionRef.current, val);
+      if (res.conflict) {
+        setConflictNotice('This draft changed on another device. Showing the latest version.');
+        if (res.latest) {
+          versionRef.current = res.latest.version;
+          setDraft(res.latest);
+          setEditVal({
+            title: res.latest.title,
+            subject: res.latest.subject,
+            summary: res.latest.summary,
+            flashcards: res.latest.flashcards,
+            questions: res.latest.questions,
+          });
+        }
+        setSaveStatus('idle');
+        dirtyRef.current = false;
+        return res.latest;
+      }
+      versionRef.current = res.draft.version;
+      setDraft(res.draft);
+      setConflictNotice(null);
+      setSaveStatus('saved');
+      dirtyRef.current = false;
+      return res.draft;
+    } catch {
+      setSaveStatus('error');
+      return null;
+    }
+  };
+
+  const handleEditChange = (next: EditableQuizValue) => {
+    setEditVal(next);
+    dirtyRef.current = true;
+    setSaveStatus('saving');
+    if (autosaveRef.current) clearTimeout(autosaveRef.current);
+    autosaveRef.current = setTimeout(() => {
+      void flushSave(next);
+    }, 800);
+  };
+
+  const proceedToAssign = async () => {
+    if (!editVal || !draft) return;
+    if (autosaveRef.current) clearTimeout(autosaveRef.current);
+    const vErr = validateQuizValue(editVal);
+    if (vErr) {
+      setError(vErr);
+      return;
+    }
+    if (dirtyRef.current) {
+      const saved = await flushSave(editVal);
+      if (!saved) return;
+    }
+    setStep('assign');
   };
 
   const toggleClass = (id: string) => {
@@ -225,41 +349,37 @@ export function TeacherUploadSheet() {
     });
   };
 
-  const handleApprovePublish = async () => {
-    if (!deck || publishing) return;
+  const handleAssign = async () => {
+    if (!draft || assigning || assignLockRef.current) return;
     const chosenIds = IS_PITCH ? ['sampaguita'] : targetIds;
     if (chosenIds.length === 0) {
-      setError('Select at least one class to receive these flashcards & quiz questions.');
+      setError('Select at least one class.');
       return;
     }
-    setPublishing(true);
+    assignLockRef.current = true;
+    setAssigning(true);
     setError(null);
     try {
-      const { saved, lanUrl } = await publishModulesToClasses(chosenIds, {
-        title: title.trim() || 'Lesson Module',
-        subject,
-        sourceName,
-        summary: deck.summary,
-        flashcards: deck.flashcards,
-        questions: deck.questions,
-      });
+      const res = await assignDraftToClasses(draft, chosenIds, shareSource);
+      if (res.status === 'conflict') {
+        assignLockRef.current = false;
+        setConflictNotice('This draft changed on another device. Showing the latest version.');
+        setStep('edit');
+        return;
+      }
+      if (IS_PITCH) res.saved.forEach((m) => useAppStore.getState().addPitchModule(m));
       haptic.success();
-      const clsWord = saved.length === 1 ? '1 class' : `${saved.length} classes`;
-      setDoneBanner(
-        Platform.OS === 'web'
-          ? `Published to ${clsWord}. Students get it on their next sync.`
-          : lanUrl
-            ? `Approved for ${clsWord}. Students download directly from your phone (${lanUrl}).`
-            : `Approved for ${clsWord}. Hosted locally on your phone & synced directly to students.`,
-      );
+      const clsWord = res.saved.length === 1 ? '1 class' : `${res.saved.length} classes`;
+      setDoneBanner(`Assigned v${res.version} to ${clsWord}.`);
       setTimeout(() => {
         resetForm();
         setUploadOpen(false);
       }, 1100);
     } catch (e) {
+      assignLockRef.current = false;
       setError((e as Error).message);
     } finally {
-      setPublishing(false);
+      setAssigning(false);
     }
   };
 
@@ -268,23 +388,6 @@ export function TeacherUploadSheet() {
   const availableClasses = IS_PITCH
     ? [{ id: 'sampaguita', name: `Grade 8 - ${PITCH_NAMES.section}`, grade: 8, join_code: 'SAMP8' }]
     : classes;
-
-  const webDropProps =
-    Platform.OS === 'web'
-      ? ({
-          onDragOver: (e: { preventDefault: () => void }) => {
-            e.preventDefault();
-            setDraggingOver(true);
-          },
-          onDragLeave: () => setDraggingOver(false),
-          onDrop: (e: { preventDefault: () => void; dataTransfer?: { files?: FileList } }) => {
-            e.preventDefault();
-            setDraggingOver(false);
-            const file = e.dataTransfer?.files?.[0];
-            if (file) void readWebFile(file);
-          },
-        } as Record<string, unknown>)
-      : null;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}>
@@ -304,307 +407,237 @@ export function TeacherUploadSheet() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={[styles.centerWrap, { paddingBottom: Math.max(insets.bottom + 82, 92), paddingTop: insets.top + 16 }]}
+        style={[styles.centerWrap, { paddingBottom: Math.max(insets.bottom + 16, 20), paddingTop: insets.top + 16 }]}
         pointerEvents="box-none"
       >
-        <Animated.View style={[styles.cardFrame, growWrapperStyle]}>
-          {/* Compact front face shown briefly at the start of the 3D flip */}
-          <Animated.View style={[styles.frontFace, { backgroundColor: '#C2410C' }, frontFaceStyle]} pointerEvents="none">
-            <Plus size={44} weight="bold" color="#FFFFFF" />
-            <Text variant="title" color="#FFFFFF" align="center">
-              UPLOAD MODULE
-            </Text>
-          </Animated.View>
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: c.bg, borderColor: c.hairline },
+            cardAnimStyle,
+          ]}
+        >
+          <View style={styles.topRow}>
+            <View style={styles.flex}>
+              <Text variant="title" color="text" numberOfLines={1}>
+                {step === 'upload' ? 'Upload module' : step === 'edit' ? 'Review & edit draft' : 'Assign to classes'}
+              </Text>
+              <Text variant="caption" color="textSecondary">
+                {step === 'upload'
+                  ? 'Drafts stay private until you assign them'
+                  : step === 'edit'
+                    ? `Private draft · v${draft?.version ?? 1}`
+                    : `Publishes snapshot v${draft?.version ?? 1}`}
+              </Text>
+            </View>
+            <IconButton kind="close" size={34} accessibilityLabel="Close upload sheet" onPress={closeSheet} />
+          </View>
 
-          {/* Back face: expands into drag-drop upload & class approval workflow */}
-          <Animated.View style={[styles.backCard, backFaceStyle]}>
-            <View style={styles.topRow}>
-              <View style={styles.titleRow}>
-                <Plus size={22} weight="bold" color="#FFFFFF" />
-                <Text variant="title" color="#FFFFFF" numberOfLines={1} style={styles.flex}>
-                  {step === 'upload' ? 'UPLOAD MODULE' : 'APPROVE & SEND'}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollInner}
+          >
+            {error ? <Notice text={error} /> : null}
+            {doneBanner ? (
+              <View style={[styles.doneBanner, { backgroundColor: c.success + '18' }]}>
+                <CheckCircle size={18} weight="fill" color={c.success} />
+                <Text variant="subhead" color="text" style={styles.flex}>
+                  {doneBanner}
                 </Text>
               </View>
-              <IconButton kind="close" tone="onAccent" size={34} accessibilityLabel="Close upload sheet" onPress={closeSheet} />
-            </View>
+            ) : null}
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollInner}
-            >
-              {error ? <Notice text={error} /> : null}
-              {doneBanner ? (
-                <View style={styles.doneBanner}>
-                  <CheckCircle size={18} weight="fill" color="#187B43" />
-                  <Text variant="subhead" color="#2B2D31" style={styles.flex}>
-                    {doneBanner}
-                  </Text>
-                </View>
-              ) : null}
+            {step === 'upload' ? (
+              <>
+                <UploadDropCard
+                  compact
+                  state={uploadState}
+                  onPress={() => void pickFile()}
+                  onDropFile={(f) => void readWebFile(f)}
+                  onDragChange={(dragging) =>
+                    setUploadState((prev) =>
+                      dragging
+                        ? { status: 'dragging' }
+                        : prev.status === 'dragging'
+                          ? source
+                            ? { status: 'ready', fileName: source.fileName, charCount: content.length }
+                            : { status: 'idle' }
+                          : prev,
+                    )
+                  }
+                />
 
-              {step === 'upload' ? (
-                <>
-                  <PressableScale
-                    onPress={() => void pickFile()}
-                    accessibilityLabel="Drag and drop or tap to select lesson file"
-                    style={styles.dropTap}
-                  >
-                    <View
-                      {...(webDropProps ?? {})}
-                      style={[
-                        styles.dropZone,
-                        draggingOver && styles.dropZoneActive,
-                      ]}
-                    >
-                      <FileArrowUp size={30} weight="fill" color="#FFFFFF" />
-                      <Text variant="title" color="#FFFFFF" align="center">
-                        {sourceName ? sourceName : 'DRAG & DROP HERE'}
-                      </Text>
-                      <Text variant="caption" color="rgba(255,255,255,0.92)" align="center">
-                        {content
-                          ? `${content.length.toLocaleString('en-US')} chars ready for flashcards & quiz`
-                          : Platform.OS === 'web'
-                            ? 'Supports PDF, Word (.docx), .txt, .md, .csv, .html'
-                            : 'Supports .txt, .md, .csv, .html'}
-                      </Text>
-                    </View>
-                  </PressableScale>
-
-                  <PressableScale
-                    onPress={() => void pickFile()}
-                    accessibilityLabel="Select module to upload"
-                    style={styles.selectPill}
-                  >
-                    <Text variant="headline" color="#C2410C" style={[fontFor(800), styles.selectLabel]}>
-                      SELECT MODULE TO UPLOAD
-                    </Text>
-                  </PressableScale>
-
-                  <View style={styles.helperRow}>
-                    <PressableScale
-                      onPress={() => {
-                        haptic.select();
-                        setShowPaste((v) => !v);
-                      }}
-                      style={styles.ghostChip}
-                    >
-                      <Text variant="caption" color="#FFFFFF">
-                        {showPaste ? 'Hide notes box' : 'Paste lesson notes'}
-                      </Text>
-                    </PressableScale>
-                    <PressableScale
-                      onPress={() => {
-                        haptic.select();
-                        setError(null);
-                        setTitle('Linear Equations & Slope');
-                        setSubject('Math');
-                        setSourceName('sample-linear-equations.txt');
-                        setContent(SAMPLE_MODULE_TEXT);
-                      }}
-                      style={styles.ghostChip}
-                    >
-                      <Text variant="caption" color="#FFFFFF">
-                        Load sample lesson
-                      </Text>
-                    </PressableScale>
-                  </View>
-
-                  {content || showPaste ? (
-                    <View style={styles.metaPanel}>
-                      <TextInput
-                        value={title}
-                        onChangeText={setTitle}
-                        placeholder="Module title (e.g. Linear Equations)"
-                        placeholderTextColor="rgba(17,17,17,0.45)"
-                        style={styles.whiteInput}
-                        maxLength={120}
-                      />
-                      <View style={styles.subjRow}>
-                        {SUBJECTS.map((subj) => {
-                          const active = subject === subj;
-                          return (
-                            <PressableScale
-                              key={subj}
-                              onPress={() => setSubject(subj)}
-                              style={[styles.subjBtn, { backgroundColor: active ? '#C2410C' : '#F3F2EE' }]}
-                            >
-                              <Text variant="caption" color={active ? '#FFFFFF' : '#2B2D31'}>
-                                {subj}
-                              </Text>
-                            </PressableScale>
-                          );
-                        })}
-                      </View>
-                      {showPaste ? (
-                        <TextInput
-                          value={content}
-                          onChangeText={setContent}
-                          placeholder="Paste definitions, formulas, or reading notes..."
-                          placeholderTextColor="rgba(17,17,17,0.45)"
-                          multiline
-                          textAlignVertical="top"
-                          style={[styles.whiteInput, styles.pasteInput]}
-                        />
-                      ) : null}
-                      <PillButton
-                        label={generating ? 'Building flashcards & quiz...' : 'Review & Create Flashcards'}
-                        icon={<Sparkle size={17} weight="fill" color="#FFFFFF" />}
-                        block
-                        size="lg"
-                        disabled={generating || content.trim().length < 30}
-                        onPress={() => void handleGenerate()}
-                        style={{ backgroundColor: '#161616' }}
-                      />
-                    </View>
-                  ) : null}
-                </>
-              ) : deck ? (
-                <View style={styles.metaPanel}>
-                  <View style={styles.rowBetween}>
-                    <View style={styles.flex}>
-                      <Text variant="title" color="#2B2D31" numberOfLines={2}>
-                        {title.trim() || 'Generated Module'}
-                      </Text>
-                      <Text variant="caption" color="#62666C">
-                        {subject} · {deck.flashcards.length} flashcards · {deck.questions.length} quiz questions
-                      </Text>
-                    </View>
-                    <Chip label="Back" kind="neutral" onPress={() => setStep('upload')} />
-                  </View>
-
-                  <Text variant="subhead" color="#4B5057">
-                    {deck.summary}
-                  </Text>
-
-                  <Text variant="overline" color="#C2410C">
-                    Select class to receive this module
-                  </Text>
-                  <View style={styles.classWrap}>
-                    {availableClasses.length > 1 ? (
-                      <PressableScale
-                        onPress={() => {
-                          haptic.select();
-                          setPickedTargetIds(
-                            targetIds.length === availableClasses.length
-                              ? [availableClasses[0].id]
-                              : availableClasses.map((cl) => cl.id),
-                          );
-                        }}
-                        style={[
-                          styles.classPill,
-                          {
-                            backgroundColor: targetIds.length === availableClasses.length ? '#C2410C' : '#EFECE6',
-                          },
-                        ]}
-                      >
-                        <Text
-                          variant="caption"
-                          color={targetIds.length === availableClasses.length ? '#FFFFFF' : '#2B2D31'}
-                        >
-                          All classes
-                        </Text>
-                      </PressableScale>
-                    ) : null}
-                    {availableClasses.map((cl) => {
-                      const picked = targetIds.includes(cl.id);
-                      return (
-                        <PressableScale
-                          key={cl.id}
-                          onPress={() => toggleClass(cl.id)}
-                          accessibilityState={{ selected: picked }}
-                          style={[
-                            styles.classPill,
-                            { backgroundColor: picked ? '#C2410C' : '#EFECE6' },
-                          ]}
-                        >
-                          {picked ? <CheckCircle size={15} weight="fill" color="#FFFFFF" /> : <BookOpenText size={15} color="#62666C" />}
-                          <Text variant="caption" color={picked ? '#FFFFFF' : '#2B2D31'}>
-                            {cl.name}
-                          </Text>
-                        </PressableScale>
-                      );
-                    })}
-                  </View>
-
-                  <View style={styles.p2pNote}>
-                    <WifiHigh size={16} weight="bold" color="#187B43" />
-                    <Text variant="caption" color="#187B43" style={styles.flex}>
-                      {Platform.OS === 'web'
-                        ? 'Saved to LearnShift cloud and synced to your students.'
-                        : 'Saved on your phone & downloaded directly by students to save cloud storage.'}
-                    </Text>
-                  </View>
-
-                  <Text variant="overline" color="#62666C">
-                    Flashcards ({deck.flashcards.length})
-                  </Text>
-                  {deck.flashcards.map((fc, idx) => (
-                    <View key={fc.id} style={styles.itemCard}>
-                      <View style={styles.rowBetween}>
-                        <Text variant="subhead" color="#C2410C" style={styles.flex}>
-                          #{idx + 1} · {fc.front}
-                        </Text>
-                        {deck.flashcards.length > 1 ? (
-                          <IconButton
-                            kind="remove"
-                            tone="danger"
-                            size={30}
-                            accessibilityLabel="Remove flashcard"
-                            onPress={() =>
-                              setDeck((d) =>
-                                d ? { ...d, flashcards: d.flashcards.filter((x) => x.id !== fc.id) } : null,
-                              )
-                            }
-                          />
-                        ) : null}
-                      </View>
-                      <Text variant="caption" color="#33363B">
-                        {fc.back}
-                      </Text>
-                    </View>
-                  ))}
-
-                  <Text variant="overline" color="#62666C">
-                    Quiz Breaks ({deck.questions.length})
-                  </Text>
-                  {deck.questions.map((q, idx) => (
-                    <View key={q.id} style={styles.itemCard}>
-                      <View style={styles.rowBetween}>
-                        <Text variant="subhead" color="#2B2D31" style={styles.flex}>
-                          Q{idx + 1}. {q.prompt}
-                        </Text>
-                        {deck.questions.length > 1 ? (
-                          <IconButton
-                            kind="remove"
-                            tone="danger"
-                            size={30}
-                            accessibilityLabel="Remove quiz question"
-                            onPress={() =>
-                              setDeck((d) =>
-                                d ? { ...d, questions: d.questions.filter((x) => x.id !== q.id) } : null,
-                              )
-                            }
-                          />
-                        ) : null}
-                      </View>
-                      <Text variant="caption" color="#187B43">
-                        Answer: {q.options[q.answer]}
-                      </Text>
-                    </View>
-                  ))}
-
-                  <PillButton
-                    label={publishing ? (Platform.OS === 'web' ? 'Publishing…' : 'Sharing to class phones...') : 'Approve & Send to Class'}
-                    block
-                    size="lg"
-                    disabled={publishing || targetIds.length === 0}
-                    onPress={() => void handleApprovePublish()}
+                <View style={styles.helperRow}>
+                  <Chip
+                    label={showPaste ? 'Hide notes box' : 'Paste lesson notes'}
+                    kind="neutral"
+                    onPress={() => {
+                      haptic.select();
+                      setShowPaste((v) => !v);
+                    }}
+                  />
+                  <Chip
+                    label="Load sample lesson"
+                    kind="neutral"
+                    onPress={() => {
+                      haptic.select();
+                      setError(null);
+                      setTitle('Linear Equations & Slope');
+                      setSubject('Math');
+                      setSource(null);
+                      setContent(SAMPLE_MODULE_TEXT);
+                      setUploadState({
+                        status: 'ready',
+                        fileName: 'sample-linear-equations.txt',
+                        charCount: SAMPLE_MODULE_TEXT.length,
+                      });
+                    }}
                   />
                 </View>
-              ) : null}
-            </ScrollView>
-          </Animated.View>
+
+                {content || showPaste ? (
+                  <View style={[styles.metaPanel, { backgroundColor: c.card, borderColor: c.hairline }]}>
+                    <TextInput
+                      value={title}
+                      onChangeText={setTitle}
+                      placeholder="Module title (e.g. Linear Equations)"
+                      placeholderTextColor={c.textTertiary}
+                      style={[styles.input, { backgroundColor: c.inset, color: c.text }]}
+                      maxLength={120}
+                    />
+                    <View style={styles.subjRow}>
+                      {QUIZ_SUBJECTS.map((subj) => (
+                        <Chip
+                          key={subj}
+                          label={subj}
+                          kind={subject === subj ? 'tinted' : 'neutral'}
+                          selected={subject === subj}
+                          onPress={() => setSubject(subj)}
+                        />
+                      ))}
+                    </View>
+                    {showPaste ? (
+                      <TextInput
+                        value={content}
+                        onChangeText={setContent}
+                        placeholder="Paste definitions, formulas, or reading notes..."
+                        placeholderTextColor={c.textTertiary}
+                        multiline
+                        textAlignVertical="top"
+                        style={[styles.input, styles.pasteInput, { backgroundColor: c.inset, color: c.text }]}
+                      />
+                    ) : null}
+                    <PillButton
+                      label={generating ? 'Building private draft…' : 'Generate draft quiz'}
+                      icon={<Sparkle size={17} weight="fill" color={c.onAccent} />}
+                      block
+                      size="lg"
+                      disabled={generating || content.trim().length < 30}
+                      onPress={() => void handleGenerate()}
+                    />
+                  </View>
+                ) : null}
+              </>
+            ) : step === 'edit' && editVal && draft ? (
+              <View style={[styles.metaPanel, { backgroundColor: c.card, borderColor: c.hairline }]}>
+                <QuizEditor
+                  value={editVal}
+                  onChange={handleEditChange}
+                  saveStatus={saveStatus}
+                  conflictNotice={conflictNotice}
+                />
+                {draft.sourceId && !IS_PITCH ? (
+                  <PillButton
+                    label="View original file"
+                    kind="neutral"
+                    size="sm"
+                    icon={<FileText size={15} weight="bold" color={c.text} />}
+                    onPress={() => void openOriginalSource({ draftId: draft.id }).catch((e) => setError((e as Error).message))}
+                  />
+                ) : null}
+                <View style={styles.btnRow}>
+                  <PillButton
+                    label="Keep private"
+                    kind="neutral"
+                    style={styles.flex}
+                    block
+                    onPress={() => {
+                      resetForm();
+                      closeSheet();
+                    }}
+                  />
+                  <PillButton
+                    label="Assign"
+                    style={styles.flex}
+                    block
+                    disabled={!!validateQuizValue(editVal)}
+                    onPress={() => void proceedToAssign()}
+                  />
+                </View>
+              </View>
+            ) : step === 'assign' && draft ? (
+              <View style={[styles.metaPanel, { backgroundColor: c.card, borderColor: c.hairline }]}>
+                <View style={styles.rowBetween}>
+                  <Text variant="headline" style={styles.flex} numberOfLines={2}>
+                    {draft.title}
+                  </Text>
+                  <Chip label="Back" kind="neutral" onPress={() => setStep('edit')} />
+                </View>
+
+                <Text variant="overline" color="accent">
+                  Select classes to receive v{draft.version}
+                </Text>
+                <View style={styles.classWrap}>
+                  {availableClasses.map((cl) => {
+                    const picked = targetIds.includes(cl.id);
+                    return (
+                      <PressableScale
+                        key={cl.id}
+                        onPress={() => toggleClass(cl.id)}
+                        accessibilityState={{ selected: picked }}
+                        style={[
+                          styles.classPill,
+                          { backgroundColor: picked ? c.accent : c.inset },
+                        ]}
+                      >
+                        {picked ? (
+                          <CheckCircle size={15} weight="fill" color={c.onAccent} />
+                        ) : (
+                          <BookOpenText size={15} color={c.textSecondary} />
+                        )}
+                        <Text variant="caption" color={picked ? c.onAccent : c.text}>
+                          {cl.name}
+                        </Text>
+                      </PressableScale>
+                    );
+                  })}
+                </View>
+
+                {draft.sourceId ? (
+                  <View style={[styles.shareRow, { backgroundColor: c.inset }]}>
+                    <View style={styles.flex}>
+                      <Text variant="subhead" color="text">
+                        Also share the original file
+                      </Text>
+                      <Text variant="caption" color="textSecondary">
+                        Off by default.
+                      </Text>
+                    </View>
+                    <Toggle value={shareSource} onChange={setShareSource} accessibilityLabel="Also share the original file" />
+                  </View>
+                ) : null}
+
+                <PillButton
+                  label={assigning ? 'Assigning…' : 'Assign to selected classes'}
+                  block
+                  size="lg"
+                  disabled={assigning || targetIds.length === 0}
+                  onPress={() => void handleAssign()}
+                />
+              </View>
+            ) : null}
+          </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
     </View>
@@ -623,92 +656,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
   },
-  cardFrame: {
+  sheetCard: {
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 480,
     maxHeight: '88%',
-  },
-  frontFace: {
-    position: 'absolute',
-    left: 24,
-    right: 24,
-    bottom: 24,
-    height: 180,
     borderRadius: radius.sheet,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 14,
-  },
-  backCard: {
-    backgroundColor: '#C2410C',
-    borderRadius: radius.sheet,
-    borderCurve: 'continuous',
-    padding: 20,
-    maxHeight: '100%',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.16,
     shadowRadius: 24,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 8 },
     elevation: 18,
   },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 },
   flex: { flex: 1 },
-  scrollInner: { gap: 14, paddingBottom: 4 },
-  dropTap: { width: '100%' },
-  dropZone: {
-    backgroundColor: '#F4A98E',
-    borderRadius: 26,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.9)',
-    minHeight: 186,
-    paddingHorizontal: 18,
-    paddingVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  dropZoneActive: { backgroundColor: '#F7BDAA', borderColor: '#FFFFFF' },
-  selectPill: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.pill,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-  },
-  selectLabel: { fontSize: 15, letterSpacing: 0.4 },
-  helperRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, flexWrap: 'wrap' },
-  ghostChip: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: radius.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
+  scrollInner: { gap: 12, paddingBottom: 4 },
+  helperRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
   metaPanel: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 16,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
     gap: 12,
   },
-  whiteInput: {
-    backgroundColor: '#F3F2EE',
-    borderRadius: 14,
+  input: {
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 11,
     fontSize: 15,
-    color: '#2B2D31',
     fontFamily: FONT_SECONDARY,
   },
   pasteInput: { minHeight: 96 },
   subjRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  subjBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill },
+  btnRow: { flexDirection: 'row', gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   classWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   classPill: {
@@ -719,25 +699,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: radius.pill,
   },
-  p2pNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#E9F7EE',
-    borderRadius: 12,
-    padding: 10,
-  },
-  itemCard: {
-    backgroundColor: '#F4F4F0',
-    borderRadius: 14,
-    padding: 12,
-    gap: 6,
-  },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 12, padding: 10 },
   doneBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E9F7EE',
     borderRadius: 14,
     padding: 12,
   },
