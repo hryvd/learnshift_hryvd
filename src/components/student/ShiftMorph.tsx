@@ -189,7 +189,7 @@ export function ShiftMorph({
     // Open: content arrives late. Close: it leaves first, before the shape shrinks.
     const cp = opening
       ? interpolate(p, [0.3, 0.95], [0, 1], Extrapolation.CLAMP)
-      : interpolate(p, [0.66, 0.97], [0, 1], Extrapolation.CLAMP);
+      : interpolate(p, [0.5, 0.98], [0, 1], Extrapolation.CLAMP);
     return {
       opacity: reduced ? p : cp,
       transform: [
