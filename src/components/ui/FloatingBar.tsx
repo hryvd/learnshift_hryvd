@@ -1,12 +1,10 @@
 import { createContext, useContext, useEffect, useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { Platform, Pressable, StyleSheet, Text as RNText, View, type StyleProp, type ViewStyle } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,22 +98,28 @@ export function BarBlurTarget({ children, style }: { children: ReactNode; style?
   );
 }
 
+/**
+ * Near-clear glass: ~5% blur, a light tint for icon legibility, no sheen or
+ * strokes. The edge "light wrap" is an inset glow (boxShadow), not a line.
+ */
 const TONE = {
   day: {
-    wash: 'rgba(255,255,255,0.38)',
-    frost: 'rgba(255,255,255,0.88)',
-    sheen: ['rgba(255,255,255,0.45)', 'rgba(255,255,255,0)'] as const,
-    rim: 'rgba(255,255,255,0.85)',
-    outline: 'rgba(0,0,0,0.07)',
+    wash: 'rgba(255,255,255,0.62)',
+    /** Shown only until the live blur samples, so the bar never flashes black. */
+    frost: 'rgba(246,245,241,0.92)',
+    wrap: 'inset 0 0 0 0.5px rgba(255,255,255,0.55), inset 0 1px 10px rgba(255,255,255,0.75), inset 0 -1px 8px rgba(255,255,255,0.35)',
+    drop: '0 10px 26px -8px rgba(28,25,20,0.22)',
   },
   night: {
-    wash: 'rgba(22,26,44,0.42)',
-    frost: 'rgba(22,26,44,0.9)',
-    sheen: ['rgba(255,255,255,0.10)', 'rgba(255,255,255,0)'] as const,
-    rim: 'rgba(255,255,255,0.16)',
-    outline: 'rgba(255,255,255,0.07)',
+    wash: 'rgba(22,26,44,0.55)',
+    frost: 'rgba(22,26,44,0.92)',
+    wrap: 'inset 0 0 0 0.5px rgba(255,255,255,0.14), inset 0 1px 10px rgba(255,255,255,0.18), inset 0 -1px 8px rgba(255,255,255,0.08)',
+    drop: '0 10px 26px -8px rgba(0,0,0,0.5)',
   },
 };
+
+/** ~5% blur strength (expo-blur intensity is 0–100). */
+const BLUR = 5;
 
 /** The glass card that floats above the content. `inline` renders it in flow (gallery). */
 export function FloatingBarShell({
@@ -128,7 +132,7 @@ export function FloatingBarShell({
   /** Disables pointer and screen-reader interaction while a modal card covers the bar. */
   blocked?: boolean;
 }) {
-  const { c, isNight } = useTheme();
+  const { isNight } = useTheme();
   const { bottom } = useFloatingBar();
   const target = useContext(BlurTargetContext);
   const t = isNight ? TONE.night : TONE.day;
@@ -149,7 +153,7 @@ export function FloatingBarShell({
           <BlurView
             blurTarget={target}
             blurMethod="dimezisBlurViewSdk31Plus"
-            intensity={80}
+            intensity={BLUR}
             tint={isNight ? 'systemUltraThinMaterialDark' : 'default'}
             style={StyleSheet.absoluteFill}
           />
@@ -158,7 +162,7 @@ export function FloatingBarShell({
         )
       ) : (
         <BlurView
-          intensity={80}
+          intensity={BLUR}
           tint={isNight ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
           style={StyleSheet.absoluteFill}
         />
@@ -171,10 +175,8 @@ export function FloatingBarShell({
         {blur}
         {/* Brand-tinted wash keeps icons readable over busy content. */}
         <View style={[StyleSheet.absoluteFill, { backgroundColor: t.wash }]} />
-        <LinearGradient colors={t.sheen} style={styles.sheen} />
-        {/* Bright top edge plus a faint outline: the cue that reads as glass. */}
-        <View style={[StyleSheet.absoluteFill, styles.rim, { borderColor: t.rim }]} />
-        <View style={[StyleSheet.absoluteFill, styles.outline, { borderColor: t.outline }]} />
+        {/* Edge light wrap: an inward glow along every edge, no stroke or sheen. */}
+        <View style={[StyleSheet.absoluteFill, styles.round, { boxShadow: t.wrap }]} />
       </View>
     );
   }
@@ -190,8 +192,8 @@ export function FloatingBarShell({
       <View
         style={[
           styles.bar,
-          // Android elevation shows through translucent fills, so only iOS and web get a drop shadow.
-          Platform.OS !== 'android' ? [styles.shadow, { shadowColor: c.shadow }] : null,
+          // CSS-style boxShadow draws only outside the bar, so it works over translucent glass on every platform.
+          { boxShadow: t.drop },
         ]}
       >
         {surface}
@@ -217,17 +219,14 @@ export function BarTab({ label, Icon, active, tint, onPress, badge, accessibilit
   const { c } = useTheme();
   const reduced = useReducedMotion();
   const on = useSharedValue(active ? 1 : 0);
-  const pop = useSharedValue(1);
 
   useEffect(() => {
-    on.set(withSpring(active ? 1 : 0, spring.snappy));
-    if (active && !reduced) {
-      pop.set(withSequence(withSpring(1.14, spring.snappy), withSpring(1, spring.bouncy)));
-    }
-  }, [active, reduced, on, pop]);
+    // Tabs are switched 100+ times a day: a calm critically damped lift, no bounce or pop.
+    on.set(reduced ? (active ? 1 : 0) : withSpring(active ? 1 : 0, spring.ui));
+  }, [active, reduced, on]);
 
   const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: interpolate(on.get(), [0, 1], [ICON_DROP, 0]) }, { scale: pop.get() }],
+    transform: [{ translateY: interpolate(on.get(), [0, 1], [ICON_DROP, 0]) }],
   }));
   const tintStyle = useAnimatedStyle(() => ({ opacity: on.get() }));
   const labelStyle = useAnimatedStyle(() => ({
@@ -290,7 +289,7 @@ export function CenterPlusButton({
   const btnRef = useRef<ComponentRef<typeof View> | null>(null);
   const r = useSharedValue(open ? 1 : 0);
   useEffect(() => {
-    r.set(withSpring(open ? 1 : 0, spring.snappy));
+    r.set(withSpring(open ? 1 : 0, spring.ui));
   }, [open, r]);
   const plusStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${r.get() * 45}deg` }, { scale: 1 + r.get() * 0.06 }],
@@ -341,17 +340,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: radius.card,
   },
-  shadow: {
-    shadowOpacity: 0.16,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 10 },
-  },
   fill: { flex: 1 },
   round: { borderRadius: radius.card },
   clip: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: radius.card, overflow: 'hidden' },
-  sheen: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
-  rim: { borderRadius: radius.card, borderTopWidth: 1, borderLeftWidth: 0.5, borderRightWidth: 0.5 },
-  outline: { borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth },
   slot: { flex: 1, height: BAR_HEIGHT, alignItems: 'center', justifyContent: 'center', gap: LABEL_GAP },
   hiddenCenter: { opacity: 0 },
   icon: { width: ICON, height: ICON },
